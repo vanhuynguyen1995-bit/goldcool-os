@@ -89,5 +89,5 @@ Mã nguồn sinh 18 màn hình: `lib.js`, `batch1v2.js`, `batch2v2.js` (18 màn 
 ## Cổng nhận khách từ chatbot Fanpage (31/10/2026)
 - URL: `POST https://goldcool-os-386s.vercel.app/api/inbound?key=<INBOUND_KEY>` (hoặc header `x-goldcool-key`). INBOUND_KEY xem trong Vercel → goldcool-os-386s → Settings → Environment Variables.
 - Body JSON, các trường nhận được (tên nào cũng được trong ngoặc): name (full_name, customer_name, customer.name), phone (phone_number, sdt), address, source, business_model, product, size, cooling, choice, price_sent, concern, level (L1–L6), last_message, summary (handover), next_action, conversation (mảng {role,text} hoặc chuỗi), link (conversation_url), psid.
-- Khách hiện ở Hộp thư AI Sales, mục "Khách thật từ Fanpage"; Sales nhận khách, đổi trạng thái, đánh dấu đã nhập Zotech.
+- Khách mới được chia tự động theo tỉ lệ (Giám đốc/HCNS đặt ở Hộp thư → "Tỉ lệ chia", mặc định Hà 34 · Ánh 33 · Yến 33 · NVKD4 0). Mỗi khách giao cho Sales đang thiếu nhiều nhất so với tỉ lệ trong tháng. Sales chỉ thấy và sửa khách của mình; Giám đốc/HCNS thấy tất cả và chuyển khách.
 - Đặt `ZOTECH_WEBHOOK_URL` thì mỗi khách mới được chuyển tiếp sang Zotech.

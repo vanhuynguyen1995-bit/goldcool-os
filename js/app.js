@@ -818,13 +818,13 @@
   /* ===== Khách thật từ Fanpage (cổng /api/inbound) trong Hộp thư ===== */
   let INB = { leads: [], statuses: [], ready: false, zotech: false, loaded: false }; let inbTimer;
   const LV_COLOR = { L1: 'var(--l1)', L2: 'var(--l2)', L3: 'var(--l3)', L4: 'var(--l4)', L5: 'var(--l5)', L6: 'var(--l6)' };
-  const inbChip = (l) => { const st = l.status === 'Mới' ? 'warn' : l.status === 'Đã chốt' ? 'ok' : l.status === 'Không nhu cầu' ? 'gray' : 'blue'; return `<span class="chip ${st}" style="font-size:11px">${esc(l.status)}${l.ownerName ? ' · ' + esc(l.ownerName.split(' ').pop()) : ''}</span>`; };
+  const inbChip = (l) => { const st = l.status === 'Mới' ? 'warn' : l.status === 'Đã chốt' ? 'ok' : l.status === 'Không nhu cầu' ? 'gray' : 'blue'; return `<span class="chip ${st}" style="font-size:11px">${esc(l.status)}${INB.admin ? ' · ' + (l.ownerName ? esc(l.ownerName.split(' ').pop()) : 'chưa chia') : ''}</span>`; };
   function inbList() {
     const secs = $$('.app section'); if (!secs[0] || CUR !== 'hop-thu') return;
     const list = secs[0].children[1]; if (!list) return;
     let box = $('#inb-box'); if (!box) { box = document.createElement('div'); box.id = 'inb-box'; list.prepend(box); }
     const L2 = INB.leads;
-    box.innerHTML = `<div style="padding:10px 14px 6px;background:#F7FBF8;border-top:1px solid var(--line)"><div class="row xs" style="gap:6px;font-weight:700;letter-spacing:.04em;color:var(--ok)">● KHÁCH THẬT TỪ FANPAGE<span class="sp muted" style="font-weight:600;letter-spacing:0">${L2.length ? L2.filter((l) => l.status === 'Mới').length + ' chờ nhận' : ''}</span></div></div>`
+    box.innerHTML = `<div style="padding:10px 14px 8px;background:#F7FBF8;border-top:1px solid var(--line)"><div class="row xs" style="gap:6px;font-weight:700;letter-spacing:.04em;color:var(--ok)">● ${INB.admin ? 'KHÁCH THẬT TỪ FANPAGE' : 'KHÁCH ĐƯỢC CHIA CHO BẠN'}<span class="sp muted" style="font-weight:600;letter-spacing:0">${L2.filter((l) => l.status === 'Mới').length ? L2.filter((l) => l.status === 'Mới').length + ' chưa liên hệ' : ''}</span></div>${INB.admin ? `<div class="row xs" style="gap:6px;margin-top:6px;flex-wrap:wrap">${(INB.split || []).filter((u) => u.w > 0).map((u) => `<span class="chip gray" style="font-size:11px" title="Tháng này ${u.month} khách">${esc(u.n.split(' ').pop())} ${u.w}%</span>`).join('')}<span class="sp btn sm" data-inb-split="1" style="height:26px;font-size:12px">Tỉ lệ chia</span></div>` : ''}</div>`
       + (L2.length ? L2.slice(0, 50).map((l) => `<div class="click" data-inb="${l.id}" style="padding:12px 14px;border-top:1px solid var(--line);background:${l.status === 'Mới' ? '#FFFCF2' : '#fff'}"><div class="row" style="gap:8px"><b style="font-size:13.5px">${esc(l.name)}</b><span class="xs muted">${l.address ? '· ' + esc(l.address.slice(0, 18)) : ''}</span><span class="sp xs muted">${fmtAt(l.at)}</span></div><div class="sm muted" style="margin:3px 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.lastMessage || l.summary || l.product || '')}</div><div class="row" style="gap:6px;flex-wrap:wrap">${l.urgent ? '<span class="chip bad" style="font-size:11px">Khẩn</span>' : ''}${inbChip(l)}${l.level ? `<span class="chip" style="font-size:11px;background:${LV_COLOR[l.level]};color:#fff">${l.level}</span>` : ''}${l.product ? `<span class="chip gray" style="font-size:11px">${esc(l.product.slice(0, 22))}</span>` : ''}</div></div>`).join('')
       : `<div style="padding:12px 14px 14px;border-top:1px solid var(--line);background:#F7FBF8" class="xs muted">${INB.ready ? 'Cổng kết nối đã sẵn sàng. Khi chatbot Fanpage chuyển khách, khách sẽ hiện ở đây.' : 'Chưa bật cổng kết nối chatbot (thiếu INBOUND_KEY trên Vercel).'}</div>`)
       + '<div style="padding:8px 14px;border-top:2px solid var(--line);background:#F7F9FC" class="xs muted">DỮ LIỆU MẪU (bản thiết kế)</div>';
@@ -835,22 +835,39 @@
     const row = (k, v) => v ? `<div class="row sm" style="gap:10px;padding:6px 0;border-top:1px solid var(--line)"><span class="muted" style="width:120px;flex:none">${k}</span><span>${esc(v)}</span></div>` : '';
     ov.hidden = false;
     ov.innerHTML = `<div class="acct-box card" style="width:620px;max-width:94vw;max-height:88vh;overflow:auto"><div class="row" style="gap:10px;align-items:flex-start"><div><div class="h1" style="font-size:21px">${esc(l.name)}</div><div class="xs muted">${esc(l.source)} · ${fmtAt(l.at)}${l.zotech ? ' · <b style="color:var(--ok)">đã có trên Zotech</b>' : ''}</div></div><span class="sp"></span>${inbChip(l)}${l.level ? `<span class="chip" style="background:${LV_COLOR[l.level]};color:#fff">${l.level}</span>` : ''}</div>
-      <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap">${l.phone ? `<a class="btn pri" href="tel:${esc(l.phone)}">Gọi ${esc(l.phone)}</a><a class="btn" target="_blank" rel="noopener" href="https://zalo.me/${esc(l.phone.replace(/\D/g, '').replace(/^84/, '0'))}">Zalo</a>` : ''}${l.link ? `<a class="btn" target="_blank" rel="noopener" href="${esc(l.link)}">Mở cuộc chat</a>` : ''}${!l.owner ? '<span class="btn nv" data-inb-claim="1">Tôi nhận khách này</span>' : ''}</div>
+      <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap">${l.phone ? `<a class="btn pri" href="tel:${esc(l.phone)}">Gọi ${esc(l.phone)}</a><a class="btn" target="_blank" rel="noopener" href="https://zalo.me/${esc(l.phone.replace(/\D/g, '').replace(/^84/, '0'))}">Zalo</a>` : ''}${l.link ? `<a class="btn" target="_blank" rel="noopener" href="${esc(l.link)}">Mở cuộc chat</a>` : ''}</div><div class="sm" style="margin-top:10px">Phụ trách: <b>${esc(l.ownerName || 'Chưa chia')}</b></div>
       <div style="margin-top:14px">${row('Điện thoại', l.phone)}${row('Địa chỉ', l.address)}${row('Mô hình', l.model)}${row('Sản phẩm', l.product)}${row('Kích thước', l.size)}${row('Làm lạnh', l.cooling)}${row('GoldCool / mẫu rẻ', l.choice)}${row('Giá đã gửi', l.quoted)}${row('Băn khoăn', l.concern)}${row('Tin cuối', l.lastMessage)}${row('Việc cần làm', l.next)}${row('Bàn giao', l.summary)}</div>
       ${(l.lines || []).length ? `<details style="margin-top:10px"><summary class="sm" style="cursor:pointer;font-weight:600">Xem hội thoại (${l.lines.length} dòng)</summary><div class="xs" style="margin-top:8px;white-space:pre-wrap;background:#F7F9FC;border-radius:8px;padding:10px">${esc(l.lines.join('\n'))}</div></details>` : ''}
-      <div class="row" style="gap:10px;margin-top:16px;flex-wrap:wrap"><div style="flex:1;min-width:200px"><div class="lbl">Trạng thái</div><select class="field" id="inb-st">${INB.statuses.map((x) => `<option${x === l.status ? ' selected' : ''}>${x}</option>`).join('')}</select></div><label class="row sm" style="gap:6px;margin-top:20px"><input type="checkbox" id="inb-z"${l.zotech ? ' checked' : ''}> Đã nhập Zotech</label></div>
+      <div class="row" style="gap:10px;margin-top:16px;flex-wrap:wrap"><div style="flex:1;min-width:200px"><div class="lbl">Trạng thái</div><select class="field" id="inb-st">${INB.statuses.map((x) => `<option${x === l.status ? ' selected' : ''}>${x}</option>`).join('')}</select></div>${INB.admin ? `<div style="flex:1;min-width:180px"><div class="lbl">Chuyển cho Sales</div><select class="field" id="inb-as">${(INB.split || []).map((u) => `<option value="${u.k}"${u.k === l.owner ? ' selected' : ''}>${esc(u.n)}</option>`).join('')}</select></div>` : ''}<label class="row sm" style="gap:6px;margin-top:20px"><input type="checkbox" id="inb-z"${l.zotech ? ' checked' : ''}> Đã nhập Zotech</label></div>
       <div class="lbl" style="margin-top:10px">Ghi chú xử lý</div><textarea class="field" id="inb-note" rows="3" style="height:auto;padding:10px">${esc(l.staffNote || '')}</textarea>
       <div class="row" style="gap:8px;margin-top:14px"><span class="btn" data-inb-close="1">Đóng</span><span class="sp"></span><span class="btn pri" data-inb-save="1">Lưu</span></div>
       ${(l.history || []).length ? `<div class="xs muted" style="margin-top:14px">${l.history.slice().reverse().map((h) => `${esc(h.by)} · ${fmtAt(h.at)} · ${esc(h.status)}${h.note ? ' – ' + esc(h.note) : ''}`).join('<br>')}</div>` : ''}</div>`;
     const upd = async (body) => { const r = await api('/api/inbound?id=' + encodeURIComponent(id), { method: 'POST', body: JSON.stringify(body) }); if (!r.ok) { toast(r.j.error || 'Chưa lưu được', 'bad'); return; } const i = INB.leads.findIndex((x) => x.id === id); INB.leads[i] = r.j.lead; inbList(); inbOpen(id); toast('Đã lưu', 'ok'); };
-    const c1 = $('[data-inb-claim]', ov); if (c1) c1.onclick = () => upd({ claim: true });
     $('[data-inb-close]', ov).onclick = closeOv;
-    $('[data-inb-save]', ov).onclick = () => upd({ status: $('#inb-st').value, zotech: $('#inb-z').checked, note: $('#inb-note').value });
+    $('[data-inb-save]', ov).onclick = () => { const body = { status: $('#inb-st').value, zotech: $('#inb-z').checked, note: $('#inb-note').value }; const as = $('#inb-as'); if (as && as.value !== l.owner) body.assign = as.value; upd(body); };
+  }
+  function inbSplit() {
+    const rows = INB.split || []; const tot = () => rows.reduce((a, u) => a + (+($('#sp-' + u.k) || {}).value || 0), 0);
+    ov.hidden = false;
+    ov.innerHTML = `<div class="acct-box card" style="width:460px;max-width:94vw"><div class="h1" style="font-size:20px">Tỉ lệ chia khách Fanpage</div><div class="sub1">Khách mới được chia tự động: Sales nào đang nhận ít so với tỉ lệ của mình trong tháng sẽ nhận khách tiếp theo. Đặt 0 để tạm ngừng chia cho người đó.</div>
+      <div style="margin-top:14px">${rows.map((u) => `<div class="row" style="gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:center"><div style="flex:1"><b class="sm">${esc(u.n)}</b><div class="xs muted">${esc(u.r)} · tháng này ${u.month} khách</div></div><input class="field" id="sp-${u.k}" type="number" min="0" max="100" value="${u.w}" style="width:80px;text-align:right"><span class="sm muted">%</span></div>`).join('')}</div>
+      <div class="row sm" style="margin-top:8px">Tổng<b class="sp" id="sp-tot"></b></div><div id="sp-err" class="xs" style="color:var(--bad);min-height:16px;margin-top:6px"></div>
+      <div class="row" style="gap:8px;margin-top:6px"><span class="btn" data-inb-close="1">Hủy</span><span class="sp"></span><span class="btn pri" id="sp-save">Lưu tỉ lệ</span></div></div>`;
+    const showTot = () => { const t = tot(); $('#sp-err').textContent = ''; $('#sp-tot').textContent = t + '%'; $('#sp-tot').style.color = t === 100 ? 'var(--ok)' : 'var(--bad)'; };
+    rows.forEach((u) => $('#sp-' + u.k).addEventListener('input', showTot)); showTot();
+    $('[data-inb-close]', ov).onclick = closeOv;
+    $('#sp-save').onclick = async () => {
+      if (tot() !== 100) { $('#sp-err').textContent = 'Tổng tỉ lệ cần bằng 100%'; return; }
+      const w = {}; rows.forEach((u) => { w[u.k] = +$('#sp-' + u.k).value || 0; });
+      const r = await api('/api/inbound?a=split', { method: 'POST', body: JSON.stringify({ w }) });
+      if (!r.ok) { $('#sp-err').textContent = r.j.error || 'Chưa lưu được'; return; }
+      closeOv(); toast('Đã lưu tỉ lệ chia khách', 'ok'); inbLoad();
+    };
   }
   const _ht = APPLY['hop-thu'];
   APPLY['hop-thu'] = () => { if (_ht) _ht(); if (!SERVER) return; if (INB.loaded) inbList(); inbLoad(); clearInterval(inbTimer); inbTimer = setInterval(() => { if (CUR === 'hop-thu' && !document.hidden) inbLoad(); else clearInterval(inbTimer); }, 30000); };
   const _htc = CLICK['hop-thu'];
-  CLICK['hop-thu'] = (t, e) => { const it = t.closest('[data-inb]'); if (it) { inbOpen(it.dataset.inb); return true; } return _htc ? _htc(t, e) : false; };
+  CLICK['hop-thu'] = (t, e) => { if (t.closest('[data-inb-split]')) { inbSplit(); return true; } const it = t.closest('[data-inb]'); if (it) { inbOpen(it.dataset.inb); return true; } return _htc ? _htc(t, e) : false; };
 
   /* ===== Đăng nhập thật, đổi mật khẩu, đặt lại mật khẩu ===== */
   const ov = document.createElement('div'); ov.id = 'acct'; ov.hidden = true; document.body.append(ov);
