@@ -67,11 +67,33 @@
   const labelOf = (a) => { const c = a.cloneNode(true); $$('.cnt', c).forEach((x) => x.remove()); return T(c); };
 
   function currentRoute() { return CUR; }
-  function fromHash() { const h = (location.hash || '').replace(/^#\/?/, ''); if (!h) return 'trang-chu'; if (SLUG[h]) return SLUG[h]; const m = META.find((x) => slugOf(x.id) === h); if (m) return m.id; const p = h.split('--'); if (p[0] === 'chua-co' && p.length > 2) return 'chua-co/' + p[1] + '/' + p.slice(2).join(' ').replace(/-/g, ' '); return 'trang-chu'; }
+  function fromHash() { const h = (location.hash || '').replace(/^#\/?/, ''); if (!h) return ONLY_SALES ? 'hop-thu' : 'trang-chu'; if (SLUG[h]) return SLUG[h]; const m = META.find((x) => slugOf(x.id) === h); if (m) return m.id; const p = h.split('--'); if (p[0] === 'chua-co' && p.length > 2) return 'chua-co/' + p[1] + '/' + p.slice(2).join(' ').replace(/-/g, ' '); return 'trang-chu'; }
   META.forEach((m) => slugOf(m.id));
 
+  /* ---------- Bản chỉ dùng AI Sales: tắt Trang chủ, Mục tiêu & KPI, Học viện, Dữ liệu ---------- */
+  const ONLY_SALES = true;
+  const HOME = 'hop-thu';
+  const ALLOW = new Set(META.filter((m) => m.mod === 'sales' || ['dang-nhap', 'nhan-vien', 'nhat-ky'].includes(m.id)).map((m) => m.id));
+  const KEEP_TOP = ['AI Sales', 'Cài đặt'];
+  if (ONLY_SALES) {
+    NAV_TOP['Trang chủ'] = HOME;
+    Object.assign(MOBILE_NAV, { 'Trang chủ': HOME, 'Báo cáo': 'bao-cao-ai' });
+    NAV_SUB['Cài đặt'] = { 'Nhân viên': 'nhan-vien', 'Nhật ký thay đổi': 'nhat-ky' };
+  }
+  const allowed = (r) => !ONLY_SALES || ALLOW.has(r);
+  function trimNav() {
+    if (!ONLY_SALES) return;
+    $$('.side .nav > a').forEach((a) => { if (!KEEP_TOP.includes(labelOf(a))) { const nx = a.nextElementSibling; if (nx && nx.classList.contains('sub')) nx.remove(); a.remove(); } });
+    // Cài đặt chỉ còn Nhân viên và Nhật ký
+    $$('.side .nav > a').forEach((a) => { if (labelOf(a) === 'Cài đặt' && a.classList.contains('on')) { let sub = a.nextElementSibling; if (!sub || !sub.classList.contains('sub')) { sub = document.createElement('div'); sub.className = 'sub'; a.after(sub); } sub.innerHTML = Object.entries(NAV_SUB['Cài đặt']).map(([t, id]) => `<a class="${CUR === id ? 'on' : ''}">${t}</a>`).join(''); } });
+    // Thanh dưới của màn hình điện thoại: bỏ mục Học
+    $$('.phone nav > div.col').forEach((d) => { if (T(d) === 'Học') d.style.visibility = 'hidden'; });
+    const mode = $('.modebox'); if (mode) mode.style.display = '';
+  }
+
   function render() {
-    const r = currentRoute();
+    let r = currentRoute();
+    if (r !== 'dang-nhap' && (r.startsWith('chua-co/') || !allowed(r))) { if (ONLY_SALES && r !== 'trang-chu') toast('Bản hiện tại chỉ dùng phần AI Sales'); r = HOME; CUR = HOME; try { history.replaceState(null, '', '#' + slugOf(HOME)); } catch (e) { /* bỏ qua */ } }
     window.scrollTo(0, 0);
     if (r.startsWith('chua-co/')) {
       const [, mod, ...rest] = r.split('/');
@@ -94,16 +116,17 @@
     $$('.card').forEach((c) => { if (CLICK_CARDS[m.id] && CLICK_CARDS[m.id](c)) c.classList.add('click'); });
     (APPLY[m.id] || (() => {}))();
     if (typeof personalize === 'function') personalize(m.id);
+    trimNav();
     menuMark(m.id);
   }
   const syncHash = () => { CUR = fromHash(); render(); };
   window.addEventListener('hashchange', syncHash); window.addEventListener('popstate', syncHash);
 
   /* ---------- Menu 18 màn hình ---------- */
-  const btn = document.createElement('div'); btn.className = 'scr-btn'; btn.innerHTML = '☰ ' + META.length + ' màn hình';
+  const btn = document.createElement('div'); btn.className = 'scr-btn'; btn.innerHTML = '☰ ' + META.filter((m) => allowed(m.id)).length + ' màn hình';
   const menu = document.createElement('div'); menu.className = 'scr-menu';
   const GROUPS = { home: 'Trang chủ', sales: 'AI Sales', data: 'Dữ liệu', kpi: 'Mục tiêu & KPI', hv: 'Học viện', set: 'Cài đặt & hệ thống' };
-  menu.innerHTML = Object.keys(GROUPS).map((g) => `<div class="g">${GROUPS[g]}</div>` + META.filter((m) => m.mod === g).map((m) => `<a data-go="${m.id}" data-id="${m.id}"><b>${m.no}</b>${esc(m.title)}</a>`).join('')).join('') + '<div class="g">Dữ liệu thử</div><a data-reset="1"><b>↺</b>Đặt lại dữ liệu thử</a>';
+  menu.innerHTML = Object.keys(GROUPS).map((g) => `<div class="g">${GROUPS[g]}</div>` + META.filter((m) => m.mod === g && allowed(m.id)).map((m) => `<a data-go="${m.id}" data-id="${m.id}"><b>${m.no}</b>${esc(m.title)}</a>`).join('')).join('') + '<div class="g">Dữ liệu thử</div><a data-reset="1"><b>↺</b>Đặt lại dữ liệu thử</a>';
   document.body.append(btn, menu);
   btn.onclick = () => menu.classList.toggle('on');
   function menuMark(id) { $$('a', menu).forEach((a) => a.classList.toggle('cur', a.dataset.id === id)); menu.classList.remove('on'); }
@@ -125,12 +148,12 @@
       go(r || `chua-co/${MOD_KEY[mod] || 'home'}/${lab}`); return;
     }
     const mn = t.closest('nav > div.col');
-    if (mn && t.closest('.phone')) { go(MOBILE_NAV[T(mn)] || 'trang-chu'); return; }
-    if (t.closest('.bellw')) { go('thong-bao'); return; }
-    if (t.closest('.top > .av')) { go('nhan-vien/ho-so'); return; }
+    if (mn && t.closest('.phone')) { if (T(mn) === 'Tôi' && !allowed('nhan-vien/ho-so')) { openAccount(); return; } go(MOBILE_NAV[T(mn)] || HOME); return; }
+    if (t.closest('.bellw')) { go(allowed('thong-bao') ? 'thong-bao' : HOME); return; }
+    if (t.closest('.top > .av')) { if (allowed('nhan-vien/ho-so')) go('nhan-vien/ho-so'); else openAccount(); return; }
     if (t.closest('.me')) { openAccount(); return; }
     if (t.closest('.searchb')) { toast('Tìm kiếm sẽ hoạt động khi nối dữ liệu khách và sản phẩm thật'); return; }
-    if (t.closest('.logo')) { go('trang-chu'); return; }
+    if (t.closest('.logo')) { go(allowed('trang-chu') ? 'trang-chu' : HOME); return; }
     const r = currentRoute();
     if (CLICK[r] && CLICK[r](t, e) !== false) return;
     if (CLICK2(r, t) !== false) return;
@@ -620,7 +643,7 @@
   ov.addEventListener('click', (e) => { if (e.target === ov && !$('#pw-new', ov)) closeOv(); });
   async function doLogin() {
     const k = S.role || 'ha', pw = ($('#lg-pass') || {}).value || '', er = $('#lg-err');
-    if (!SERVER) { S.loggedIn = true; save(); toast('Xin chào ' + me().n, 'ok'); go(me().home); return; }
+    if (!SERVER) { S.loggedIn = true; save(); toast('Xin chào ' + me().n, 'ok'); go(allowed(me().home) ? me().home : HOME); return; }
     if (!pw) { er.textContent = 'Nhập mật khẩu'; $('#lg-pass').focus(); return; }
     const b = $('#lg-go'); b.classList.add('is-off'); b.textContent = 'Đang đăng nhập…';
     const r = await api('/api/auth?a=login', { method: 'POST', body: JSON.stringify({ k, password: pw }) });
@@ -628,7 +651,7 @@
     if (!r.ok) { er.textContent = r.j.error || 'Không đăng nhập được'; return; }
     S.loggedIn = true; S.role = r.j.user.k; save();
     await loadShared();
-    toast('Xin chào ' + r.j.user.n, 'ok'); go(r.j.user.home);
+    toast('Xin chào ' + r.j.user.n, 'ok'); go(allowed(r.j.user.home) ? r.j.user.home : HOME);
     if (r.j.mustChange) { S._lastPw = pw; pwForm(true); }
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target && e.target.id === 'lg-pass') doLogin(); });
@@ -663,7 +686,7 @@
     } catch (e) { SERVER = false; }
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ }
     CUR = (!S.loggedIn) ? 'dang-nhap' : fromHash();
-    if (S.loggedIn && CUR === 'dang-nhap') CUR = me().home;
+    if (S.loggedIn && CUR === 'dang-nhap') CUR = allowed(me().home) ? me().home : HOME;
     render();
     const m = $('#lg-mode'); if (m && !SERVER) m.textContent = 'Bản xem thử: mật khẩu bất kỳ';
   })();

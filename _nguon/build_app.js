@@ -85,7 +85,7 @@ const extra = fs.readFileSync(path.join(__dirname, 'app_extra.css'), 'utf8');
 fs.writeFileSync(path.join(OUT, 'css/app.css'), CSS + '\n' + extra);
 fs.copyFileSync(path.join(__dirname, 'app.js'), path.join(OUT, 'js/app.js'));
 fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GoldCool OS</title><meta name="description" content="Phần mềm quản trị GoldCool Việt Nam – AI Sales, Mục tiêu & KPI, Học viện">
+<title>GoldCool OS · AI Sales</title><meta name="description" content="GoldCool OS – AI Sales: hộp thư, khách của tôi, phòng thử AI, báo cáo">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C9A227'/%3E%3Cpath d='M16 6v20M7.3 11l17.4 10M7.3 21l17.4-10' stroke='%230F3D63' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/app.css"></head><body><div id="root"></div><div id="toast"></div>
 <script src="js/screens.js"></script><script src="js/app.js"></script></body></html>`);
