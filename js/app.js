@@ -659,6 +659,7 @@
   const _nv = APPLY['nhan-vien'];
   APPLY['nhan-vien'] = () => {
     if (_nv) _nv();
+    if (ONLY_SALES) { const names = new Set(Object.values(UMAP).map((u) => u.n)); $$('.tbl tbody tr').forEach((tr) => { if (!names.has(T($('b', tr)))) tr.remove(); }); }
     if (!SERVER || !['huy', 'huyen'].includes(S.role)) return;
     const byName = {}; Object.values(UMAP).forEach((u) => { byName[u.n] = u.k; });
     $$('.tbl tbody tr').forEach((tr) => { const nm = T($('b', tr)); const k = byName[nm]; const cell = tr.lastElementChild; if (k && cell) cell.insertAdjacentHTML('beforeend', ` <span class="btn sm" data-resetpw="${k}" title="Đưa về mật khẩu ban đầu">Đặt lại MK</span>`); });

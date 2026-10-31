@@ -15,7 +15,7 @@ const tbl = (cols, rows) => `<table class="tbl"><thead><tr>${cols.map((c) => `<t
 const tabs = (arr, on = 0) => `<div class="tabs">${arr.map(([t, n], i) => `<a class="${i === on ? 'on' : ''}">${t}${n !== undefined ? ` <i>${n}</i>` : ''}</a>`).join('')}</div>`;
 const PRINC = ['Bán bằng sự am hiểu', 'Tạo niềm tin bằng chất lượng', 'Giữ khách hàng bằng trách nhiệm', 'Niềm tin lâu dài hơn doanh số trước mắt', 'Sản phẩm phù hợp hơn sản phẩm giá cao', 'Làm đúng trước, nhanh sau', 'Minh bạch khi có vấn đề'];
 
-const DEPTS = ['Ban giám đốc', 'Kinh doanh & Marketing', 'Sản xuất – Vận hành', 'Kế toán', 'Khách hàng & Hậu mãi'];
+const DEPTS = ['Ban giám đốc', 'Kinh doanh & Marketing'];
 const USERS = [
   ['huy', 'Nguyễn Văn Huy', 'Giám đốc', 'Ban giám đốc', 'bang-so-lieu'], ['huyen', 'Chị Huyền', 'HCNS & Hệ thống', 'Ban giám đốc', 'nhan-vien'],
   ['ha', 'Đoàn Thị Hồng Hà', 'Sales · NVKD1', 'Kinh doanh & Marketing', 'trang-chu'], ['anh', 'Trần Thị Ánh', 'Sales · NVKD2', 'Kinh doanh & Marketing', 'trang-chu'], ['yen', 'Trịnh Hải Yến', 'Sales · NVKD3', 'Kinh doanh & Marketing', 'trang-chu'], ['nvkd4', 'Nhân viên mới', 'Sales NVKD4 · Học viện', 'Kinh doanh & Marketing', 'hom-nay-hoc-gi'],
@@ -24,13 +24,14 @@ const USERS = [
   ['phong', 'Sin Văn Phong', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['thiet', 'Thiên Văn Thiết', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['kinh', 'Vàng Văn Kinh', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['suong', 'Vàng Văn Sương', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['duong', 'Vàng Văn Dương', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['nam', 'Nguyễn Bảo Nam', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'],
   ['ut', 'Nguyễn Thị Út', 'Kế toán tổng hợp', 'Kế toán', 'bang-gia'], ['thutrang', 'Trần Thị Thu Trang', 'Kế toán bán hàng kiêm thủ quỹ', 'Kế toán', 'bang-gia'], ['thanh', 'Đỗ Huyền Thanh', 'Thủ kho', 'Kế toán', 'thong-bao'],
   ['quan', 'Lương Văn Quân', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'], ['hieu', 'Lương Văn Hiếu', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'], ['thang', 'Nguyễn Đăng Đại Thắng', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'], ['luong', 'Nguyễn Hữu Lương', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'],
-].map(([k, n, r, d, home]) => { const p = n.split(' '); return { k, n, r, d, home, a: p.length === 1 ? p[0][0] : (p[0][0] + p[p.length - 1][0]).toUpperCase() }; });
+].filter(([k]) => ['huy', 'huyen', 'ha', 'anh', 'yen', 'nvkd4'].includes(k)) // Bản chỉ dùng AI Sales: Ban giám đốc + Sales
+ .map(([k, n, r, d, home]) => { if (k === 'nvkd4') r = 'Sales · NVKD4'; if (k !== 'huyen') home = 'hop-thu'; const p = n.split(' '); return { k, n, r, d, home, a: p.length === 1 ? p[0][0] : (p[0][0] + p[p.length - 1][0]).toUpperCase() }; });
 S.__USERS = USERS;
 /* ===== A01 Đăng nhập ===== */
 S['A01_Dang_nhap'] = page(`<div style="min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr;width:100%;min-width:1100px">
  <div style="background:linear-gradient(160deg,#0F3D63,#0B2F4D);color:#fff;padding:56px 64px;display:flex;flex-direction:column;position:relative;overflow:hidden">
   <div class="row" style="gap:12px"><div style="width:44px;height:44px;border-radius:12px;background:var(--gold);display:grid;place-items:center">${ic('snow', 24, '#0F3D63', 2)}</div><b style="font-size:24px"><span style="color:#E6C35C">Gold</span><span style="color:#A9D0F0">Cool</span> OS</b></div>
-  <div style="margin-top:auto"><div style="font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.15">CHỌN ĐÚNG –<br>DÙNG LÂU</div><div style="font-size:16px;color:#B9CCDE;margin-top:14px;max-width:420px">Lạnh sâu – Bền lâu – Tiết kiệm điện. Phần mềm quản trị nội bộ GoldCool Việt Nam: AI Sales, Mục tiêu & KPI, Học viện.</div></div>
+  <div style="margin-top:auto"><div style="font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.15">CHỌN ĐÚNG –<br>DÙNG LÂU</div><div style="font-size:16px;color:#B9CCDE;margin-top:14px;max-width:420px">Lạnh sâu – Bền lâu – Tiết kiệm điện. Phần mềm AI Sales nội bộ GoldCool Việt Nam: hộp thư khách từ Fanpage, chuyển giao Sales, phòng thử AI.</div></div>
   <div class="xs" style="color:#8FA8C0;margin-top:40px">Kho CN05 KCN Nguyên Khê, Phúc Thịnh, Hà Nội · Hotline 0865 868 868 · goldcool.vn</div>
   <div style="position:absolute;right:-80px;top:120px;opacity:.07">${ic('snow', 420, '#fff', 1)}</div>
  </div>
