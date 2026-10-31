@@ -73,17 +73,29 @@
   /* ---------- Bản chỉ dùng AI Sales: tắt Trang chủ, Mục tiêu & KPI, Học viện, Dữ liệu ---------- */
   const ONLY_SALES = true;
   const HOME = 'hop-thu';
-  const ALLOW = new Set(META.filter((m) => m.mod === 'sales' || ['dang-nhap', 'nhan-vien', 'nhat-ky'].includes(m.id)).map((m) => m.id));
+  const TRAIN = { 'chon-tinh-huong': 'Luyện đóng vai', 'dong-vai': 'Luyện đóng vai', 'ket-qua-dong-vai': 'Luyện đóng vai', 'bai-thi': 'Bài thi', 'ket-qua-thi': 'Bài thi' };
+  const ALLOW = new Set(META.filter((m) => m.mod === 'sales' || TRAIN[m.id] || ['dang-nhap', 'nhan-vien', 'nhat-ky'].includes(m.id)).map((m) => m.id));
+  const SALES_SUB = [['Hộp thư', 'hop-thu'], ['Khách của tôi', 'khach-cua-toi'], ['Báo cáo tuần', 'bao-cao-ai'], ['Phòng thử AI', 'phong-thu-ai'], ['Lỗi dữ liệu', 'so-loi'], ['Cài đặt AI', 'cai-dat-ai']];
+  const TRAIN_SUB = [['Luyện đóng vai', 'chon-tinh-huong'], ['Bài thi', 'bai-thi']];
   const KEEP_TOP = ['AI Sales', 'Cài đặt'];
   if (ONLY_SALES) {
     NAV_TOP['Trang chủ'] = HOME;
     Object.assign(MOBILE_NAV, { 'Trang chủ': HOME, 'Báo cáo': 'bao-cao-ai' });
     NAV_SUB['Cài đặt'] = { 'Nhân viên': 'nhan-vien', 'Nhật ký thay đổi': 'nhat-ky' };
+    NAV_SUB['AI Sales']['Luyện đóng vai'] = 'chon-tinh-huong'; NAV_SUB['AI Sales']['Bài thi'] = 'bai-thi';
   }
   const allowed = (r) => !ONLY_SALES || ALLOW.has(r);
   function trimNav() {
     if (!ONLY_SALES) return;
     $$('.side .nav > a').forEach((a) => { if (!KEEP_TOP.includes(labelOf(a))) { const nx = a.nextElementSibling; if (nx && nx.classList.contains('sub')) nx.remove(); a.remove(); } });
+    // AI Sales: thêm Luyện đóng vai, Bài thi (từ Học viện)
+    const ai = $$('.side .nav > a').find((a) => labelOf(a) === 'AI Sales');
+    if (ai) {
+      let sub = ai.nextElementSibling;
+      if (TRAIN[CUR]) { ai.classList.add('on'); if (!sub || !sub.classList.contains('sub')) { sub = document.createElement('div'); sub.className = 'sub'; ai.after(sub); sub.innerHTML = SALES_SUB.map(([t]) => `<a>${t}</a>`).join(''); } }
+      if (sub && sub.classList.contains('sub')) { $$('a', sub).forEach((x) => { if (TRAIN[CUR]) x.classList.remove('on'); }); sub.insertAdjacentHTML('beforeend', '<div class="xs" style="color:#8FA8C0;font-weight:700;letter-spacing:.05em;padding:10px 0 4px 40px">LUYỆN TẬP</div>' + TRAIN_SUB.map(([t]) => `<a class="${TRAIN[CUR] === t ? 'on' : ''}">${t}</a>`).join('')); }
+    }
+    if (TRAIN[CUR]) { const cr = $('.top .crumb'); if (cr) cr.innerHTML = cr.innerHTML.replace('Học viện', 'AI Sales <span>/</span> Luyện tập').replace('Chặng 1 – Sản phẩm, giá và kịch bản', 'Bài thi Sales'); }
     // Cài đặt chỉ còn Nhân viên và Nhật ký
     $$('.side .nav > a').forEach((a) => { if (labelOf(a) === 'Cài đặt' && a.classList.contains('on')) { let sub = a.nextElementSibling; if (!sub || !sub.classList.contains('sub')) { sub = document.createElement('div'); sub.className = 'sub'; a.after(sub); } sub.innerHTML = Object.entries(NAV_SUB['Cài đặt']).map(([t, id]) => `<a class="${CUR === id ? 'on' : ''}">${t}</a>`).join(''); } });
     // Thanh dưới của màn hình điện thoại: bỏ mục Học
@@ -606,6 +618,89 @@
       add.forEach((h) => body.insertAdjacentHTML('beforeend', h)); body.scrollTop = body.scrollHeight;
     });
   };
+
+  /* ===== Luyện tập: bài thi 30 câu từ DNA (ngân hàng js/exam_bank.js) ===== */
+  const BANK = window.EXAM_BANK || [], PARTS = window.EXAM_PARTS || [];
+  const PASS = Math.ceil(BANK.length * 0.8), MINUTES = 30;
+  const exKey = () => 'ex_' + (S.role || 'ha');
+  const EX = () => { const k = exKey(); if (!S[k] || S[k].v !== 1) S[k] = { v: 1, ans: {}, cur: 0, mark: {}, start: Date.now() }; return S[k]; };
+  let exTimer;
+  function exGrade(e) {
+    const parts = PARTS.map(() => ({ ok: 0, n: 0 })); const wrong = [];
+    BANK.forEach(([p, q, o, c, why], i) => { parts[p].n++; if (e.ans[i] === c) parts[p].ok++; else wrong.push({ i, q, right: o[c], picked: e.ans[i] === undefined ? 'Chưa trả lời' : o[e.ans[i]], why }); });
+    const ok = parts.reduce((a, x) => a + x.ok, 0);
+    return { ok, n: BANK.length, pass: ok >= PASS, parts, wrong, at: new Date().toISOString() };
+  }
+  APPLY['bai-thi'] = () => {
+    const c = $('.content'); if (!c || !BANK.length) return;
+    const e = EX(); if (e.done) { e.ans = {}; e.cur = 0; e.mark = {}; e.start = Date.now(); delete e.done; save(); }
+    const i = Math.max(0, Math.min(BANK.length - 1, e.cur)); const [p, q, o] = BANK[i];
+    const answered = Object.keys(e.ans).length;
+    const L = 'ABCD';
+    c.innerHTML = `<div class="card row" style="gap:20px;align-items:center;padding:16px 20px"><div><b style="font-size:17px">Bài thi Sales · Sản phẩm, chính sách và kịch bản</b><div class="xs muted">${BANK.length} câu · ${MINUTES} phút · đạt khi đúng từ 80% (${PASS}/${BANK.length}) · câu hỏi soạn từ DNA GoldCool</div></div>
+      <div class="sp row" style="gap:22px;align-items:center"><div style="width:180px"><div class="row xs muted">Đã làm<b class="sp" style="color:var(--ink)">${answered}/${BANK.length}</b></div><div class="bar" style="margin-top:6px"><i style="width:${Math.round(answered / BANK.length * 100)}%"></i></div></div><div class="row" style="gap:6px;align-items:center"><b id="ex-time" style="font-size:20px;font-variant-numeric:tabular-nums">--:--</b></div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;margin-top:20px;align-items:start">
+       <div class="card" style="padding:24px">
+        <div class="row" style="gap:8px"><span class="chip blue">Câu ${i + 1} / ${BANK.length}</span><span class="chip gray">${esc(PARTS[p])}</span><span class="sp btn sm" data-ex="mark">${e.mark[i] ? '★ Bỏ đánh dấu' : 'Đánh dấu xem lại'}</span></div>
+        <div style="font-size:18px;font-weight:600;line-height:1.5;margin-top:18px">${esc(q)}</div>
+        <div class="col" style="gap:10px;margin-top:18px">${o.map((t, k) => { const on = e.ans[i] === k; return `<div class="row click" data-ex-opt="${k}" style="gap:12px;align-items:center;padding:14px 16px;border-radius:12px;border:${on ? '2px solid var(--navy)' : '1.5px solid var(--line)'};background:${on ? 'var(--ice)' : '#fff'};cursor:pointer"><span style="width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:${on ? 'var(--navy)' : '#EEF1F5'};color:${on ? '#fff' : 'var(--muted)'}">${L[k]}</span><span class="sm">${esc(t)}</span>${on ? '<span class="sp xs" style="color:var(--navy);font-weight:600">Đã chọn</span>' : ''}</div>`; }).join('')}</div>
+        <div class="row" style="margin-top:20px;gap:8px"><span class="btn${i === 0 ? ' is-off' : ''}" data-ex="prev">Câu trước</span><span class="sp xs muted">Đáp án và giải thích hiện sau khi nộp bài</span><span class="btn nv${i === BANK.length - 1 ? ' is-off' : ''}" data-ex="next">Câu sau</span></div>
+       </div>
+       <div class="col" style="gap:16px">
+        <div class="card" style="padding:18px"><h3>Bảng câu hỏi</h3><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:12px">${BANK.map((_, k) => { const a = e.ans[k] !== undefined; return `<span data-ex-go="${k}" style="position:relative;height:34px;border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:700;cursor:pointer;${k === i ? 'outline:2px solid var(--gold);' : ''}background:${a ? 'var(--navy)' : '#EEF1F5'};color:${a ? '#fff' : 'var(--muted)'}">${k + 1}${e.mark[k] ? '<span style="position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--gold)"></span>' : ''}</span>`; }).join('')}</div>
+         <div class="col xs muted" style="gap:4px;margin-top:12px"><div>Đã trả lời: ${answered}</div><div>Chưa trả lời: ${BANK.length - answered}</div><div>Đánh dấu xem lại: ${Object.values(e.mark).filter(Boolean).length}</div></div></div>
+        <div class="card" style="padding:18px"><h3>Phần thi</h3>${PARTS.map((t, k) => `<div class="row sm" style="margin-top:10px;gap:8px">${esc(t)}<span class="sp muted">${BANK.filter((b) => b[0] === k).length} câu</span></div>`).join('')}</div>
+        <span class="btn pri" data-ex="submit" style="justify-content:center">Nộp bài</span>
+        <div class="xs muted" id="ex-note">${BANK.length - answered ? `Còn ${BANK.length - answered} câu chưa trả lời` : 'Đã trả lời hết, có thể nộp bài'}</div>
+       </div></div>`;
+    clearInterval(exTimer);
+    const tick = () => { const el = $('#ex-time'); if (!el) { clearInterval(exTimer); return; } const left = Math.max(0, MINUTES * 60 - Math.floor((Date.now() - e.start) / 1000)); el.textContent = String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0'); el.style.color = left < 300 ? 'var(--bad)' : ''; if (!left) { clearInterval(exTimer); exSubmit(true); } };
+    tick(); exTimer = setInterval(tick, 1000);
+  };
+  function exSubmit(auto) {
+    const e = EX(); e.result = exGrade(e); e.done = true;
+    S.exHist = (S.exHist || []).concat([{ who: S.role, ok: e.result.ok, n: e.result.n, at: e.result.at }]).slice(-20);
+    save(); clearInterval(exTimer);
+    if (SERVER) api('/api/state', { method: 'POST', body: JSON.stringify({ type: 'log', key: 'exams', item: { who: S.role, name: me().n, ok: e.result.ok, n: e.result.n, pass: e.result.pass, at: e.result.at }, note: 'Nộp bài thi Sales: ' + e.result.ok + '/' + e.result.n + (e.result.pass ? ' · Đạt' : ' · Chưa đạt') }) }).catch(() => {});
+    if (auto) toast('Hết giờ, đã tự nộp bài');
+    go('ket-qua-thi');
+  }
+  CLICK['bai-thi'] = (t) => {
+    const e = EX();
+    const o = t.closest('[data-ex-opt]'); if (o) { e.ans[e.cur] = +o.dataset.exOpt; save(); render(); return; }
+    const g = t.closest('[data-ex-go]'); if (g) { e.cur = +g.dataset.exGo; save(); render(); return; }
+    const b = t.closest('[data-ex]'); if (!b) return false;
+    const a = b.dataset.ex;
+    if (a === 'prev' && e.cur > 0) { e.cur--; save(); render(); }
+    else if (a === 'next' && e.cur < BANK.length - 1) { e.cur++; save(); render(); }
+    else if (a === 'mark') { e.mark[e.cur] = !e.mark[e.cur]; save(); render(); }
+    else if (a === 'submit') { const left = BANK.length - Object.keys(e.ans).length; if (left && b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = `Còn ${left} câu trống · bấm lần nữa để nộp`; b.style.background = 'var(--bad)'; return; } exSubmit(false); }
+    return true;
+  };
+  APPLY['ket-qua-thi'] = () => {
+    const c = $('.content'); if (!c) return;
+    const e = S[exKey()]; const r = e && e.result;
+    if (!r) { c.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div class="h1">Chưa có kết quả</div><div class="sub1" style="margin-top:6px">Bạn chưa nộp bài thi nào trên máy này.</div><span class="btn pri" data-go="bai-thi" style="margin-top:18px">Làm bài thi</span></div>`; return; }
+    const pct = Math.round(r.ok / r.n * 100);
+    c.innerHTML = `<div class="card row" style="gap:24px;align-items:center;padding:24px;border-color:${r.pass ? '#9FD3B6' : '#F0C3BC'}"><div style="width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--${r.pass ? 'ok' : 'bad'}) 0 ${pct}%,#EEF1F5 0)"><div style="width:86px;height:86px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center"><div><b style="font-size:24px">${r.ok}/${r.n}</b><div class="xs muted">${pct}%</div></div></div></div>
+      <div style="flex:1"><span class="chip ${r.pass ? 'ok' : 'bad'}" style="font-size:14px;padding:4px 14px">${r.pass ? 'ĐẠT' : 'CHƯA ĐẠT'}</span><div style="font-size:20px;font-weight:700;margin-top:8px">Bài thi Sales · Sản phẩm, chính sách và kịch bản</div><div class="sm muted">Đạt khi đúng từ 80% (${PASS}/${r.n}) · nộp lúc ${fmtAt(r.at)}${r.pass ? ' · sẵn sàng nhận khách theo kịch bản' : ' · xem lại câu sai rồi thi lại'}</div></div>
+      <span class="btn pri" data-go="bai-thi">Làm lại bài thi</span><span class="btn" data-go="chon-tinh-huong">Luyện đóng vai</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px">${r.parts.map((x, k) => { const pp = Math.round(x.ok / x.n * 100); const cl = pp >= 80 ? 'ok' : pp >= 60 ? 'warn' : 'bad'; return `<div class="card" style="padding:18px"><b class="sm">${esc(PARTS[k])}</b><div class="row" style="margin-top:10px;align-items:center"><b style="font-size:22px">${x.ok}/${x.n}</b><span class="sp chip ${cl}">${pp}%</span></div><div class="bar" style="margin-top:10px"><i style="width:${pp}%;background:var(--${cl === 'warn' ? 'gold' : cl})"></i></div></div>`; }).join('')}</div>
+      <div class="card" style="padding:20px;margin-top:18px"><h3>${r.wrong.length ? `Câu sai cần xem lại (${r.wrong.length})` : 'Đúng tất cả các câu'}</h3>${r.wrong.map((w) => `<div class="row" style="gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)"><span class="chip bad" style="flex:none">Câu ${w.i + 1}</span><div><b class="sm">${esc(w.q)}</b><div class="xs" style="margin-top:4px;color:var(--bad)">Bạn chọn: ${esc(w.picked)}</div><div class="xs" style="margin-top:2px;color:var(--ok);font-weight:600">Đáp án đúng: ${esc(w.right)}</div><div class="xs muted" style="margin-top:4px">${esc(w.why)}</div></div></div>`).join('')}</div>`;
+  };
+  CLICK['ket-qua-thi'] = () => false;
+
+  /* ===== Luyện đóng vai: chỉ mở tình huống đã có kịch bản ===== */
+  APPLY['chon-tinh-huong'] = () => {
+    const sub = $('.sub1'); if (sub) sub.textContent = 'Luyện trả lời khách theo kịch bản và Playbook trước khi nhận khách thật. Tình huống đầu tiên đã có kịch bản; các tình huống khác sẽ mở khi nối AI đóng vai.';
+    $$('.content .card').forEach((card) => {
+      const title = T($('b', card)); const ready = /bàn chặt/i.test(title);
+      const chip = $$('.chip', card).slice(-1)[0]; const btn2 = $('.btn', card);
+      if (ready) { const rp = S.rp; const st = rp && rp.ended ? (rp.discount || !(rp.cheap || rp.held) ? ['bad', 'Chưa đạt'] : ['ok', 'Đạt']) : rp && rp.log && rp.log.length ? ['warn', 'Đang luyện'] : ['gray', 'Chưa luyện']; setChip(chip, st[0], st[1]); card.style.borderColor = 'var(--navy)'; }
+      else { card.removeAttribute('data-go'); card.dataset.soon = '1'; card.style.opacity = '.6'; setChip(chip, 'gray', 'Chưa có kịch bản'); if (btn2) btn2.textContent = 'Sắp có'; }
+    });
+  };
+  CLICK['chon-tinh-huong'] = (t) => { if (t.closest('[data-soon]')) { toast('Tình huống này sẽ mở khi nối AI đóng vai thật'); return true; } return false; };
 
   /* ===== Đăng nhập thật, đổi mật khẩu, đặt lại mật khẩu ===== */
   const ov = document.createElement('div'); ov.id = 'acct'; ov.hidden = true; document.body.append(ov);

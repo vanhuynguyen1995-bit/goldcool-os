@@ -84,14 +84,15 @@ fs.writeFileSync(path.join(OUT, 'js/screens.js'), '// Tự sinh từ 18 màn hì
 const extra = fs.readFileSync(path.join(__dirname, 'app_extra.css'), 'utf8');
 fs.writeFileSync(path.join(OUT, 'css/app.css'), CSS + '\n' + extra);
 fs.copyFileSync(path.join(__dirname, 'app.js'), path.join(OUT, 'js/app.js'));
+fs.copyFileSync(path.join(__dirname, 'exam_bank.js'), path.join(OUT, 'js/exam_bank.js'));
 fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GoldCool OS · AI Sales</title><meta name="description" content="GoldCool OS – AI Sales: hộp thư, khách của tôi, phòng thử AI, báo cáo">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C9A227'/%3E%3Cpath d='M16 6v20M7.3 11l17.4 10M7.3 21l17.4-10' stroke='%230F3D63' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/app.css"></head><body><div id="root"></div><div id="toast"></div>
-<script src="js/screens.js"></script><script src="js/app.js"></script></body></html>`);
+<script src="js/screens.js"></script><script src="js/exam_bank.js"></script><script src="js/app.js"></script></body></html>`);
 const FONT = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">';
 fs.writeFileSync(path.join(OUT, 'index.html'), fs.readFileSync(path.join(OUT, 'index.html'), 'utf8').replace('<link rel="stylesheet" href="css/app.css">', FONT + '<link rel="stylesheet" href="css/app.css">'));
 // Bản để đăng thành trang có link (không có thẻ doctype/head)
-fs.writeFileSync(path.join(OUT, 'app.html'), `<title>GoldCool OS</title>\n${FONT}<link rel="stylesheet" href="css/app.css">\n<div id="root"></div><div id="toast"></div>\n<script src="js/screens.js"></script><script src="js/app.js"></script>\n`);
+fs.writeFileSync(path.join(OUT, 'app.html'), `<title>GoldCool OS</title>\n${FONT}<link rel="stylesheet" href="css/app.css">\n<div id="root"></div><div id="toast"></div>\n<script src="js/screens.js"></script><script src="js/exam_bank.js"></script><script src="js/app.js"></script>\n`);
 fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({ cleanUrls: true, headers: [{ source: '/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }] }] }, null, 2));
 console.log('OK', OUT, Object.keys(screens).length, 'màn');

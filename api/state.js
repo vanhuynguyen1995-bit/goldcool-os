@@ -1,8 +1,8 @@
 // Dữ liệu dùng chung cả công ty: bản chụp theo từng mục + danh sách cộng dồn + nhật ký thay đổi
 const L = require('./_lib.js');
 const SNAP = ['inbox', 'trang', 'prices', 'banned', 'decision', 'aiProduct'];
-const LOGS = ['kudos', 'comments', 'newIssues', 'reports'];
-const AREA = { inbox: 'Hộp thư', trang: 'Khách Phạm Thu Trang', prices: 'Bảng giá bán lẻ', banned: 'Cài đặt AI Sales', decision: 'Thẻ vấn đề VD-1107', aiProduct: 'Sản phẩm', kudos: 'Ghi nhận', comments: 'Thẻ vấn đề VD-1107', newIssues: 'Thẻ vấn đề', reports: 'Báo cáo tuần' };
+const LOGS = ['kudos', 'comments', 'newIssues', 'reports', 'exams'];
+const AREA = { inbox: 'Hộp thư', trang: 'Khách Phạm Thu Trang', prices: 'Bảng giá bán lẻ', banned: 'Cài đặt AI Sales', decision: 'Thẻ vấn đề VD-1107', aiProduct: 'Sản phẩm', kudos: 'Ghi nhận', comments: 'Thẻ vấn đề VD-1107', newIssues: 'Thẻ vấn đề', reports: 'Báo cáo tuần', exams: 'Bài thi Sales' };
 module.exports = async (req, res) => {
   try {
     const me = L.session(req); if (!me) return L.send(res, 401, { error: 'Chưa đăng nhập' });
