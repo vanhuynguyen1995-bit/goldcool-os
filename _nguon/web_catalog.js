@@ -13,12 +13,12 @@ module.exports = [
     ],
     cards: [
       ['Tủ đông inox 4 cánh', 'td4c-gc', 'Ngang 1,2 m · lạnh trực tiếp hoặc quạt gió', ['GC4C-1068L · trực tiếp', 'GC4C-1088L · quạt gió']],
-      ['Tủ đông inox 6 cánh', 'td6c-gc', 'Ngang 1,8 m cho bếp lớn · lạnh trực tiếp hoặc quạt gió', ['6 cánh · trực tiếp', 'GC6C-1800L · quạt gió']],
+      ['Tủ đông inox 6 cánh', 'td6c-gc', 'Ngang 1,8 m cho bếp lớn · lạnh trực tiếp hoặc quạt gió', ['GCTD-1800L · trực tiếp', 'GC6C-1800L · quạt gió']],
     ],
     models: [
       ['GC4C-1068L', 'Tủ đông inox 4 cánh', 'Lạnh trực tiếp, 2 ngăn riêng', '1068 / 750', '1200×700×1960', '10 đến −22', '430W', 'Nhà hàng cần tủ gọn 1,2 m'],
       ['GC4C-1088L', 'Tủ đông inox 4 cánh', 'Quạt gió, 1 ngăn', '1088 / 750', '1200×760×1960', '10 đến −22', '720W', 'Bếp mở cửa nhiều, hạn chế đóng tuyết'],
-      ['—', 'Tủ đông inox 6 cánh', 'Lạnh trực tiếp', 'Tư vấn viên xác nhận', 'Ngang 1800', '—', '—', 'Bếp lớn, đầu tư hợp lý'],
+      ['GCTD-1800L', 'Tủ đông inox 6 cánh', 'Lạnh trực tiếp, 2 ngăn riêng', '1800 / 1500', '1800×700×1950', '10 đến −20', '660W', 'Bếp lớn, đầu tư hợp lý'],
       ['GC6C-1800L', 'Tủ đông inox 6 cánh', 'Quạt gió, 1 ngăn', '1800 / 1500', '1800×760×1960', '10 đến −22', '900W', 'Bếp công suất cao'],
       ['HP-500A', 'Tủ đông nằm', 'Cửa trên', '– / 400', '1460×700×850', '10 đến −23', '335W', 'Bếp nhỏ, quán mới mở'],
       ['HP-768L', 'Tủ đông nằm', 'Cửa trên', '– / 500', '1760×700×855', '10 đến −23', '900W', 'Bếp vừa, bếp ăn công nghiệp'],
