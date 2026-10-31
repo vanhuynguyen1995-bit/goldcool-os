@@ -12,7 +12,7 @@
   const IMGS = ['td4c-gc', 'td6c-gc', 'tm2c-gc', 'tm3c-gc-02', 'tm3c-gc-03', 'tm2c-gc-03', 'bc-gc', 'salad-gc', 'tdtb-gc-kinhcong', 'tdtb-gc-kinhphang', 'gw-gc', 'td4c-mr'];
   const imgUrl = (c) => !c ? '' : /^https?:/.test(c) ? c : /^img\//.test(c) ? '../' + c : '/api/file?p=' + encodeURIComponent(c);
   const md = (s) => (window.GC_MD ? window.GC_MD(s) : esc(s)).replace(/src="img\//g, 'src="../img/');
-  let ME = null, VIEW = 'leads', LEADS = [], FILTER = '', Q = '', POSTS = [];
+  let ME = null, VIEW = 'leads', LEADS = [], FILTER = '', Q = '', POSTS = []; let PRODS = [], CATS = { inox: [], combo: [] }, PG = 'inox';
 
   /* ===== Đăng nhập ===== */
   async function loginView() {
@@ -54,7 +54,7 @@
 
   /* ===== Khung chính ===== */
   async function shell() {
-    const nav = [['leads', 'Khách để lại thông tin'], ...(ME.role !== 'sales' ? [['posts', 'Bài viết']] : []), ...(ME.role === 'admin' ? [['users', 'Tài khoản']] : [])];
+    const nav = [['leads', 'Khách để lại thông tin'], ...(ME.role !== 'sales' ? [['posts', 'Bài viết'], ['products', 'Đồ inox & combo']] : []), ...(ME.role === 'admin' ? [['users', 'Tài khoản']] : [])];
     app.innerHTML = `<div class="shell"><aside class="side"><div class="logo"><span><span class="g">Gold</span><span class="c">Cool</span><small>Quản trị website</small></span></div>
      ${nav.map(([k, t]) => `<button data-v="${k}" class="${VIEW === k ? 'on' : ''}">${t}${k === 'leads' ? '<span class="cnt" id="newcnt" hidden></span>' : ''}</button>`).join('')}
      <button data-open="1">Xem website ↗</button><button data-pw="1">Đổi mật khẩu</button><button data-out="1">Đăng xuất</button>
@@ -65,7 +65,7 @@
     $('[data-out]').onclick = async () => { await api('/api/auth?a=logout', { method: 'POST' }); ME = null; loginView(); };
     await draw();
   }
-  async function draw() { if (VIEW === 'leads') return leadsView(); if (VIEW === 'posts') return postsView(); if (VIEW === 'users') return usersView(); }
+  async function draw() { if (VIEW === 'leads') return leadsView(); if (VIEW === 'posts') return postsView(); if (VIEW === 'users') return usersView(); if (VIEW === 'products') return productsView(); }
 
   /* ===== Khách để lại thông tin ===== */
   async function leadsView() {
@@ -168,6 +168,61 @@
     if ($('#dl')) $('#dl').onclick = async () => { const b = $('#dl'); if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Bấm lần nữa để xóa'; return; } const r = await api('/api/posts?id=' + encodeURIComponent(p.id), { method: 'DELETE' }); if (r.ok) { toast('Đã xóa bài', 'ok'); postsView(); } else toast(r.j.error || 'Chưa xóa được', 'bad'); };
   }
 
+
+  /* ===== Đồ bếp inox & combo ===== */
+  const PRICE_RE = /\d{1,3}([.,]\d{3}){1,3}\s*(đ|đồng|vnđ|vnd|₫)|\d+([.,]\d+)?\s*(triệu|tr)\b|giá\s*(chỉ|từ|:)/i;
+  async function productsView() {
+    const m = $('#main'); m.innerHTML = '<div class="muted">Đang tải…</div>';
+    const r = await api('/api/products?all=1'); PRODS = r.j.products || []; CATS = r.j.cats || CATS;
+    const list = PRODS.filter((p) => p.group === PG);
+    m.innerHTML = `<div class="top"><div><h1>Đồ bếp inox &amp; combo</h1><p>Hiện trên trang “Đồ bếp inox” và “Combo bếp”. Website không hiện giá bán.</p></div><div class="r"><button class="btn g sm" id="nw">+ Thêm ${PG === 'combo' ? 'combo' : 'sản phẩm inox'}</button></div></div>
+     <div class="cats" style="margin:0 0 16px">${[['inox', 'Đồ bếp inox'], ['combo', 'Combo thiết bị bếp']].map(([k, t]) => `<button data-g="${k}" class="${PG === k ? 'on' : ''}">${t} (${PRODS.filter((p) => p.group === k).length})</button>`).join('')}</div>
+     <div class="card"><div class="tw"><table><thead><tr><th></th><th>Tên</th><th>Nhóm</th><th>Trạng thái</th><th>Cập nhật</th><th></th></tr></thead><tbody>
+     ${list.map((p) => `<tr><td style="width:72px">${p.image ? `<img src="${esc(imgUrl(p.image))}" style="width:60px;height:44px;object-fit:cover;border-radius:8px">` : '<div style="width:60px;height:44px;border-radius:8px;background:var(--ice)"></div>'}</td><td><b>${esc(p.name)}</b><div class="xs muted">${esc((p.items || []).length ? (p.items.length + ' dòng thông tin') : (p.summary || '').slice(0, 60))}</div></td><td class="xs">${esc(p.category)}</td><td><span class="pill ${p.status === 'published' ? 'st-win' : 'st-lost'}">${p.status === 'published' ? 'Đang hiện' : 'Ẩn'}</span></td><td class="xs muted">${dt(p.at)}<div>${esc(p.updatedBy || '')}</div></td><td style="white-space:nowrap"><button class="btn l sm" data-e="${p.id}">Sửa</button> ${p.status === 'published' ? `<a class="btn l sm" target="_blank" href="../san-pham.html?s=${encodeURIComponent(p.slug)}">Xem</a>` : ''}</td></tr>`).join('') || `<tr><td colspan="6" class="muted" style="text-align:center;padding:40px">${PG === 'inox' ? 'Chưa có sản phẩm inox. Bấm “+ Thêm sản phẩm inox” để đăng tên, ảnh thật và thông tin. Trang Đồ bếp inox vẫn hiện 8 nhóm sản phẩm.' : 'Chưa có combo.'}</td></tr>`}
+     </tbody></table></div></div>`;
+    $$('[data-g]').forEach((b) => b.onclick = () => { PG = b.dataset.g; productsView(); });
+    $('#nw').onclick = () => productEditor(null);
+    $$('[data-e]').forEach((b) => b.onclick = () => productEditor(PRODS.find((p) => p.id === b.dataset.e)));
+  }
+  function productEditor(p) {
+    p = p || { group: PG, category: (CATS[PG] || [])[0] || '', name: '', image: '', summary: '', items: [], order: 50, status: 'published' };
+    const combo = p.group === 'combo';
+    const m = $('#main');
+    m.innerHTML = `<div class="top"><div><button class="btn l sm" id="bk">← Danh sách</button><h1 style="margin-top:12px">${p.id ? 'Sửa' : 'Thêm'} ${combo ? 'combo' : 'sản phẩm inox'}</h1></div><div class="r">${p.id ? '<button class="btn l sm" id="dl" style="color:var(--bad)">Xóa</button>' : ''}<button class="btn l sm" id="sd">Lưu, chưa hiện</button><button class="btn g sm" id="pb">Lưu và hiện trên website</button></div></div>
+     <div class="ed"><div class="card" style="padding:20px">
+      <label class="lbl" style="margin-top:0">Tên ${combo ? 'combo' : 'sản phẩm'} *</label><input class="inp" id="nm" value="${esc(p.name)}" maxlength="120" placeholder="${combo ? 'Ví dụ: Combo bếp quán lẩu, nướng' : 'Ví dụ: Bàn inox 2 tầng'}">
+      <div style="display:grid;grid-template-columns:1fr 120px;gap:12px"><div><label class="lbl">Nhóm</label><select class="inp" id="ca">${(CATS[p.group] || []).map((c) => `<option${c === p.category ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div><div><label class="lbl">Thứ tự</label><input class="inp" id="od" type="number" min="0" max="999" value="${esc(p.order)}"></div></div>
+      <label class="lbl">Mô tả ngắn</label><textarea class="inp" id="sm" rows="2" maxlength="400" placeholder="Dùng cho khu nào, hợp với quán nào">${esc(p.summary)}</textarea>
+      <label class="lbl">${combo ? 'Combo gồm (mỗi dòng một thiết bị)' : 'Thông tin sản phẩm (mỗi dòng một ý: kích thước, chất liệu…)'}</label><textarea class="inp" id="it" rows="7" maxlength="4000">${esc((p.items || []).join('\n'))}</textarea>
+      <label class="lbl">Ảnh</label><div class="covers" id="cv">${IMGS.map((i) => `<button data-c="img/${i}.jpg" class="${p.image === 'img/' + i + '.jpg' ? 'on' : ''}"><img src="../img/${i}.jpg" alt=""></button>`).join('')}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><label class="btn l sm" style="cursor:pointer">Tải ảnh thật lên<input type="file" id="up" accept="image/*" hidden></label><button class="btn l sm" id="noimg">Bỏ ảnh</button><span class="xs muted" id="cvn">${/^uploads\//.test(p.image) ? 'Đang dùng ảnh đã tải lên' : ''}</span></div>
+      <p class="xs muted" style="margin-top:12px">Chỉ ghi thông số đã xác nhận. Không ghi giá bán, không viết “tiết kiệm điện 50%”. Khách bấm “Nhận báo giá” để để lại thông tin.</p>
+     </div><div><div class="xs muted" style="font-weight:700;margin-bottom:8px">XEM TRƯỚC</div><div class="pv" id="pv"></div></div></div>`;
+    let image = p.image;
+    const pv = () => { $('#pv').innerHTML = `${image ? `<img src="${esc(imgUrl(image))}" style="width:100%;aspect-ratio:4/3;object-fit:contain;background:var(--ice);border-radius:12px">` : '<div style="aspect-ratio:4/3;background:var(--ice);border-radius:12px;display:grid;place-items:center;color:var(--muted)">Chưa có ảnh</div>'}<div class="eyebrow" style="margin-top:16px">${esc($('#ca').value)}</div><h2 style="font-size:24px;margin-top:6px">${esc($('#nm').value || 'Tên sản phẩm')}</h2><p class="muted" style="margin-top:6px">${esc($('#sm').value)}</p><ul class="chk" style="margin-top:12px">${$('#it').value.split('\n').filter((x) => x.trim()).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`; };
+    ['nm', 'ca', 'sm', 'it'].forEach((id) => $('#' + id).addEventListener('input', pv)); pv();
+    $$('#cv button').forEach((b) => b.onclick = () => { image = b.dataset.c; $$('#cv button').forEach((x) => x.classList.toggle('on', x === b)); $('#cvn').textContent = ''; pv(); });
+    $('#noimg').onclick = () => { image = ''; $$('#cv button').forEach((x) => x.classList.remove('on')); $('#cvn').textContent = ''; pv(); };
+    $('#up').onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(f); });
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      toast('Đang tải ảnh…');
+      const r = await api('/api/upload', { method: 'POST', body: JSON.stringify({ data: c.toDataURL('image/jpeg', 0.85) }) });
+      if (!r.ok) { toast(r.j.error || 'Chưa tải được ảnh', 'bad'); return; }
+      image = r.j.path; $$('#cv button').forEach((x) => x.classList.remove('on')); $('#cvn').textContent = 'Đang dùng ảnh đã tải lên'; toast('Đã tải ảnh', 'ok'); pv();
+    };
+    const save = async (status) => {
+      const body = { id: p.id, group: p.group, name: $('#nm').value, category: $('#ca').value, order: $('#od').value, summary: $('#sm').value, items: $('#it').value, image, status, slug: p.slug };
+      if (PRICE_RE.test(body.name + ' ' + body.summary + ' ' + body.items)) { toast('Website không hiện giá bán. Hãy bỏ con số giá.', 'bad'); return; }
+      if (/tiết kiệm (điện )?50 ?%/i.test(body.name + body.summary + body.items)) { toast('DNA không cho phép viết “tiết kiệm điện 50%”', 'bad'); return; }
+      const r = await api('/api/products', { method: 'POST', body: JSON.stringify(body) });
+      if (!r.ok) { toast(r.j.error || 'Chưa lưu được', 'bad'); return; }
+      toast(status === 'published' ? 'Đã lưu, đang hiện trên website' : 'Đã lưu (chưa hiện)', 'ok'); PG = p.group; productsView();
+    };
+    $('#sd').onclick = () => save('draft'); $('#pb').onclick = () => save('published'); $('#bk').onclick = productsView;
+    if ($('#dl')) $('#dl').onclick = async () => { const b = $('#dl'); if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Bấm lần nữa để xóa'; return; } const r = await api('/api/products?id=' + encodeURIComponent(p.id), { method: 'DELETE' }); if (r.ok) { toast('Đã xóa', 'ok'); productsView(); } else toast(r.j.error || 'Chưa xóa được', 'bad'); };
+  }
   /* ===== Tài khoản (Quản trị) ===== */
   async function usersView() {
     const r = await api('/api/auth?a=accounts'); const accs = r.j.accounts || [];

@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
     if (req.method === 'POST' && !(req.query && req.query.id)) {
       const b = await L.body(req);
       if (b.website) return L.send(res, 200, { ok: true }); // bẫy chống spam
-      const lead = { name: clean(b.name, 80), phone: clean(b.phone, 20).replace(/[^\d+ ]/g, ''), model: clean(b.model, 60), city: clean(b.city, 40), products: (Array.isArray(b.products) ? b.products : []).slice(0, 6).map((x) => clean(x, 40)), size: clean(b.size, 30), when: clean(b.when, 30), note: clean(b.note, 1000), page: clean(b.page, 100), ref: clean(b.ref, 200) };
+      const lead = { name: clean(b.name, 80), phone: clean(b.phone, 20).replace(/[^\d+ ]/g, ''), model: clean(b.model, 60), city: clean(b.city, 40), products: (Array.isArray(b.products) ? b.products : []).slice(0, 10).map((x) => clean(x, 40)), size: clean(b.size, 30), when: clean(b.when, 30), note: clean(b.note, 1000), page: clean(b.page, 100), ref: clean(b.ref, 200) };
       const digits = lead.phone.replace(/\D/g, '');
       if (lead.name.length < 2) return L.send(res, 400, { error: 'Thiếu họ tên' });
       if (digits.length < 9 || digits.length > 12) return L.send(res, 400, { error: 'Số điện thoại chưa đúng' });

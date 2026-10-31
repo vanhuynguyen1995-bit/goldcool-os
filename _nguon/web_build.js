@@ -22,7 +22,7 @@ const I = {
 };
 const ic = (n, s = 20, c = 'currentColor', w = 2) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
-const NAV = [['index.html#san-pham', 'Sản phẩm'], ['index.html#vi-sao', 'Vì sao GoldCool'], ['index.html#so-sanh', 'So sánh'], ['index.html#quy-trinh', 'Quy trình'], ['tin-tuc.html', 'Tin tức'], ['index.html#tu-van', 'Liên hệ']];
+const NAV = [['index.html#san-pham', 'Thiết bị lạnh'], ['do-bep-inox.html', 'Đồ bếp inox'], ['combo-bep.html', 'Combo bếp'], ['index.html#vi-sao', 'Vì sao GoldCool'], ['tin-tuc.html', 'Tin tức'], ['index.html#tu-van', 'Liên hệ']];
 const logo = `<a class="logo" href="index.html" aria-label="GoldCool – Trang chủ"><span class="mk">${ic('snow', 24, '#0F3D63', 2.2)}</span><span><span class="g">Gold</span><span class="c">Cool</span></span></a>`;
 const header = (on, solid) => `<header class="hdr${solid ? ' solid' : ''}">
  ${logo}
@@ -33,7 +33,7 @@ const header = (on, solid) => `<header class="hdr${solid ? ' solid' : ''}">
 const footer = `<footer class="ft"><div class="wrap in">
  <div class="ftg">
   <div>${logo.replace('class="logo"', 'class="logo" style="color:#fff"')}<p style="margin-top:18px;font-size:14.5px;line-height:1.6;max-width:320px">Chọn đúng – Dùng lâu. Lạnh sâu – Bền lâu – Tiết kiệm điện. Thiết bị lạnh và thiết bị bếp cho cơ sở F&amp;B.</p></div>
-  <div><h4>Sản phẩm</h4><ul><li><a href="index.html#san-pham">Tủ đông 4 &amp; 6 cánh</a></li><li><a href="index.html#san-pham">Tủ mát 2 &amp; 3 cánh</a></li><li><a href="index.html#san-pham">Tủ bàn chặt &amp; salad</a></li><li><a href="index.html#san-pham">Tủ đông trưng bày</a></li><li><a href="index.html#san-pham">GoldWash</a></li></ul></div>
+  <div><h4>Sản phẩm</h4><ul><li><a href="index.html#san-pham">Tủ đông 4 &amp; 6 cánh</a></li><li><a href="index.html#san-pham">Tủ mát 2 &amp; 3 cánh</a></li><li><a href="index.html#san-pham">Tủ bàn chặt &amp; salad</a></li><li><a href="index.html#san-pham">Tủ đông trưng bày</a></li><li><a href="index.html#san-pham">GoldWash</a></li><li><a href="do-bep-inox.html">Đồ bếp inox</a></li><li><a href="combo-bep.html">Combo thiết bị bếp</a></li></ul></div>
   <div><h4>Hỗ trợ</h4><ul><li><a href="index.html#so-sanh">Bảo hành 24 tháng</a></li><li><a href="index.html#so-sanh">Đổi mới 30 ngày</a></li><li><a href="index.html#quy-trinh">Giao hàng &amp; lắp đặt</a></li><li><a href="tin-tuc.html">Tin tức &amp; kiến thức</a></li></ul></div>
   <div><h4>Liên hệ</h4><ul><li><a href="tel:0865868868">Hotline / Zalo: 0865 868 868</a></li><li>Kho CN05 KCN Nguyên Khê, Phúc Thịnh, Hà Nội</li><li>goldcool.vn</li></ul></div>
  </div>
@@ -49,7 +49,7 @@ const head = (title, desc, extra = '') => `<!doctype html><html lang="vi"><head>
 <link rel="stylesheet" href="site.css">${extra}</head><body>`;
 const tail = `<script src="site.js"></script></body></html>`;
 
-const pick = ['Tủ đông 4 & 6 cánh', 'Tủ mát 2 & 3 cánh', 'Tủ bàn chặt', 'Tủ salad', 'Tủ đông trưng bày', 'GoldWash'];
+const pick = ['Tủ đông 4 & 6 cánh', 'Tủ mát 2 & 3 cánh', 'Tủ bàn chặt', 'Tủ salad', 'Tủ đông trưng bày', 'GoldWash', 'Đồ bếp inox', 'Combo thiết bị bếp'];
 const form = `<section class="sec form-sec" id="tu-van"><div class="wrap in">
  <div class="fg">
   <div class="fl">
@@ -73,7 +73,7 @@ const form = `<section class="sec form-sec" id="tu-van"><div class="wrap in">
      <div class="f"><label for="f-model">Mô hình kinh doanh *</label><select id="f-model" name="model" required><option value="">Chọn mô hình</option>${['Quán lẩu, nướng', 'Nhà hàng', 'Quán cơm, phở, bún', 'Quán cà phê, trà sữa', 'Siêu thị mini, tạp hóa', 'Cửa hàng kem, đồ đông lạnh', 'Bếp ăn tập thể, khách sạn', 'Đại lý, cửa hàng điện máy', 'Khác'].map((o) => `<option>${o}</option>`).join('')}</select><div class="msg"></div></div>
      <div class="f"><label for="f-city">Tỉnh / thành phố *</label><input id="f-city" name="city" list="cities" placeholder="Ví dụ: Hà Nội" required maxlength="40"><datalist id="cities">${['Hà Nội', 'TP Hồ Chí Minh', 'Hải Phòng', 'Bắc Ninh', 'Bắc Giang', 'Hưng Yên', 'Hải Dương', 'Quảng Ninh', 'Thái Nguyên', 'Vĩnh Phúc', 'Phú Thọ', 'Nam Định', 'Thái Bình', 'Ninh Bình', 'Thanh Hóa', 'Nghệ An', 'Đà Nẵng'].map((c) => `<option value="${c}">`).join('')}</datalist><div class="msg"></div></div>
      <div class="f full"><span class="lab">Sản phẩm quan tâm *</span><div class="pick" id="f-products">${pick.map((p, i) => `<label><input type="checkbox" name="products" value="${p}"${i === 0 ? ' checked' : ''}>${p}</label>`).join('')}</div><div class="msg"></div></div>
-     <div class="f"><label for="f-size">Chỗ đặt tủ dài khoảng</label><input id="f-size" name="size" placeholder="Ví dụ: 1,3 m" maxlength="30"></div>
+     <div class="f"><label for="f-size">Mặt bằng / chỗ đặt</label><input id="f-size" name="size" placeholder="Ví dụ: bếp 3×4 m, chỗ đặt tủ 1,3 m" maxlength="30"></div>
      <div class="f"><span class="lab">Bạn cần thiết bị khi nào?</span><div class="seg">${['Trong tháng', '1–3 tháng', 'Đang tham khảo'].map((t, i) => `<label><input type="radio" name="when" value="${t}"${i === 0 ? ' checked' : ''}>${t}</label>`).join('')}</div></div>
      <div class="f full"><label for="f-note">Ghi chú thêm</label><textarea id="f-note" name="note" maxlength="1000" placeholder="Mặt hàng cần trữ, số lượng tủ, câu hỏi về lạnh trực tiếp hay quạt gió…"></textarea></div>
      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -85,6 +85,29 @@ const form = `<section class="sec form-sec" id="tu-van"><div class="wrap in">
  </div>
 </div></section>`;
 
+
+/* Hình minh họa nét cho các nhóm đồ inox (dùng khi chưa có ảnh thật) */
+const ART = {
+  'Bàn inox': '<path d="M18 40h124M22 40v54M138 40v54M22 70h116"/><path d="M18 40l6-8h112l6 8"/>',
+  'Chậu rửa inox': '<path d="M14 38h132v10H14zM20 48v46M140 48v46M20 76h120"/><path d="M34 48v14a6 6 0 0 0 6 6h28a6 6 0 0 0 6-6V48M86 48v14a6 6 0 0 0 6 6h28a6 6 0 0 0 6-6V48"/><path d="M80 38V20h12v6"/>',
+  'Kệ & giá inox': '<path d="M30 14v84M130 14v84M30 22h100M30 46h100M30 70h100M30 94h100"/><rect x="42" y="30" width="18" height="16" rx="2"/><rect x="66" y="34" width="26" height="12" rx="2"/><rect x="98" y="56" width="20" height="14" rx="2"/><rect x="44" y="80" width="30" height="14" rx="2"/>',
+  'Bếp công nghiệp': '<path d="M16 52h128v42H16z"/><circle cx="50" cy="44" r="14"/><circle cx="110" cy="44" r="14"/><path d="M36 30h28M96 30h28M30 72h12M74 72h12M118 72h12"/><path d="M50 22c-4-6 4-8 0-14M110 22c-4-6 4-8 0-14"/>',
+  'Tủ inox': '<rect x="34" y="12" width="92" height="86" rx="3"/><path d="M80 12v86M70 50v12M90 50v12M34 92h92"/>',
+  'Chụp hút khói': '<path d="M62 8h36v22H62z"/><path d="M62 30 22 64h116L98 30"/><path d="M22 64v8h116v-8M44 72v8M80 72v8M116 72v8"/><path d="M50 96c4-6-4-8 0-14M80 96c4-6-4-8 0-14M110 96c4-6-4-8 0-14"/>',
+  'Xe đẩy inox': '<path d="M26 26h108M26 54h108M26 82h108M30 26v62M130 26v62M20 26h12"/><circle cx="40" cy="96" r="6"/><circle cx="120" cy="96" r="6"/>',
+  'Dụng cụ & phụ kiện': '<path d="M26 92 66 52M60 46a14 14 0 1 0 20 20"/><path d="M98 16v44M90 16v18a8 8 0 0 0 16 0V16M98 60v34"/><path d="M124 18c10 6 10 30 0 36v40"/>',
+};
+const art = (k, big) => `<svg viewBox="0 0 160 110" width="100%" height="100%" fill="none" stroke="#0F3D63" stroke-width="${big ? 2.4 : 2.6}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g opacity=".9">${ART[k] || ART['Bàn inox']}</g></svg>`;
+const INOX = [
+  ['Bàn inox', 'Bàn sơ chế, bàn chia đồ, bàn có giá dưới cho khu bếp nóng và bếp lạnh.'],
+  ['Chậu rửa inox', 'Chậu 1, 2, 3 hố cho khu rửa rau, rửa thịt và rửa dụng cụ.'],
+  ['Kệ & giá inox', 'Kệ nhiều tầng cho kho khô, giá treo xoong nồi, kệ trên tường.'],
+  ['Bếp công nghiệp', 'Bếp á, bếp hầm, bếp chiên cho quán ăn và nhà hàng.'],
+  ['Tủ inox', 'Tủ đựng bát đĩa, tủ dụng cụ, tủ chứa đồ trong bếp.'],
+  ['Chụp hút khói', 'Chụp hút trên khu bếp nấu, giữ bếp thông thoáng.'],
+  ['Xe đẩy inox', 'Xe đẩy thức ăn, xe thu dọn bát đĩa giữa bếp và phòng ăn.'],
+  ['Dụng cụ & phụ kiện', 'Dụng cụ nấu, khay, giỏ và phụ kiện inox cho bếp.'],
+];
 /* ===================== TRANG CHỦ ===================== */
 const index = head('GoldCool – Tủ đông, tủ mát, thiết bị bếp cho nhà hàng | Chọn đúng, Dùng lâu', 'Tủ đông, tủ mát, tủ bàn chặt, tủ trưng bày và máy rửa bát GoldWash cho nhà hàng, quán ăn. Dàn lạnh đồng, bảo hành 24 tháng, đổi mới 30 ngày đầu nếu lỗi kỹ thuật. Hotline 0865 868 868.') + `
 <section class="hero"><div class="wrap">
@@ -135,6 +158,14 @@ const index = head('GoldCool – Tủ đông, tủ mát, thiết bị bếp cho 
  <div class="fine">${ic('info', 18, '#5B6878')}Có thêm tủ salad. Để lại thông tin để nhận báo giá theo đúng phiên bản quán cần.</div>
 </div></section>
 
+<section class="sec kit" id="do-bep"><div class="wrap in">
+ <div class="shead"><div><div class="eyebrow">Đồ bếp inox &amp; combo</div><h2 class="h2 d">Không chỉ thiết bị lạnh –<br>đủ cho cả căn bếp</h2></div><a class="btn n r" href="#tu-van">Tư vấn setup bếp</a></div>
+ <p class="sub">Bàn, chậu, kệ, bếp công nghiệp, chụp hút và dụng cụ inox. Hoặc chọn combo theo mô hình quán, tư vấn viên điều chỉnh theo mặt bằng thực tế.</p>
+ <div class="kitg">
+  <a class="kc inox" href="do-bep-inox.html"><div class="arts">${INOX.slice(0, 6).map(([k]) => `<span>${art(k)}</span>`).join('')}</div><div class="bd"><div class="k">8 nhóm sản phẩm</div><h3>Đồ bếp inox</h3><p>Bàn, chậu rửa, kệ, bếp công nghiệp, tủ, chụp hút khói, xe đẩy và dụng cụ.</p><span class="more">Xem đồ bếp inox →</span></div></a>
+  <a class="kc combo" href="combo-bep.html"><div class="im"><img src="img/td4c-gc.jpg" alt="Bếp nhà hàng dùng thiết bị GoldCool" loading="lazy"></div><div class="bd"><div class="k">Theo mô hình quán</div><h3>Combo thiết bị bếp</h3><p>Quán lẩu – nướng, cơm – phở – bún, cà phê – trà sữa, nhà hàng và bếp ăn tập thể.</p><span class="more">Xem các combo →</span></div></a>
+ </div>
+</div></section>
 <section class="sec" id="so-sanh"><div class="wrap in cmp">
  <div><div class="eyebrow">Minh bạch khi so sánh</div><h2 class="h2 d">GoldCool hay mẫu rẻ?<br>Bạn được chọn.</h2><p class="sub">Chúng tôi bán cả hai và nói rõ khác biệt. Quán dùng lâu dài, mở tủ nhiều, chạy cả ngày thường chọn GoldCool. Quán cần đầu tư ban đầu thấp có thể chọn mẫu rẻ.</p>
   <div class="note">${ic('shieldc', 22, '#0F3D63')}<div><b>Niềm tin lâu dài hơn doanh số trước mắt.</b> Tư vấn viên sẽ nói thật ưu, nhược điểm của từng bản trước khi bạn quyết định.</div></div></div>
@@ -198,7 +229,45 @@ ${header('Tin tức', true)}
 </div></div></section>
 ${footer}${tail}`;
 
+
+/* ===================== ĐỒ BẾP INOX ===================== */
+const inoxPage = head('Đồ bếp inox cho nhà hàng, quán ăn – GoldCool', 'Bàn inox, chậu rửa, kệ, bếp công nghiệp, tủ inox, chụp hút khói, xe đẩy và dụng cụ inox cho bếp nhà hàng, quán ăn. Tư vấn theo mặt bằng. Hotline 0865 868 868.') + `
+${header('Đồ bếp inox', true)}
+<section class="pagehead"><div class="wrap in"><div class="eyebrow">Đồ bếp inox</div><h1 class="h2 d">Bếp gọn, sạch, dùng lâu</h1><p>Đồ inox cho khu sơ chế, nấu, rửa và kho của nhà hàng, quán ăn. Chọn theo mặt bằng và cách vận hành bếp, không theo bộ có sẵn.</p><div class="cta" style="margin-top:26px"><a class="btn g" href="#tu-van">Nhận tư vấn &amp; báo giá ${ic('arrow', 18, 'currentColor', 2.4)}</a><a class="btn o" href="https://zalo.me/0865868868" target="_blank" rel="noopener">Gửi ảnh mặt bằng qua Zalo</a></div></div></section>
+<section class="sec" style="padding-top:40px"><div class="wrap in">
+ <div class="cats" id="pcats"><button class="on" data-c="">Tất cả</button>${INOX.map(([k]) => `<button data-c="${k}">${k}</button>`).join('')}</div>
+ <div class="ig" data-products="inox">${INOX.map(([k, d]) => `<div class="icard" data-cat="${k}"><div class="ia">${art(k, 1)}</div><div class="bd"><h3>${k}</h3><p>${d}</p><div class="list" data-list="${k}"></div><a class="more" href="#tu-van" data-pre="Đồ bếp inox" data-n="${k}">Nhận tư vấn ${k.toLowerCase()} →</a></div></div>`).join('')}</div>
+ <div class="ibar"><div><b>Chưa thấy món cần?</b><span>Gửi ảnh bếp hoặc danh sách đồ cần mua qua Zalo 0865 868 868, tư vấn viên lên danh sách phù hợp cho quán.</span></div><a class="btn n" href="#tu-van">Để lại thông tin</a></div>
+</div></section>
+${form.replace('value="Tủ đông 4 & 6 cánh" checked', 'value="Tủ đông 4 & 6 cánh"')}
+${footer}${tail}`;
+
+/* ===================== COMBO BẾP ===================== */
+const comboPage = head('Combo thiết bị bếp theo mô hình quán – GoldCool', 'Combo thiết bị bếp cho quán lẩu nướng, quán cơm phở bún, cà phê trà sữa, nhà hàng và bếp ăn tập thể: tủ đông, tủ mát, bàn chặt, GoldWash và đồ inox. Hotline 0865 868 868.') + `
+${header('Combo bếp', true)}
+<section class="pagehead"><div class="wrap in"><div class="eyebrow">Combo thiết bị bếp</div><h1 class="h2 d">Setup cả căn bếp<br>theo đúng mô hình quán</h1><p>Mỗi combo là cấu hình gợi ý: thiết bị lạnh GoldCool kết hợp đồ bếp inox. Tư vấn viên điều chỉnh số lượng, kích thước theo mặt bằng và lượng khách của quán.</p></div></section>
+<section class="sec" style="padding-top:48px"><div class="wrap in">
+ <div class="cbg" data-products="combo"><div class="empty">Đang tải combo…</div></div>
+ <div class="steps3">${[['1', 'Kể về quán', 'Mô hình, món bán, lượng khách, diện tích bếp.'], ['2', 'Nhận cấu hình', 'Tư vấn viên đề xuất danh sách thiết bị và báo giá riêng.'], ['3', 'Giao &amp; lắp đặt', 'Kiểm tra hàng, hướng dẫn sử dụng, bảo hành theo chính sách.']].map(([n, t, d]) => `<div><span>${n}</span><b>${t}</b><p>${d}</p></div>`).join('')}</div>
+</div></section>
+${form.replace('value="Tủ đông 4 & 6 cánh" checked', 'value="Tủ đông 4 & 6 cánh"')}
+${footer}${tail}`;
+
+/* ===================== CHI TIẾT SẢN PHẨM ===================== */
+const productPage = head('Sản phẩm – GoldCool', 'Đồ bếp inox và combo thiết bị bếp GoldCool.') + `
+${header('', true)}
+<section class="pagehead" style="padding-bottom:56px"><div class="wrap in"><a id="p-back" href="do-bep-inox.html" style="color:#B6C8D9;font-size:14px;font-weight:600">← Quay lại</a><div class="eyebrow" id="p-cat" style="margin-top:20px"></div><h1 class="h2 d" id="p-name">Đang tải…</h1></div></section>
+<section class="sec" style="padding-top:48px"><div class="wrap in"><div class="pd">
+ <div class="pim" id="p-img"></div>
+ <div><p class="lead2" id="p-sum"></p><h3 id="p-ih" style="margin-top:22px;font-size:17px"></h3><ul class="chk" id="p-items"></ul>
+ <div class="cta-box" style="margin-top:28px"><div style="flex:1;min-width:220px"><b>Nhận báo giá cho quán</b><span>Website không niêm yết giá. Để lại thông tin, tư vấn viên gửi báo giá đúng cấu hình bạn cần.</span></div><a class="btn g" id="p-cta" href="#tu-van">Nhận tư vấn</a></div></div>
+</div></div></section>
+${form.replace('value="Tủ đông 4 & 6 cánh" checked', 'value="Tủ đông 4 & 6 cánh"')}
+${footer}${tail}`;
 fs.writeFileSync(path.join(OUT, 'index.html'), index);
+fs.writeFileSync(path.join(OUT, 'do-bep-inox.html'), inoxPage);
+fs.writeFileSync(path.join(OUT, 'combo-bep.html'), comboPage);
+fs.writeFileSync(path.join(OUT, 'san-pham.html'), productPage);
 fs.writeFileSync(path.join(OUT, 'tin-tuc.html'), news);
 fs.writeFileSync(path.join(OUT, 'bai-viet.html'), article);
-console.log('Đã sinh 3 trang website');
+console.log('Đã sinh 6 trang website');

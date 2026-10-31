@@ -75,3 +75,8 @@ Mã nguồn sinh 18 màn hình: `lib.js`, `batch1v2.js`, `batch2v2.js` (18 màn 
 - Trang: trang chủ, tin tức, bài viết; form “Nhận tư vấn” lưu vào kho, xem ở trang quản trị.
 - Quản trị: 9 tài khoản (Quản trị: anh Huy, chị Huyền · Biên tập: Lan, Nguyệt, Kiên, Đạt · Sales: Hà, Ánh, Yến). Mật khẩu ban đầu giống GoldCool OS, bắt buộc đổi lần đầu.
 - Sửa giao diện trang: sửa `_nguon/web_build.js` rồi chạy `node _nguon/web_build.js`.
+
+## Website: đồ bếp inox & combo (31/10/2026)
+- Trang mới: `do-bep-inox.html` (8 nhóm inox), `combo-bep.html` (4 combo gợi ý theo mô hình quán), `san-pham.html?s=...` (chi tiết).
+- Quản trị → “Đồ inox & combo”: thêm/sửa/ẩn sản phẩm, tải ảnh thật. API `api/products.js`, danh mục và combo mẫu ở `api/_catalog.js`.
+- Không hiện giá bán: chặn số tiền ở cả trang quản trị và API.
