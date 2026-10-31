@@ -31,9 +31,11 @@ const stamp = () => String(Date.now()).padStart(15, '0') + '-' + crypto.randomBy
 const hash = (pw, salt) => crypto.scryptSync(String(pw), salt, 32).toString('hex');
 async function getPw(k) { const b = latest(await list(`users/${k}/pw-`)); return b ? await read(b.url) : null; }
 async function setPw(k, pw, by, mustChange) { const salt = crypto.randomBytes(16).toString('hex'); await put(`users/${k}/pw-${stamp()}.json`, { salt, hash: hash(pw, salt), by, mustChange: !!mustChange, at: new Date().toISOString() }); const old = (await list(`users/${k}/pw-`)).sort((a, b) => a.pathname.localeCompare(b.pathname)).slice(0, -1); await del(old.map((b) => b.url)); }
+// GC_RESET="huy@2026-10-31T16:28:00Z,ha@…": đưa tài khoản về mật khẩu ban đầu nếu mật khẩu hiện tại đặt trước mốc đó (dùng một lần, tự hết hiệu lực khi người dùng đổi mật khẩu mới)
+const RESET = Object.fromEntries(String(process.env.GC_RESET || '').split(',').map((x) => x.trim().split('@')).filter((x) => x[0] && Date.parse(x[1])).map((x) => [x[0], Date.parse(x[1])]));
 async function checkPw(k, pw) {
   const rec = await getPw(k);
-  if (!rec || rec.reset) return { ok: pw === DEFAULT_PW, mustChange: true };
+  if (!rec || rec.reset || (RESET[k] && !(Date.parse(rec.at) > RESET[k]))) return { ok: pw === DEFAULT_PW, mustChange: true };
   const a = Buffer.from(rec.hash, 'hex'), b = Buffer.from(hash(pw, rec.salt), 'hex');
   return { ok: a.length === b.length && crypto.timingSafeEqual(a, b), mustChange: !!rec.mustChange };
 }
