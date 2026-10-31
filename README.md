@@ -48,7 +48,14 @@ Nếu máy đã có Node.js: mở Terminal trong thư mục này và chạy `npx
 - **Bài thi**: chọn đáp án, chấm câu.
 - **Đóng vai**: khách AI phản hồi theo câu trả lời. Không tự giảm giá thì buổi luyện đạt; tự giảm giá thì chưa đạt.
 
-Trạng thái lưu trong trình duyệt của từng người. Muốn làm lại từ đầu, mở menu **☰ 18 màn hình** và chọn **Đặt lại dữ liệu thử**.
+## Đăng nhập và dữ liệu dùng chung (bản trên Vercel)
+
+- 25 tài khoản theo sơ đồ tổ chức. Mật khẩu ban đầu do Giám đốc giữ; lần đầu đăng nhập bắt buộc đặt mật khẩu riêng (ít nhất 8 ký tự). Mật khẩu được mã hóa một chiều (scrypt).
+- Giám đốc và chị Huyền đặt lại mật khẩu ở màn **Nhân viên** (nút “Đặt lại MK”, bấm 2 lần để xác nhận).
+- Bấm tên ở góc dưới bên trái để **đổi mật khẩu** hoặc **đăng xuất**.
+- Dữ liệu dùng chung lưu trong kho Vercel Blob riêng tư `goldcool-os-data` (Singapore): tiếp nhận khách, cấp khách, duyệt giá, câu bị cấm, quyết định thẻ vấn đề, ghi nhận, trao đổi, thẻ vấn đề mới. Mọi thay đổi ghi vào **Nhật ký thay đổi** kèm tên người sửa.
+- API: `api/auth.js` (đăng nhập, đổi / đặt lại mật khẩu), `api/state.js` (dữ liệu dùng chung). Không cần cài thư viện.
+- Mở file trực tiếp (không có API) thì app chạy ở chế độ xem thử: mật khẩu bất kỳ, dữ liệu lưu trên trình duyệt.
 
 ## Chưa có trong bản này (bước tích hợp tiếp theo)
 

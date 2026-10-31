@@ -9,6 +9,7 @@
   const T = (el) => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const now = () => new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const fmtAt = (v) => { if (!v) return ''; if (/^\d{4}-\d{2}-\d{2}T/.test(v)) { const d = new Date(v); return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }); } return v; };
   const fmtDate = (v) => (v ? v.split('-').reverse().join('/') : '');
   const META = window.SCREEN_META;
 
@@ -17,7 +18,28 @@
   const DEFAULT_BANNED = ['còn hàng', 'giao ngay', 'giao trong ngày', 'giảm giá', 'tặng', 'combo', 'giá đại lý', 'rẻ nhất', 'tiết kiệm điện 50%'];
   let S = {};
   try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { S = {}; }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
+  let SERVER = false; // true khi chạy trên Vercel có API đăng nhập và dữ liệu dùng chung
+  const SNAPK = ['inbox', 'trang', 'prices', 'banned', 'decision', 'aiProduct'];
+  const LOGK = ['kudos', 'comments', 'newIssues'];
+  const NOTE = { inbox: 'Tiếp nhận / nhắn khách Phạm Thu Trang', trang: 'Cập nhật kết quả liên hệ, cấp khách', prices: 'Duyệt bảng giá bán lẻ', banned: 'Sửa danh sách câu bị cấm của AI', decision: 'Quyết định phương án bảo hành GoldWash', aiProduct: 'Bật / tắt AI báo giá tủ đông 4 cánh', kudos: 'Gửi ghi nhận đồng nghiệp', comments: 'Trao đổi trên thẻ VD-1107', newIssues: 'Tạo thẻ vấn đề mới' };
+  let synced = {};
+  const api = async (path, opt = {}) => { const r = await fetch(path, { credentials: 'same-origin', headers: { 'content-type': 'application/json' }, ...opt }); let j = {}; try { j = await r.json(); } catch (e) { j = {}; } return { ok: r.ok, status: r.status, j }; };
+  function pushChanges() {
+    if (!SERVER || !S.loggedIn) return;
+    SNAPK.forEach((k) => { const v = JSON.stringify(S[k] === undefined ? null : S[k]); if (synced[k] !== undefined && v !== synced[k]) { synced[k] = v; api('/api/state', { method: 'POST', body: JSON.stringify({ type: 'snap', key: k, value: S[k] === undefined ? null : S[k], note: NOTE[k] }) }).then((r) => { if (!r.ok) toast('Chưa lưu được lên máy chủ: ' + (r.j.error || r.status), 'bad'); }); } });
+    LOGK.forEach((k) => (S[k] || []).forEach((it) => { if (it._new) { delete it._new; const item = { ...it }; api('/api/state', { method: 'POST', body: JSON.stringify({ type: 'log', key: k, item, note: NOTE[k] }) }).then((r) => { if (!r.ok) toast('Chưa lưu được lên máy chủ: ' + (r.j.error || r.status), 'bad'); }); } }));
+  }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } pushChanges(); };
+  async function loadShared() {
+    const r = await api('/api/state'); if (!r.ok) return false;
+    const { snap, logs, audit } = r.j;
+    SNAPK.forEach((k) => { if (snap[k] !== undefined && snap[k] !== null) S[k] = snap[k]; else delete S[k]; synced[k] = JSON.stringify(S[k] === undefined ? null : S[k]); });
+    S.kudos = (logs.kudos || []).slice().reverse(); S.comments = logs.comments || []; S.newIssues = logs.newIssues || [];
+    S._audit = audit || [];
+    if (!S.inbox) S.inbox = { taken: false, msgs: [] }; if (!S.trang) S.trang = {};
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ }
+    return true;
+  }
   const banned = () => S.banned || DEFAULT_BANNED;
 
   let toastTimer;
@@ -106,7 +128,7 @@
     if (mn && t.closest('.phone')) { go(MOBILE_NAV[T(mn)] || 'trang-chu'); return; }
     if (t.closest('.bellw')) { go('thong-bao'); return; }
     if (t.closest('.top > .av')) { go('nhan-vien/ho-so'); return; }
-    if (t.closest('.me')) { S.loggedIn = false; save(); toast('Đã đăng xuất'); go('dang-nhap'); return; }
+    if (t.closest('.me')) { openAccount(); return; }
     if (t.closest('.searchb')) { toast('Tìm kiếm sẽ hoạt động khi nối dữ liệu khách và sản phẩm thật'); return; }
     if (t.closest('.logo')) { go('trang-chu'); return; }
     const r = currentRoute();
@@ -410,9 +432,9 @@
   const issueComment = () => {
     const f = findIncl('.field', 'Viết trao đổi'); if (!f) return;
     inputInto(f, 'Viết trao đổi…', (v) => {
-      S.comments = (S.comments || []).concat({ t: v, at: now() }); save(); render();
+      S.comments = (S.comments || []).concat({ t: v, at: now(), byName: (UMAP[S.role] || {}).n || 'Nguyễn Văn Huy', _new: true }); save(); render();
     });
-    (S.comments || []).forEach((c) => f.insertAdjacentHTML('beforebegin', `<div class="row" style="gap:10px;align-items:flex-start;margin-top:12px"><span class="av" style="width:28px;height:28px;font-size:10.6px;background:#E8F1F8;color:var(--navy)">NH</span><div style="flex:1"><div class="xs"><b>Nguyễn Văn Huy</b> <span class="muted">· ${c.at}</span></div><div class="sm" style="margin-top:2px">${esc(c.t)}</div></div></div>`));
+    (S.comments || []).forEach((c) => f.insertAdjacentHTML('beforebegin', `<div class="row" style="gap:10px;align-items:flex-start;margin-top:12px"><span class="av" style="width:28px;height:28px;font-size:10.6px;background:#E8F1F8;color:var(--navy)">NH</span><div style="flex:1"><div class="xs"><b>${esc(c.byName || 'Nguyễn Văn Huy')}</b> <span class="muted">· ${fmtAt(c.at)}</span></div><div class="sm" style="margin-top:2px">${esc(c.t)}</div></div></div>`));
   };
   const _a14 = APPLY['the-van-de/vd-1107']; APPLY['the-van-de/vd-1107'] = () => { _a14(); issueComment(); };
 
@@ -509,7 +531,7 @@
     if (r === 'dang-nhap') {
       const ro = t.closest('[data-role]');
       if (ro) { S.role = ro.dataset.role; save(); $$('[data-role]').forEach((x) => { const on = x === ro; x.style.borderColor = on ? 'var(--navy)' : 'transparent'; x.style.background = on ? 'var(--ice)' : ''; }); return; }
-      if (t.closest('#lg-go')) { const em = $('#lg-email').value.trim(); if (!/@/.test(em)) { toast('Nhập email công ty, ví dụ kinhdoanh@goldcool.vn', 'bad'); return; } S.loggedIn = true; save(); toast('Xin chào ' + me().n, 'ok'); go(me().home); return; }
+      if (t.closest('#lg-go')) { doLogin(); return; }
       if (/Quên mật khẩu/.test(T(t))) { toast('Liên hệ chị Huyền (HCNS & Hệ thống) để cấp lại mật khẩu'); return; }
     }
     if (r === 'thong-bao' && /Đánh dấu đã đọc hết/.test(lab)) { $$('.noti .dot').forEach((d) => d.remove()); $$('.noti').forEach((n) => { n.style.background = ''; }); toast('Đã đánh dấu đã đọc', 'ok'); return; }
@@ -517,13 +539,13 @@
     if (r === 'cay-muc-tieu') { if (/Đề xuất mục tiêu/.test(lab)) return go('de-xuat-muc-tieu'); const c = t.closest('.card'); if (c && /liên hệ/i.test(T(c))) return go('muc-tieu/chi-tiet'); }
     if (r === 'the-van-de' && /Báo vấn đề/.test(lab)) return go('the-van-de/moi');
     if (r === 'the-van-de/moi') {
-      if (lab === 'Tạo thẻ') { const v = (id) => ($('#' + id) || {}).value || ''; if (!v('iss-1') || !v('iss-2') || !v('iss-3')) { toast('Điền đủ Vấn đề, Nguyên nhân, Phương án', 'bad'); return; } S.newIssues = (S.newIssues || []).concat({ t: v('iss-1'), due: v('iss-6') }); save(); toast('Đã tạo thẻ vấn đề', 'ok'); return go('the-van-de'); }
+      if (lab === 'Tạo thẻ') { const v = (id) => ($('#' + id) || {}).value || ''; if (!v('iss-1') || !v('iss-2') || !v('iss-3')) { toast('Điền đủ Vấn đề, Nguyên nhân, Phương án', 'bad'); return; } S.newIssues = (S.newIssues || []).concat({ t: v('iss-1'), due: v('iss-6'), byName: me().n, _new: true }); save(); toast('Đã tạo thẻ vấn đề', 'ok'); return go('the-van-de'); }
       if (lab === 'Hủy') return go('the-van-de');
     }
     if (r === 'de-xuat-muc-tieu' && /Gửi duyệt/.test(lab)) { toast('Đã gửi đề xuất cho Nguyễn Văn Huy duyệt', 'ok'); return go('cay-muc-tieu'); }
     if (r === 'ghi-nhan') {
       const ch = t.closest('[data-val]'); if (ch) { $$('[data-val]').forEach((x) => { x.className = 'chip click ' + (x === ch ? 'goldc' : 'gray'); }); return; }
-      if (/Gửi ghi nhận/.test(lab)) { const who = $('#kd-who').value.trim(), tx = $('#kd-text').value.trim(); const val = T($('[data-val].goldc') || $('[data-val]')); if (!who || !tx) { toast('Ghi rõ người được ghi nhận và việc cụ thể', 'bad'); return; } S.kudos = [{ who, tx, val, at: now() }].concat(S.kudos || []); save(); render(); toast('Đã gửi ghi nhận cho ' + who, 'ok'); return; }
+      if (/Gửi ghi nhận/.test(lab)) { const who = $('#kd-who').value.trim(), tx = $('#kd-text').value.trim(); const val = T($('[data-val].goldc') || $('[data-val]')); if (!who || !tx) { toast('Ghi rõ người được ghi nhận và việc cụ thể', 'bad'); return; } S.kudos = [{ who, tx, val, at: now(), byName: me().n, _new: true }].concat(S.kudos || []); save(); render(); toast('Đã gửi ghi nhận cho ' + who, 'ok'); return; }
     }
     if (r === 'xem-bai-hoc') {
       const q = t.closest('[data-quiz]'); if (q) { const ok = q.dataset.quiz === '1'; q.style.borderColor = ok ? 'var(--ok)' : 'var(--bad)'; q.style.background = ok ? 'var(--oks)' : 'var(--bads)'; toast(ok ? 'Đúng: nhóm này AI không báo giá' : 'Chưa đúng: tủ đông trưng bày AI không báo giá', ok ? 'ok' : 'bad'); return; }
@@ -547,9 +569,9 @@
     const ta = $('.top > .av'); if (ta) ta.textContent = u.a;
     if (id === 'trang-chu' && S.role !== 'ha') { const h = $('.h1'); if (h) h.textContent = 'Chào buổi sáng, ' + u.n.split(' ').pop(); }
   }
-  APPLY['ghi-nhan'] = () => { const l = $('#kd-list'); if (l) (S.kudos || []).slice().reverse().forEach((k) => l.insertAdjacentHTML('afterbegin', `<div style="padding:12px 18px;border-top:1px solid var(--line);background:#FFFCF2"><div class="row sm" style="gap:8px"><b>Đoàn Thị Hồng Hà</b><span class="muted">→</span><b>${esc(k.who)}</b><span class="sp xs muted">${k.at}</span></div><span class="chip blue" style="font-size:11px;margin-top:6px">${esc(k.val)}</span><div class="sm muted" style="margin-top:6px">“${esc(k.tx)}”</div></div>`)); };
+  APPLY['ghi-nhan'] = () => { const l = $('#kd-list'); if (l) (S.kudos || []).slice().reverse().forEach((k) => l.insertAdjacentHTML('afterbegin', `<div style="padding:12px 18px;border-top:1px solid var(--line);background:#FFFCF2"><div class="row sm" style="gap:8px"><b>${esc(k.byName || 'Đoàn Thị Hồng Hà')}</b><span class="muted">→</span><b>${esc(k.who)}</b><span class="sp xs muted">${fmtAt(k.at)}</span></div><span class="chip blue" style="font-size:11px;margin-top:6px">${esc(k.val)}</span><div class="sm muted" style="margin-top:6px">“${esc(k.tx)}”</div></div>`)); };
   const _tvd = APPLY['the-van-de'];
-  APPLY['the-van-de'] = () => { if (_tvd) _tvd(); const col = $$('.content div').find((c) => c.style.background === 'rgb(238, 242, 246)' && T(c).startsWith('Mới')); if (!col) return; (S.newIssues || []).forEach((n) => col.firstElementChild.insertAdjacentHTML('afterend', `<div class="card" style="padding:12px 14px;border-color:#9FD3B6"><div class="row" style="gap:6px"><span class="chip gray" style="font-size:11px">KD & MKT</span><span class="chip ok" style="font-size:11px">Mới tạo</span></div><b class="sm" style="display:block;margin-top:8px">${esc(n.t)}</b><div class="row xs" style="margin-top:10px;gap:6px"><span>Đoàn Thị Hồng Hà</span><span class="sp chip gray" style="font-size:11px">Hạn ${fmtDate(n.due)}</span></div></div>`)); };
+  APPLY['the-van-de'] = () => { if (_tvd) _tvd(); const col = $$('.content div').find((c) => c.style.background === 'rgb(238, 242, 246)' && T(c).startsWith('Mới')); if (!col) return; (S.newIssues || []).forEach((n) => col.firstElementChild.insertAdjacentHTML('afterend', `<div class="card" style="padding:12px 14px;border-color:#9FD3B6"><div class="row" style="gap:6px"><span class="chip gray" style="font-size:11px">KD & MKT</span><span class="chip ok" style="font-size:11px">Mới tạo</span></div><b class="sm" style="display:block;margin-top:8px">${esc(n.t)}</b><div class="row xs" style="margin-top:10px;gap:6px"><span>${esc(n.byName || 'Đoàn Thị Hồng Hà')}</span><span class="sp chip gray" style="font-size:11px">Hạn ${fmtDate(n.due)}</span></div></div>`)); };
   APPLY['chat-website'] = () => {
     const body = $('#web-body'); const f = $('#web-in'); if (!body || !f) return;
     const W = S.web || { cv: {}, log: [] };
@@ -562,7 +584,91 @@
     });
   };
 
-  save();
-  if (!S.loggedIn && !location.hash) CUR = 'dang-nhap'; else CUR = fromHash();
-  render();
+  /* ===== Đăng nhập thật, đổi mật khẩu, đặt lại mật khẩu ===== */
+  const ov = document.createElement('div'); ov.id = 'acct'; ov.hidden = true; document.body.append(ov);
+  const closeOv = () => { ov.hidden = true; ov.innerHTML = ''; };
+  function pwForm(force) {
+    ov.hidden = false;
+    ov.innerHTML = `<div class="acct-box card"><div class="h1" style="font-size:20px">${force ? 'Đặt mật khẩu của bạn' : 'Đổi mật khẩu'}</div><div class="sub1">${force ? 'Đây là lần đầu đăng nhập hoặc mật khẩu vừa được đặt lại. Hãy đặt mật khẩu riêng, ít nhất 8 ký tự.' : 'Mật khẩu mới ít nhất 8 ký tự.'}</div>
+      <div class="lbl" style="margin-top:16px">Mật khẩu hiện tại</div><input class="field" id="pw-old" type="password" autocomplete="current-password">
+      <div class="lbl" style="margin-top:12px">Mật khẩu mới</div><input class="field" id="pw-new" type="password" autocomplete="new-password">
+      <div class="lbl" style="margin-top:12px">Nhập lại mật khẩu mới</div><input class="field" id="pw-new2" type="password" autocomplete="new-password">
+      <div id="pw-err" class="xs" style="color:var(--bad);margin-top:8px;min-height:16px"></div>
+      <div class="row" style="gap:8px;margin-top:6px">${force ? '' : '<span class="btn" id="pw-cancel">Hủy</span>'}<span class="sp"></span><span class="btn pri" id="pw-save">Lưu mật khẩu</span></div></div>`;
+    if (force && S._lastPw) $('#pw-old').value = S._lastPw;
+    $('#pw-old').focus();
+    const c = $('#pw-cancel'); if (c) c.onclick = closeOv;
+    $('#pw-save').onclick = async () => {
+      const o = $('#pw-old').value, n = $('#pw-new').value, n2 = $('#pw-new2').value, er = $('#pw-err');
+      if (n.length < 8) { er.textContent = 'Mật khẩu mới cần ít nhất 8 ký tự'; return; }
+      if (n !== n2) { er.textContent = 'Hai lần nhập mật khẩu mới chưa khớp'; return; }
+      const r = await api('/api/auth?a=password', { method: 'POST', body: JSON.stringify({ oldPassword: o, newPassword: n }) });
+      if (!r.ok) { er.textContent = r.j.error || 'Chưa đổi được mật khẩu'; return; }
+      delete S._lastPw; closeOv(); toast('Đã lưu mật khẩu mới', 'ok');
+    };
+  }
+  function openAccount() {
+    const u = me();
+    ov.hidden = false;
+    ov.innerHTML = `<div class="acct-box card" style="width:340px"><div class="row" style="gap:12px"><span class="av" style="width:42px;height:42px;background:#2A5A85;color:#fff">${u.a}</span><div><b>${esc(u.n)}</b><div class="xs muted">${esc(u.r)} · ${esc(u.d || '')}</div></div></div>
+      <div class="col" style="gap:8px;margin-top:16px">${SERVER ? '<span class="btn" id="ac-pw">Đổi mật khẩu</span>' : ''}<span class="btn" id="ac-out">Đăng xuất</span><span class="btn" id="ac-close">Đóng</span></div>
+      ${SERVER ? '' : '<div class="xs muted" style="margin-top:10px">Bản xem thử: dữ liệu chỉ lưu trên trình duyệt này.</div>'}</div>`;
+    const p = $('#ac-pw'); if (p) p.onclick = () => pwForm(false);
+    $('#ac-close').onclick = closeOv;
+    $('#ac-out').onclick = async () => { if (SERVER) await api('/api/auth?a=logout', { method: 'POST' }); S.loggedIn = false; save(); closeOv(); toast('Đã đăng xuất'); go('dang-nhap'); };
+  }
+  ov.addEventListener('click', (e) => { if (e.target === ov && !$('#pw-new', ov)) closeOv(); });
+  async function doLogin() {
+    const k = S.role || 'ha', pw = ($('#lg-pass') || {}).value || '', er = $('#lg-err');
+    if (!SERVER) { S.loggedIn = true; save(); toast('Xin chào ' + me().n, 'ok'); go(me().home); return; }
+    if (!pw) { er.textContent = 'Nhập mật khẩu'; $('#lg-pass').focus(); return; }
+    const b = $('#lg-go'); b.classList.add('is-off'); b.textContent = 'Đang đăng nhập…';
+    const r = await api('/api/auth?a=login', { method: 'POST', body: JSON.stringify({ k, password: pw }) });
+    b.classList.remove('is-off'); b.textContent = 'Đăng nhập';
+    if (!r.ok) { er.textContent = r.j.error || 'Không đăng nhập được'; return; }
+    S.loggedIn = true; S.role = r.j.user.k; save();
+    await loadShared();
+    toast('Xin chào ' + r.j.user.n, 'ok'); go(r.j.user.home);
+    if (r.j.mustChange) { S._lastPw = pw; pwForm(true); }
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target && e.target.id === 'lg-pass') doLogin(); });
+  // Giám đốc và HCNS đặt lại mật khẩu nhân viên
+  const _nv = APPLY['nhan-vien'];
+  APPLY['nhan-vien'] = () => {
+    if (_nv) _nv();
+    if (!SERVER || !['huy', 'huyen'].includes(S.role)) return;
+    const byName = {}; Object.values(UMAP).forEach((u) => { byName[u.n] = u.k; });
+    $$('.tbl tbody tr').forEach((tr) => { const nm = T($('b', tr)); const k = byName[nm]; const cell = tr.lastElementChild; if (k && cell) cell.insertAdjacentHTML('beforeend', ` <span class="btn sm" data-resetpw="${k}" title="Đưa về mật khẩu ban đầu">Đặt lại MK</span>`); });
+  };
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-resetpw]'); if (!b) return; e.stopPropagation();
+    const u = UMAP[b.dataset.resetpw];
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Bấm lần nữa để đặt lại'; b.style.borderColor = 'var(--bad)'; b.style.color = 'var(--bad)'; return; }
+    const r = await api('/api/auth?a=reset', { method: 'POST', body: JSON.stringify({ k: u.k }) });
+    if (r.ok) { b.textContent = '✓ Đã đặt lại'; b.classList.add('is-off'); toast('Đã đưa mật khẩu của ' + u.n + ' về mật khẩu ban đầu', 'ok'); } else toast(r.j.error || 'Chưa đặt lại được', 'bad');
+  }, true);
+  // Nhật ký thay đổi thật
+  APPLY['nhat-ky'] = () => {
+    if (!SERVER || !(S._audit || []).length) return;
+    const tb = $('.tbl tbody'); if (!tb) return;
+    tb.insertAdjacentHTML('afterbegin', S._audit.map((a) => `<tr style="background:#FAFCFE"><td><span class="sm muted" style="white-space:nowrap">${fmtAt(a.at)}</span></td><td><span class="sm"><b>${esc(a.name || (UMAP[a.user] || {}).n || a.user)}</b></span></td><td><span class="chip blue" style="font-size:11px">${esc(a.area)}</span></td><td><span class="sm">${esc(a.text)}</span></td></tr>`).join(''));
+  };
+
+  (async () => {
+    try {
+      const r = await api('/api/auth');
+      if (r.status === 200 || r.status === 401) SERVER = true;
+      if (r.status === 200) { S.loggedIn = true; S.role = r.j.user.k; await loadShared(); }
+      else if (r.status === 401) S.loggedIn = false;
+    } catch (e) { SERVER = false; }
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ }
+    CUR = (!S.loggedIn) ? 'dang-nhap' : fromHash();
+    if (S.loggedIn && CUR === 'dang-nhap') CUR = me().home;
+    render();
+    const m = $('#lg-mode'); if (m && !SERVER) m.textContent = 'Bản xem thử: mật khẩu bất kỳ';
+  })();
+  // Trên máy chủ: chưa đăng nhập thì luôn về trang đăng nhập; lấy dữ liệu mới khi quay lại tab
+  window.addEventListener('hashchange', () => { if (SERVER && !S.loggedIn && CUR !== 'dang-nhap') { CUR = 'dang-nhap'; render(); } });
+  document.addEventListener('visibilitychange', async () => { if (SERVER && S.loggedIn && !document.hidden) { if (await loadShared()) render(); } });
+
 })();

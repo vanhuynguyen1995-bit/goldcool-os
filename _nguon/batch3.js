@@ -37,15 +37,15 @@ S['A01_Dang_nhap'] = page(`<div style="min-height:100vh;display:grid;grid-templa
  <div style="display:grid;place-items:center;padding:40px;background:var(--bg)">
   <div class="card" style="width:420px;padding:32px">
    <div class="h1">Đăng nhập</div><div class="sub1">Dùng email công ty để vào phần mềm.</div>
-   <div class="lbl" style="margin-top:22px">Email</div><input class="field" id="lg-email" value="kinhdoanh@goldcool.vn">
-   <div class="lbl" style="margin-top:14px">Mật khẩu</div><input class="field" id="lg-pass" type="password" value="goldcool">
-   <div class="lbl" style="margin-top:14px">Chọn tài khoản (bản thử · ${USERS.length} người)</div>
+   <div class="lbl" style="margin-top:22px">Chọn tài khoản của bạn · ${USERS.length} người</div>
    <input class="field" id="lg-find" placeholder="Tìm tên hoặc phòng ban…" style="margin-bottom:8px">
    <div id="lg-roles" style="max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px">
     ${DEPTS.map((d) => `<div class="lg-grp"><div class="xs muted" style="font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:8px 8px 4px">${d}</div>${USERS.filter((u) => u.d === d).map((u) => `<div class="row click lg-u" data-role="${u.k}" data-find="${(u.n + ' ' + u.r + ' ' + d).toLowerCase()}" style="gap:10px;cursor:pointer;padding:7px 8px;border-radius:8px;border:1px solid transparent;${u.k === 'ha' ? 'border-color:var(--navy);background:var(--ice)' : ''}">${av(u.a, 28)}<div style="min-width:0"><b class="sm">${u.n}</b><div class="xs muted">${u.r}</div></div></div>`).join('')}</div>`).join('')}
    </div>
-   <span class="btn pri" id="lg-go" style="width:100%;height:44px;margin-top:20px">Đăng nhập</span>
-   <div class="row xs" style="margin-top:12px"><span class="muted">Bản thử: mật khẩu bất kỳ</span><a class="sp" style="color:var(--navy);font-weight:600;cursor:pointer">Quên mật khẩu?</a></div>
+   <div class="lbl" style="margin-top:14px">Mật khẩu</div><input class="field" id="lg-pass" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password">
+   <div id="lg-err" class="xs" style="color:var(--bad);margin-top:6px;min-height:16px"></div>
+   <span class="btn pri" id="lg-go" style="width:100%;height:44px;margin-top:8px">Đăng nhập</span>
+   <div class="row xs" style="margin-top:12px"><span class="muted" id="lg-mode">Lần đầu đăng nhập sẽ được yêu cầu đổi mật khẩu</span><a class="sp" style="color:var(--navy);font-weight:600;cursor:pointer">Quên mật khẩu?</a></div>
   </div>
  </div></div>`, 'body{background:var(--bg)}');
 

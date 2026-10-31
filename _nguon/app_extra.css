@@ -38,3 +38,6 @@ input.field:focus,textarea.field:focus,[contenteditable].field:focus{border-colo
 .app{background:linear-gradient(90deg,var(--navy) 252px,var(--bg) 252px)}
 #root{overflow-x:auto}body{margin:0}
 #web-body .wl>div{margin-left:0!important;margin-right:auto!important;align-items:flex-start!important}
+#acct{position:fixed;inset:0;background:rgba(11,47,77,.45);z-index:120;display:grid;place-items:center;padding:16px}
+#acct[hidden]{display:none}
+.acct-box{width:420px;max-width:100%;padding:24px;box-shadow:0 24px 60px rgba(11,47,77,.3)}
