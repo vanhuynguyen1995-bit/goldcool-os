@@ -1,0 +1,501 @@
+/* GoldCool OS – bản web chạy 18 màn hình chính
+   Giao diện lấy nguyên từ bản thiết kế đã duyệt (js/screens.js).
+   File này thêm điều hướng, thao tác và lưu trạng thái trong trình duyệt. */
+(function () {
+  'use strict';
+  const root = document.getElementById('root');
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  const T = (el) => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const now = () => new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const fmtDate = (v) => (v ? v.split('-').reverse().join('/') : '');
+  const META = window.SCREEN_META;
+
+  /* ---------- Trạng thái (lưu trong trình duyệt) ---------- */
+  const KEY = 'goldcool-os-v1';
+  const DEFAULT_BANNED = ['còn hàng', 'giao ngay', 'giao trong ngày', 'giảm giá', 'tặng', 'combo', 'giá đại lý', 'rẻ nhất', 'tiết kiệm điện 50%'];
+  let S = {};
+  try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { S = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bỏ qua */ } };
+  const banned = () => S.banned || DEFAULT_BANNED;
+
+  let toastTimer;
+  function toast(msg, kind) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = 'on ' + (kind || '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+  }
+
+  /* ---------- Điều hướng ---------- */
+  // Đường dẫn dạng #ten-man-hinh (chỉ chữ, số, gạch ngang) để chia sẻ link được ở mọi nơi
+  const fold = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const SLUG = {}; const slugOf = (r) => { const k = r.split('/').map(fold).join('--'); SLUG[k] = r; return k; };
+  let CUR = 'trang-chu';
+  const go = (r) => { CUR = r; const h = '#' + slugOf(r); try { if (location.hash !== h) { history.pushState(null, '', h); } } catch (e) { /* bỏ qua */ } render(); };
+  const NAV_TOP = { 'Trang chủ': 'trang-chu', 'AI Sales': 'hop-thu', 'Mục tiêu & KPI': 'bang-so-lieu', 'Học viện': 'hom-nay-hoc-gi', 'Dữ liệu': 'san-pham', 'Cài đặt': 'chua-co/set/Cài đặt chung' };
+  const NAV_SUB = {
+    'AI Sales': { 'Hộp thư': 'hop-thu', 'Khách của tôi': 'khach-cua-toi', 'Báo cáo tuần': 'bao-cao-ai', 'Phòng thử AI': 'phong-thu-ai', 'Cài đặt AI': 'cai-dat-ai' },
+    'Mục tiêu & KPI': { 'Bảng số liệu': 'bang-so-lieu', 'Cây mục tiêu': 'cay-muc-tieu', 'Báo cáo tuần': 'bao-cao-tuan', 'Thẻ vấn đề': 'the-van-de' },
+    'Học viện': { 'Hôm nay học gì': 'hom-nay-hoc-gi', 'Bài thi': 'bai-thi', 'Phòng đóng vai': 'dong-vai' },
+    'Dữ liệu': { 'Sản phẩm': 'san-pham', 'Bảng giá bán lẻ': 'bang-gia' },
+  };
+  const MOD_KEY = { 'AI Sales': 'sales', 'Mục tiêu & KPI': 'kpi', 'Học viện': 'hv', 'Dữ liệu': 'data' };
+  const MOBILE_NAV = { 'Trang chủ': 'trang-chu', 'Khách': 'khach-cua-toi', 'Hộp thư': 'hop-thu', 'Học': 'hom-nay-hoc-gi', 'Báo cáo': 'bao-cao-tuan', 'Tôi': 'chua-co/home/Hồ sơ của tôi' };
+  const labelOf = (a) => { const c = a.cloneNode(true); $$('.cnt', c).forEach((x) => x.remove()); return T(c); };
+
+  function currentRoute() { return CUR; }
+  function fromHash() { const h = (location.hash || '').replace(/^#\/?/, ''); if (!h) return 'trang-chu'; if (SLUG[h]) return SLUG[h]; const m = META.find((x) => slugOf(x.id) === h); if (m) return m.id; const p = h.split('--'); if (p[0] === 'chua-co' && p.length > 2) return 'chua-co/' + p[1] + '/' + p.slice(2).join(' ').replace(/-/g, ' '); return 'trang-chu'; }
+  META.forEach((m) => slugOf(m.id));
+
+  function render() {
+    const r = currentRoute();
+    window.scrollTo(0, 0);
+    if (r.startsWith('chua-co/')) {
+      const [, mod, ...rest] = r.split('/');
+      const title = rest.join('/');
+      const modName = Object.keys(MOD_KEY).find((k) => MOD_KEY[k] === mod);
+      root.innerHTML = (window.PLACEHOLDERS[mod] || window.PLACEHOLDERS.home)
+        .replace('%%SUB%%', esc(title)).replace('%%TITLE%%', esc(title))
+        .replace('%%CRUMB%%', modName ? `${esc(modName)} <span>/</span> <b>${esc(title)}</b>` : `<b>${esc(title)}</b>`)
+        .replace('%%ICON%%', window.ICONS.layers);
+      document.title = title + ' · GoldCool OS';
+      menuMark(r); return;
+    }
+    const m = META.find((x) => x.id === r) || META[0];
+    const html = window.SCREENS[m.id];
+    if (m.mobile) {
+      root.innerHTML = `<div class="phone-wrap"><div class="phone-info"><div class="xs muted" style="font-weight:700;letter-spacing:.05em">MÀN ${m.no} · ĐIỆN THOẠI</div><h2>${esc(m.title.replace(' (điện thoại)', ''))}</h2><p class="sub1" style="margin-top:6px">Màn hình này dành cho nhân viên dùng trên điện thoại. Mở bằng điện thoại sẽ hiện toàn màn hình.</p><div class="col" style="gap:8px;margin-top:18px"><span class="btn" data-go="trang-chu">← Về Trang chủ</span><span class="btn" data-open-menu="1">Xem 18 màn hình</span></div></div><div class="phone"><div>${html}</div></div></div>`;
+    } else root.innerHTML = html;
+    document.title = m.title + ' · GoldCool OS';
+    $$('.card').forEach((c) => { if (CLICK_CARDS[m.id] && CLICK_CARDS[m.id](c)) c.classList.add('click'); });
+    (APPLY[m.id] || (() => {}))();
+    menuMark(m.id);
+  }
+  const syncHash = () => { CUR = fromHash(); render(); };
+  window.addEventListener('hashchange', syncHash); window.addEventListener('popstate', syncHash);
+
+  /* ---------- Menu 18 màn hình ---------- */
+  const btn = document.createElement('div'); btn.className = 'scr-btn'; btn.innerHTML = '☰ 18 màn hình';
+  const menu = document.createElement('div'); menu.className = 'scr-menu';
+  const GROUPS = { home: 'Trang chủ', sales: 'AI Sales', data: 'Dữ liệu', kpi: 'Mục tiêu & KPI', hv: 'Học viện' };
+  menu.innerHTML = Object.keys(GROUPS).map((g) => `<div class="g">${GROUPS[g]}</div>` + META.filter((m) => m.mod === g).map((m) => `<a data-go="${m.id}" data-id="${m.id}"><b>${m.no}</b>${esc(m.title)}</a>`).join('')).join('') + '<div class="g">Dữ liệu thử</div><a data-reset="1"><b>↺</b>Đặt lại dữ liệu thử</a>';
+  document.body.append(btn, menu);
+  btn.onclick = () => menu.classList.toggle('on');
+  function menuMark(id) { $$('a', menu).forEach((a) => a.classList.toggle('cur', a.dataset.id === id)); menu.classList.remove('on'); }
+
+  /* ---------- Nhấn chuột chung ---------- */
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t.closest('[data-reset]')) { S = {}; save(); toast('Đã đặt lại dữ liệu thử', 'ok'); render(); return; }
+    const g = t.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
+    if (t.closest('[data-open-menu]')) { menu.classList.add('on'); return; }
+    if (!t.closest('.scr-menu,.scr-btn')) menu.classList.remove('on');
+    const a = t.closest('.nav a');
+    if (a) {
+      const lab = labelOf(a);
+      const sub = a.parentElement.classList.contains('sub');
+      if (!sub) { go(NAV_TOP[lab] || 'trang-chu'); return; }
+      const mod = labelOf(a.parentElement.previousElementSibling);
+      const r = (NAV_SUB[mod] || {})[lab];
+      go(r || `chua-co/${MOD_KEY[mod] || 'home'}/${lab}`); return;
+    }
+    const mn = t.closest('nav > div.col');
+    if (mn && t.closest('.phone')) { go(MOBILE_NAV[T(mn)] || 'trang-chu'); return; }
+    if (t.closest('.bellw')) { toast('3 thông báo mới: 1 khách chờ quá 5 phút · 2 việc cần duyệt'); return; }
+    if (t.closest('.searchb')) { toast('Tìm kiếm sẽ hoạt động khi nối dữ liệu khách và sản phẩm thật'); return; }
+    if (t.closest('.logo')) { go('trang-chu'); return; }
+    const r = currentRoute();
+    if (CLICK[r] && CLICK[r](t, e) !== false) return;
+    const b = t.closest('.btn, .tabs a');
+    if (b) toast(`“${T(b)}” sẽ hoạt động khi nối dữ liệu thật (Fanpage, Zotech, Zalo).`);
+  });
+
+  /* ---------- Tiện ích dựng giao diện ---------- */
+  const salesBubble = (m, time) => `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;max-width:76%"><div style="background:#FFF8E6;border:1px solid #F0DFA6;border-radius:14px 4px 14px 14px;padding:9px 13px">${esc(m)}</div><div class="xs muted row" style="margin-top:3px;gap:6px"><b style="color:#8A6A05">Đoàn Thị Hồng Hà</b> ${time}</div></div>`;
+  const kBubble = (m, time, ini = 'KH') => `<div style="display:flex;gap:9px;max-width:72%"><div class="av" style="width:30px;height:30px;font-size:11px">${ini}</div><div><div style="background:#fff;border:1px solid var(--line);border-radius:4px 14px 14px 14px;padding:9px 13px">${esc(m)}</div><div class="xs muted" style="margin-top:3px">${time}</div></div></div>`;
+  const aiBubble = (html, time) => `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;max-width:76%"><div style="background:var(--ice);border:1px solid #CFE0EE;border-radius:14px 4px 14px 14px;padding:9px 13px">${html}</div><div class="xs muted row" style="margin-top:3px;gap:6px"><span class="ai">✦ AI</span> ${time}</div></div>`;
+  const sysNote = (html) => `<div class="sysnote">${html}</div>`;
+  function inputInto(field, placeholder, onSend) {
+    field.classList.add('inrow');
+    field.innerHTML = `<input placeholder="${esc(placeholder)}"><span class="btn sm nv" data-send="1">Gửi</span>`;
+    const inp = $('input', field);
+    const fire = () => { const v = inp.value.trim(); if (!v) return; if (onSend(v) !== false) inp.value = ''; inp.focus(); };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') fire(); });
+    $('[data-send]', field).addEventListener('click', (e) => { e.stopPropagation(); fire(); });
+    return inp;
+  }
+  const bannedIn = (s) => banned().filter((w) => s.toLowerCase().includes(w));
+  const setChip = (el, cls, text) => { if (!el) return; el.className = 'chip ' + cls; el.textContent = text; };
+  const findText = (sel, text, scope) => $$(sel, scope).find((el) => T(el) === text);
+  const findIncl = (sel, text, scope) => $$(sel, scope).find((el) => T(el).includes(text));
+
+  const CLICK = {}, APPLY = {}, CLICK_CARDS = {};
+
+  /* ===== 01 Trang chủ ===== */
+  CLICK_CARDS['trang-chu'] = (c) => /Khách mới cần liên hệ|Follow-up khách L4|Bài học hôm nay|Chăm sóc sau bán L6/.test(T(c)) && T(c).length < 120;
+  CLICK['trang-chu'] = (t) => {
+    const c = t.closest('.card.click');
+    if (c) { const s = T(c); go(s.includes('Bài học') ? 'hom-nay-hoc-gi' : 'khach-cua-toi'); return; }
+    const b = t.closest('.btn'); if (!b) return false;
+    const row = b.closest('.row'); const s = T(row);
+    if (s.includes('Phạm Thu Trang')) return go('khach/pham-thu-trang');
+    if (s.includes('Thẻ vấn đề')) return go('the-van-de');
+    if (s.includes('Đỗ Văn Long')) { toast('Đang gọi anh Đỗ Văn Long – nhớ ghi kết quả lần liên hệ 2/3'); return; }
+    if (s.includes('Nguyễn Quang Vinh')) { toast('Mở khách L4 Nguyễn Quang Vinh – hẹn gửi video Ozon hôm nay'); return; }
+    if (s.includes('Lê Mai Anh')) { toast('Đang gọi chị Lê Mai Anh – mốc chăm sóc 7 ngày'); return; }
+    return false;
+  };
+
+  /* ===== 02 Hộp thư ===== */
+  S.inbox = S.inbox || { taken: false, msgs: [] };
+  APPLY['hop-thu'] = () => {
+    const secs = $$('.app section'); const chat = secs[1]; if (!chat) return;
+    $$('div[style*="padding:12px 14px;border-top"]', secs[0]).forEach((it) => it.classList.add('click'));
+    if (S.inbox.taken) {
+      setChip(findText('.chip', 'Chờ Sales', chat.children[0]), 'ok', 'Hà đang trả lời');
+      const tb = findText('.btn', 'Tiếp nhận', chat); if (tb) { tb.innerHTML = '✓ Đã tiếp nhận'; tb.classList.remove('pri'); tb.classList.add('is-off'); }
+      const li = findIncl('div[style*="border-top"]', 'Phạm Thu Trang', secs[0]); if (li) setChip(findIncl('.chip', 'Chờ Sales', li), 'ok', 'Hà đang trả lời');
+      const bodyEl = chat.children[1];
+      S.inbox.msgs.forEach((m) => bodyEl.insertAdjacentHTML('beforeend', salesBubble(m.t, m.at)));
+      inputInto($('.field', chat.children[2]), 'Nhắn cho chị Trang… (không hứa tồn kho, ngày giao khi Kho chưa xác nhận)', (v) => {
+        const hit = bannedIn(v).filter((w) => /hàng|giao/.test(w));
+        if (hit.length) { toast(`Chưa gửi: “${hit[0]}” – chưa có xác nhận của Kho thì không hứa tồn kho, ngày giao.`, 'bad'); return false; }
+        const m = { t: v, at: now() }; S.inbox.msgs.push(m); save();
+        bodyEl.insertAdjacentHTML('beforeend', salesBubble(m.t, m.at)); bodyEl.lastElementChild.scrollIntoView({ block: 'nearest' });
+      });
+    }
+  };
+  CLICK['hop-thu'] = (t) => {
+    const b = t.closest('.btn');
+    if (b && T(b) === 'Tiếp nhận') { S.inbox.taken = true; save(); render(); toast('Chị Hà đã tiếp nhận khách – AI ngừng trả lời cuộc này', 'ok'); return; }
+    const secs = $$('.app section');
+    const it = t.closest('div[style*="border-top"]');
+    if (it && secs[0].contains(it)) { if (!T(it).includes('Phạm Thu Trang')) toast('Bản thử có đầy đủ cuộc trò chuyện của chị Phạm Thu Trang'); return; }
+    if (t.closest('.field') && !S.inbox.taken) { toast('Bấm “Tiếp nhận” trước khi nhắn cho khách'); return; }
+    return false;
+  };
+
+  /* ===== 03 Khách của tôi (điện thoại) ===== */
+  CLICK['khach-cua-toi'] = (t) => {
+    const b = t.closest('.btn'); const card = t.closest('.card');
+    if (!b) { if (t.closest('.chip') && t.closest('[style*="background:var(--navy)"]')) { toast('Đang xem nhóm khách: ' + T(t.closest('.chip'))); return; } return false; }
+    const lab = T(b); const who = card ? T($('b', card)) : '';
+    if (lab === 'Gọi') { toast('Đang gọi ' + who + '…'); return; }
+    if (lab === 'Nhắn') return go('hop-thu');
+    if (/Kết quả|Ghi kết quả/.test(lab)) { if (who.includes('Phạm Thu Trang')) return go('khach/pham-thu-trang'); toast('Ghi kết quả cho ' + who + ' – bản thử có chi tiết khách Phạm Thu Trang'); return; }
+    return false;
+  };
+
+  /* ===== 04 Chi tiết khách ===== */
+  S.trang = S.trang || {};
+  APPLY['khach/pham-thu-trang'] = () => {
+    const form = findIncl('.card', 'Ghi kết quả liên hệ'); if (!form) return;
+    const opts = $$('.btn.sm', $('.row', form).parentElement.children[1]);
+    opts.forEach((o) => { o.removeAttribute('style'); o.innerHTML = T(o); if (T(o) === (S.trang.result || 'Đã liên hệ được')) o.classList.add('sel-opt'); });
+    const note = $$('.field', form)[0]; note.contentEditable = 'true'; note.classList.remove('muted');
+    if (S.trang.note) note.textContent = S.trang.note;
+    const fDate = $$('.field', form)[1], fAct = $$('.field', form)[2];
+    fDate.outerHTML = `<input type="date" class="field" id="fu-date" value="${S.trang.date || '2026-11-04'}">`;
+    fAct.outerHTML = `<input class="field" id="fu-act" value="${esc(S.trang.action || T(fAct))}">`;
+    if (S.trang.l4) {
+      const head = $('.content > .row');
+      const l3 = findText('.chip', 'L3', head); if (l3) { l3.textContent = 'L4'; l3.style.background = 'var(--l4)'; }
+      const up = findIncl('.btn', 'Lên L4', head); if (up) up.innerHTML = 'Lên L5 ▾';
+      const sv = findIncl('.btn', 'Lưu & lên L4', form); if (sv) { sv.innerHTML = '✓ Đã lên L4'; sv.classList.add('is-off'); }
+      const tl = findIncl('.card', 'Hành trình của khách');
+      const last = tl && $$('.row', tl).pop();
+      if (last) last.innerHTML = `<div style="width:30px;display:flex;justify-content:center"><span class="chip" style="background:var(--l4);color:#fff;padding:2px 7px">L4</span></div><div><div class="sm"><b>Khách tiềm năng</b> – follow-up ${fmtDate(S.trang.l4.date)}</div><div class="xs muted">${esc(S.trang.l4.action)} · ghi lúc ${S.trang.l4.at}</div></div>`;
+    }
+  };
+  CLICK['khach/pham-thu-trang'] = (t) => {
+    const b = t.closest('.btn'); if (!b) return false;
+    const lab = T(b); const form = findIncl('.card', 'Ghi kết quả liên hệ');
+    if (b.classList.contains('sm') && form && form.contains(b) && !/Lưu/.test(lab)) { S.trang.result = lab; save(); $$('.btn.sm', b.parentElement).forEach((o) => o.classList.toggle('sel-opt', o === b)); return; }
+    if (/Lưu & lên L4/.test(lab)) {
+      const d = $('#fu-date').value, act = $('#fu-act').value.trim();
+      S.trang.note = T($$('.field', form)[0]);
+      if (!d || !act) { toast('Lên L4 phải có ngày và hành động follow-up', 'bad'); return; }
+      S.trang.date = d; S.trang.action = act; S.trang.l4 = { date: d, action: act, at: now() }; save(); render();
+      toast('Đã lên L4 · hẹn follow-up ' + fmtDate(d), 'ok'); return;
+    }
+    if (/Lên L4/.test(lab)) { form.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast('Điền ngày và hành động follow-up để lên L4'); return; }
+    if (/Lên L5/.test(lab)) { toast('Lên L5 cần Kế toán xác nhận cọc hoặc đơn hàng'); return; }
+    if (lab === 'Gọi') { toast('Đang gọi chị Phạm Thu Trang – 0912 345 678'); return; }
+    if (/Mở cuộc chat/.test(lab)) return go('hop-thu');
+    return false;
+  };
+
+  /* ===== 05 Phòng thử AI – AI làm đúng 5 kịch bản ===== */
+  const PRICE = {
+    TD4C: { name: 'Tủ đông 4 cánh', gc: ['16.100.000đ', '23.920.000đ'], mr: ['12.500.000đ', '18.500.000đ'], img: ['TD4C_GC_SP_01', 'TD4C_MR_SP_01'] },
+    TD6C: { name: 'Tủ đông 6 cánh', gc: ['21.620.000đ', '35.880.000đ'], mr: ['18.500.000đ', '25.000.000đ'], img: ['TD6C_GC_SP_01', 'TD6C_MR_SP_01'] },
+    TM2C: { name: 'Tủ mát 2 cánh', caps: [['1050L', '16.100.000đ'], ['1150L', '17.480.000đ'], ['1200L cao cấp', '23.800.000đ']], mr: '14.500.000đ', img: ['TM2C_GC_SP_01', 'TM2C_MR_SP_01'] },
+    TM3C: { name: 'Tủ mát 3 cánh', caps: [['1500L', '23.920.000đ'], ['1650L', '25.300.000đ'], ['1800L cao cấp', '33.930.000đ']], mr: '19.000.000đ', img: ['TM3C_GC_SP_01', 'TM3C_MR_SP_01'] },
+    BC: { mát: { '1,2': ['9.660.000đ', '15.640.000đ', '8.000.000đ', '12.000.000đ'], '1,5': ['10.120.000đ', '16.560.000đ', '8.500.000đ', '12.500.000đ'], '1,8': ['10.580.000đ', '17.480.000đ', '9.000.000đ', '13.000.000đ'] }, đông: { '1,2': ['10.120.000đ', '16.560.000đ', '8.500.000đ', '12.500.000đ'], '1,5': ['10.580.000đ', '17.480.000đ', '9.000.000đ', '13.000.000đ'], '1,8': ['11.040.000đ', '18.400.000đ', '9.500.000đ', '13.500.000đ'] } },
+  };
+  const NOPRICE = {
+    SALAD: { name: 'tủ salad', img: 'SALAD_GC_SP_01', text: 'Dạ tủ salad bên em có khay inox đặt trên mặt bàn để đựng topping, phía dưới là ngăn mát giữ nguyên liệu. Mình chọn theo chiều dài bàn và số khay cần dùng ạ.', ask: 'Anh/chị cần tủ salad dài khoảng bao nhiêu và dùng khoảng mấy khay ạ?' },
+    TDTB: { name: 'tủ đông trưng bày', img: 'TDTB_GC_KINHCONG_SP_01', text: 'Dạ tủ đông trưng bày bên em có 3 phiên bản: kính cong, kính phẳng và bản xả đá. Kính cong trưng bày đẹp, dễ nhìn hàng; kính phẳng gọn và dễ xếp; bản xả đá phù hợp khi mở nắp nhiều.', ask: 'Anh/chị đang quan tâm phiên bản nào và cần dài khoảng bao nhiêu ạ?' },
+    GW: { name: 'máy rửa bát GoldWash', img: 'GW_GC_SP_01', text: 'Dạ GoldWash là máy rửa bát dạng bồn inox cho bếp nhà hàng. Mình chọn theo chiều dài máy và phiên bản phù hợp với lượng bát đĩa mỗi ngày.', ask: 'Bếp mình mỗi ngày rửa khoảng bao nhiêu bát đĩa và chỗ đặt dài khoảng bao nhiêu ạ?' },
+  };
+  const DIFF = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:400px"><div><b>Mẫu rẻ</b><div class="sm">· Dàn lạnh nhôm<br>· Hoàn thiện cơ bản<br>· Bảo hành 12 tháng</div></div><div><b style="color:#8A6A05">GoldCool</b><div class="sm">· Dàn lạnh đồng<br>· Hoàn thiện chắc chắn hơn<br>· Bảo hành 24 tháng<br>· Đổi mới 30 ngày đầu nếu lỗi kỹ thuật</div></div></div>`;
+  const pcard = (title, rows, gold, pic) => `<div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end"><div style="background:#fff;border:1px solid ${gold ? '#E8D28A' : '#CFE0EE'};border-radius:14px 4px 14px 14px;padding:10px 12px;width:410px;display:flex;gap:12px"><img src="img/${pic}.jpg" style="width:64px;height:84px;object-fit:contain;background:#EEF2F6;border-radius:6px;flex:none"><div style="flex:1"><div class="row" style="gap:6px"><b class="sm">${title}</b><span class="sp chip ${gold ? 'goldc' : 'gray'}" style="font-size:10.5px">1 ảnh</span></div>${rows.map(([k, v]) => `<div class="row sm" style="justify-content:space-between;margin-top:5px"><span class="muted">${k}</span><b style="color:var(--navy)">${v}</b></div>`).join('')}<div class="xs muted" style="margin-top:5px">Giá đã gồm VAT · chưa gồm vận chuyển</div></div></div><div class="xs muted row" style="gap:6px;margin-top:3px"><span class="ai">✦ AI</span>${now()}</div></div>`;
+  const TRANSFER = [[/giảm|bớt|chiết khấu|combo|đại lý|sỉ|lấy (2|3|4|5|nhiều) cái|mua (2|3|4|5|nhiều)/, 'đòi giảm giá / combo / giá đại lý'], [/giao|ship|vận chuyển|bao lâu|mấy ngày/, 'hỏi giao hàng'], [/thanh toán|chuyển khoản|cọc|trả góp/, 'hỏi thanh toán'], [/còn hàng|tồn kho|có sẵn/, 'hỏi tồn kho'], [/hỏng|bảo hành|lỗi|không lạnh|khiếu nại/, 'khiếu nại / bảo hành'], [/nhân viên|gặp người|gọi cho|tư vấn viên/, 'muốn gặp nhân viên'], [/đặt hàng|chốt|lấy luôn|mua luôn/, 'muốn đặt hàng']];
+  function aiReply(m) {
+    const c = S.cv; const L = m.toLowerCase(); const out = [];
+    const note = (why, lv) => { c.done = true; out.push(sysNote(`<b>AI dừng tư vấn${lv ? ` · khách lên ${lv}` : ''} · chuyển Sales ngay.</b><div class="xs muted">Lý do: ${why} · AI không gửi tin báo chuyển cho khách · Sales nhận bản bàn giao</div>`)); };
+    if (c.done) { out.push(sysNote('AI đã dừng ở cuộc này – Sales đang xử lý. Bấm “Cuộc mới” để thử lại.')); return out; }
+    for (const [re, why] of TRANSFER) if (re.test(L)) { note(why); return out; }
+    if (c.stage === 'choice') { note('khách trả lời câu hỏi chọn cuối', 'L3'); return out; }
+    if (c.stage === 'version') { note('khách trả lời kích thước / phiên bản (nhóm không báo giá)', 'L2'); return out; }
+    if (!c.group) {
+      if (/rửa bát|goldwash/.test(L)) c.group = 'GW'; else if (/salad/.test(L)) c.group = 'SALAD'; else if (/trưng bày|kem/.test(L)) c.group = 'TDTB';
+      else if (/bàn chặt|bàn mát|bàn đông/.test(L)) c.group = 'BC'; else if (/6 cánh/.test(L)) c.group = 'TD6C'; else if (/4 cánh/.test(L)) c.group = 'TD4C';
+      else if (/3 cánh/.test(L)) c.group = 'TM3C'; else if (/2 cánh/.test(L)) c.group = 'TM2C';
+    }
+    if (!c.model && /quán|nhà hàng|bếp|lẩu|nướng|cơm|phở|bún|cafe|cà phê|trà sữa|siêu thị|tạp hóa|cửa hàng|bar|bánh|kem|khách sạn|căng tin|trường/.test(L)) c.model = true;
+    if (c.group === 'BC') { const k = L.match(/\b(đông|mát)\b/); if (k) c.kind = k[1]; const z = L.match(/1\s*[m,\.]\s*(2|5|8)/); if (z) c.size = '1,' + z[1]; }
+    if (!c.group) { if (/tủ|máy/.test(L)) note('hỏi sản phẩm ngoài 5 nhóm'); else out.push(aiBubble('Dạ anh/chị đang quan tâm tủ đông, tủ mát, tủ bàn chặt, tủ salad, tủ đông trưng bày hay máy rửa bát GoldWash ạ?', now())); return out; }
+    const g = c.group;
+    if (NOPRICE[g]) { const n = NOPRICE[g]; out.push(aiBubble(n.text, now()), aiBubble(`<img src="img/${n.img}.jpg" style="width:220px;border-radius:8px;display:block">`, now()), aiBubble(n.ask, now())); c.stage = 'version'; return out; }
+    if (g === 'BC') {
+      if (!c.kind) { out.push(aiBubble('Dạ anh/chị cần tủ bàn chặt <b>đông</b> hay <b>mát</b> ạ?', now())); return out; }
+      if (!c.size) { out.push(aiBubble('Dạ chỗ đặt dài khoảng <b>1,2 m, 1,5 m hay 1,8 m</b> ạ?', now())); return out; }
+      const p = PRICE.BC[c.kind][c.size]; const nm = `Tủ ${c.kind} bàn chặt ${c.size} m`;
+      out.push(pcard(nm + ' GoldCool', [['Trực tiếp', p[0]], ['Quạt gió', p[1]]], true, 'BC_GC_SP_01'), pcard(nm + ' – mẫu rẻ', [['Trực tiếp', p[2]], ['Quạt gió', p[3]]], false, 'BC_MR_SP_01'), aiBubble(DIFF, now()), aiBubble('Anh/chị đang nghiêng về GoldCool hay mẫu rẻ, và mình ưu tiên lạnh trực tiếp hay quạt gió ạ?', now()));
+      c.stage = 'choice'; return out;
+    }
+    if (!c.model) { out.push(aiBubble('Dạ anh/chị đang dùng tủ cho mô hình quán gì ạ?', now())); return out; }
+    const P = PRICE[g];
+    if (g === 'TD4C' || g === 'TD6C') {
+      out.push(aiBubble(`Dạ, ${P.name.toLowerCase()} bên em có 2 hình thức làm lạnh:<br><b>1. Lạnh trực tiếp</b> – 2 ngăn riêng, dùng cả 2 ngăn đông hoặc 1 đông – 1 mát; đầu tư thấp hơn; cần xả đá định kỳ.<br><b>2. Lạnh quạt gió</b> – lạnh nhanh, nhiệt đều hơn; không cần xả đá thủ công; một ngăn chung một chế độ nhiệt; đầu tư cao hơn.`, now()));
+      out.push(pcard(P.name + ' GoldCool', [['Lạnh trực tiếp', P.gc[0]], ['Lạnh quạt gió', P.gc[1]]], true, P.img[0]), pcard(P.name + ' – mẫu rẻ', [['Lạnh trực tiếp', P.mr[0]], ['Lạnh quạt gió', P.mr[1]]], false, P.img[1]));
+      out.push(aiBubble(DIFF, now()), aiBubble('Bên em vẫn bán GoldCool là chính vì phù hợp hơn với quán cần sử dụng lâu dài và ưu tiên độ ổn định ạ.', now()), aiBubble('Anh/chị đang nghiêng về GoldCool hay mẫu rẻ, và mình ưu tiên lạnh trực tiếp hay quạt gió ạ?', now()));
+    } else {
+      out.push(pcard(P.name + ' GoldCool', P.caps, true, P.img[0]), pcard(P.name + ' – mẫu rẻ', [['Mẫu rẻ', P.mr]], false, P.img[1]));
+      out.push(aiBubble(DIFF, now()), aiBubble('Bên em vẫn bán GoldCool là chính vì phù hợp hơn với quán cần sử dụng lâu dài và ưu tiên độ ổn định ạ.', now()), aiBubble('Anh/chị đang nghiêng về GoldCool hay mẫu rẻ, và cần dung tích khoảng bao nhiêu ạ?', now()));
+    }
+    c.stage = 'choice'; return out;
+  }
+  APPLY['phong-thu-ai'] = () => {
+    const card = findIncl('.card', 'Chat thử như khách'); if (!card) return;
+    const bodyEl = card.children[1];
+    if (!S.cv) S.cv = { group: 'BC', kind: 'mát', size: '1,5', model: true, stage: 'choice', log: [] };
+    if (S.cv.fresh) bodyEl.innerHTML = '<div class="xs muted" style="text-align:center">Cuộc mới · gõ như một khách hàng nhắn Fanpage</div>';
+    (S.cv.log || []).forEach((h) => bodyEl.insertAdjacentHTML('beforeend', h));
+    inputInto($('.field', card.children[2]), 'Gõ câu hỏi như một khách hàng… ví dụ: “Tủ đông 6 cánh giá sao em?”', (v) => {
+      const add = [kBubble(v, now())].concat(aiReply(v));
+      S.cv.log = (S.cv.log || []).concat(add); save();
+      add.forEach((h) => bodyEl.insertAdjacentHTML('beforeend', h)); bodyEl.lastElementChild.scrollIntoView({ block: 'nearest' });
+    });
+  };
+  CLICK['phong-thu-ai'] = (t) => {
+    const b = t.closest('.btn'); if (!b) return false;
+    if (/Cuộc mới/.test(T(b))) { S.cv = { fresh: true, log: [] }; save(); render(); return; }
+    if (/Chạy lại/.test(T(b))) { toast('Đang chạy lại 70 câu kiểm tra… Kết quả: bài 1 đạt 30/30, bài 2 còn 2 câu sai (#17, #31)'); return; }
+    return false;
+  };
+
+  /* ===== 06 Bảng giá bán lẻ ===== */
+  APPLY['bang-gia'] = () => {
+    const f = findIncl('.field', 'Chọn ngày');
+    if (f) f.outerHTML = `<input type="date" class="field" id="price-date" style="padding:6px 10px" value="${(S.prices && S.prices.date) || ''}">`;
+    if (S.prices && S.prices.done) {
+      $$('.chip').filter((c) => T(c) === 'Chờ chốt').forEach((c) => setChip(c, 'ok', 'Đang áp dụng'));
+      const ban = findIncl('.card', 'Giá đang chạy theo kịch bản AI');
+      if (ban) { ban.style.background = 'var(--oks)'; ban.style.borderColor = '#B8DFC9'; $('b.sm', ban).textContent = `Đã duyệt bảng giá · áp dụng từ ${fmtDate(S.prices.date)}`; $('.xs', ban).textContent = `Người duyệt: Nguyễn Văn Huy · lúc ${S.prices.at}. Sửa giá nào sau này cũng phải duyệt lại.`; }
+      const st = findIncl('.card', 'Chờ anh chốt'); if (st) { $('.xs', st).textContent = 'Đã duyệt'; $('b', st).textContent = '28 dòng giá'; }
+      const ab = findIncl('.btn', 'Duyệt cả bảng'); if (ab) { ab.innerHTML = '✓ Đã duyệt'; ab.classList.add('is-off'); }
+    }
+  };
+  CLICK['bang-gia'] = (t) => {
+    const b = t.closest('.btn'); if (!b) return false;
+    if (/Duyệt cả bảng/.test(T(b))) {
+      const d = $('#price-date').value; if (!d) { toast('Chọn ngày áp dụng trước khi duyệt', 'bad'); $('#price-date').focus(); return; }
+      S.prices = { date: d, done: true, at: now() }; save(); render(); toast('Đã duyệt 28 dòng giá · áp dụng từ ' + fmtDate(d), 'ok'); return;
+    }
+    if (/Nhật ký/.test(T(b))) { toast(S.prices && S.prices.done ? `Nhật ký: Nguyễn Văn Huy duyệt bảng giá lúc ${S.prices.at}` : 'Nhật ký: chưa có lần duyệt nào'); return; }
+    if (/Giao việc/.test(T(b))) { toast('Đã tạo việc “Lập giá tủ đông trưng bày theo model” cho Kế toán', 'ok'); return; }
+    return false;
+  };
+
+  /* ===== 08 Cài đặt AI ===== */
+  APPLY['cai-dat-ai'] = () => {
+    const card = findIncl('.card', 'Câu bị cấm'); if (!card) return;
+    const box = $$('.row', card).find((r) => r.style.flexWrap === 'wrap');
+    const list = S.bannedDraft || banned();
+    box.innerHTML = list.map((w) => `<span class="chip bad click" data-ban="${esc(w)}" style="padding:4px 9px" title="Bấm để bỏ">⊘ ${esc(w)} ✕</span>`).join('') + '<span class="chip gray click" data-add-ban="1" style="padding:4px 10px">+ Thêm</span>';
+  };
+  CLICK['cai-dat-ai'] = (t) => {
+    const x = t.closest('[data-ban]');
+    if (x) { S.bannedDraft = (S.bannedDraft || banned().slice()).filter((w) => w !== x.dataset.ban); APPLY['cai-dat-ai'](); toast('Đã bỏ “' + x.dataset.ban + '” – bấm Lưu thay đổi để áp dụng'); return; }
+    const ad = t.closest('[data-add-ban]');
+    if (ad) { ad.outerHTML = '<input class="field" id="ban-in" placeholder="Nhập cụm từ rồi Enter" style="width:200px;padding:5px 10px">'; const i = $('#ban-in'); i.focus(); i.onkeydown = (e) => { if (e.key === 'Enter' && i.value.trim()) { S.bannedDraft = (S.bannedDraft || banned().slice()).concat(i.value.trim().toLowerCase()); APPLY['cai-dat-ai'](); } if (e.key === 'Escape') APPLY['cai-dat-ai'](); }; return; }
+    const b = t.closest('.btn');
+    if (b && /Lưu thay đổi/.test(T(b))) { if (S.bannedDraft) S.banned = S.bannedDraft; delete S.bannedDraft; save(); toast('Đã lưu cài đặt AI Sales · ghi vào Nhật ký thay đổi', 'ok'); return; }
+    if (b && T(b) === 'Hủy') { delete S.bannedDraft; render(); toast('Đã hủy thay đổi'); return; }
+    if (t.closest('[style*="border:2px solid #D5DCE5"]') || /Tự trả lời/.test(T(t.closest('.col') || t))) { toast('Nấc này đang khóa: cần 2 bài kiểm tra đạt 100% và chạy song song 1 tuần không có lỗi nặng'); return; }
+    return false;
+  };
+
+  /* ===== 09 Chi tiết sản phẩm ===== */
+  APPLY['san-pham'] = () => {
+    const sw = $$('span[style*="width:38px;height:22px"]')[0]; if (!sw) return;
+    sw.style.cursor = 'pointer'; sw.dataset.sw = '1';
+    const on = S.aiProduct !== false; sw.style.background = on ? 'var(--ok)' : '#C4CCD7'; sw.firstElementChild.style.right = on ? '3px' : '19px';
+  };
+  CLICK['san-pham'] = (t) => {
+    if (t.closest('[data-sw]')) { S.aiProduct = S.aiProduct === false; save(); APPLY['san-pham'](); toast(S.aiProduct ? 'AI được báo giá sản phẩm này' : 'Đã tắt: AI sẽ chuyển Sales thay vì báo giá sản phẩm này', S.aiProduct ? 'ok' : ''); return; }
+    const b = t.closest('.btn');
+    if (b && T(b) === 'Lưu') { toast('Đã lưu sản phẩm · Người phụ trách dữ liệu: Nguyễn Văn Chính', 'ok'); return; }
+    if (b && /Xem như AI thấy/.test(T(b))) { toast('AI chỉ thấy: giá đã duyệt, thông số trong bảng, ảnh và feedback đã xác thực'); return; }
+    return false;
+  };
+
+  /* ===== 10 Bảng số liệu ===== */
+  CLICK['bang-so-lieu'] = (t) => {
+    const b = t.closest('.btn'); if (!b) return false;
+    const s = T(b.closest('.row'));
+    if (/Mở cây mục tiêu/.test(T(b))) return go('cay-muc-tieu');
+    if (/Xem và quyết/.test(T(b))) { if (s.includes('GoldWash')) return go('the-van-de/vd-1107'); if (s.includes('bảng giá')) return go('bang-gia'); toast('Bản thử có chi tiết thẻ “Thống nhất cách nói bảo hành GoldWash”'); return go('the-van-de'); }
+    return false;
+  };
+
+  /* ===== 12 Báo cáo tuần (điện thoại) ===== */
+  APPLY['bao-cao-tuan'] = () => {
+    const card = findIncl('.card', 'Một việc chị đã làm đúng DNA');
+    if (card) $$('.chip', card).forEach((c) => { c.classList.add('click'); if (S.value) { const on = T(c).replace('✓', '').trim() === S.value; c.className = 'chip click ' + (on ? 'goldc' : 'gray'); c.style.outline = on ? '1.5px solid var(--gold)' : ''; } });
+    if (S.report) { const b = findIncl('.btn', 'Nộp báo cáo tuần 45'); if (b) { b.innerHTML = '✓ Đã nộp lúc ' + S.report; b.style.background = 'var(--ok)'; b.style.borderColor = 'var(--ok)'; b.style.color = '#fff'; b.classList.add('is-off'); } }
+  };
+  CLICK['bao-cao-tuan'] = (t) => {
+    const c = t.closest('.chip.click'); if (c) { S.value = T(c).replace('✓', '').trim(); save(); APPLY['bao-cao-tuan'](); return; }
+    const b = t.closest('.btn');
+    if (b && /Nộp báo cáo/.test(T(b))) { S.report = now(); save(); APPLY['bao-cao-tuan'](); toast('Đã nộp báo cáo tuần 45 · chị Đỗ Huyền Thanh nhận yêu cầu hỗ trợ', 'ok'); return; }
+    return false;
+  };
+
+  /* ===== 13–14 Thẻ vấn đề ===== */
+  CLICK_CARDS['the-van-de'] = (c) => c.style.padding === '12px 14px';
+  APPLY['the-van-de'] = () => {
+    if (!S.decision) return;
+    const c = $$('.card').find((x) => T(x).includes('bảo hành GoldWash')); if (!c) return;
+    c.insertAdjacentHTML('beforeend', `<div class="row xs" style="margin-top:8px;gap:6px"><span class="chip ok" style="font-size:11px">✓ Đã quyết: phương án ${S.decision.k}</span><span class="muted">chờ bằng chứng để đóng thẻ</span></div>`);
+  };
+  CLICK['the-van-de'] = (t) => {
+    const c = t.closest('.card.click');
+    if (c) { if (T(c).includes('bảo hành GoldWash')) return go('the-van-de/vd-1107'); toast('Bản thử có chi tiết thẻ “Thống nhất cách nói bảo hành GoldWash”'); return; }
+    return false;
+  };
+  APPLY['the-van-de/vd-1107'] = () => {
+    if (!S.decision) return;
+    const d = findIncl('.card', 'Cần anh quyết định'); if (!d) return;
+    d.style.background = 'var(--oks)'; d.style.borderColor = '#9FD3B6';
+    d.innerHTML = `<h3 style="color:var(--ok)">✓ Đã quyết định</h3><div class="sm" style="margin-top:8px"><b>Phương án ${S.decision.k}:</b> ${esc(S.decision.t)}</div><div class="xs muted" style="margin-top:6px">Nguyễn Văn Huy · ${S.decision.at} · đã ghi vào Thư viện quyết định</div><div class="sm" style="margin-top:12px">Việc tiếp theo: chị Lan sửa kịch bản K.5, S.7; anh Đạt sửa website; tải bằng chứng lên để đóng thẻ.</div><span class="btn sm" data-undo="1" style="margin-top:12px">Hoàn tác</span>`;
+    const chip = findText('.chip', 'Chờ duyệt'); if (chip) setChip(chip, 'ok', 'Đã quyết – chờ bằng chứng');
+  };
+  CLICK['the-van-de/vd-1107'] = (t) => {
+    if (t.closest('[data-undo]')) { delete S.decision; save(); render(); return; }
+    const b = t.closest('.btn'); if (!b) return false;
+    const m = T(b).match(/Phương án (A|B) – (.*)/);
+    if (m) { S.decision = { k: m[1], t: m[2], at: now() }; save(); render(); toast('Đã chọn phương án ' + m[1] + ' · thông báo cho chị Lan, anh Hùng, anh Đạt', 'ok'); return; }
+    if (/Yêu cầu thêm thông tin/.test(T(b))) { toast('Đã gửi yêu cầu bổ sung thông tin cho chị Nguyễn Thị Lan'); return; }
+    return false;
+  };
+  const issueComment = () => {
+    const f = findIncl('.field', 'Viết trao đổi'); if (!f) return;
+    inputInto(f, 'Viết trao đổi…', (v) => {
+      S.comments = (S.comments || []).concat({ t: v, at: now() }); save(); render();
+    });
+    (S.comments || []).forEach((c) => f.insertAdjacentHTML('beforebegin', `<div class="row" style="gap:10px;align-items:flex-start;margin-top:12px"><span class="av" style="width:28px;height:28px;font-size:10.6px;background:#E8F1F8;color:var(--navy)">NH</span><div style="flex:1"><div class="xs"><b>Nguyễn Văn Huy</b> <span class="muted">· ${c.at}</span></div><div class="sm" style="margin-top:2px">${esc(c.t)}</div></div></div>`));
+  };
+  const _a14 = APPLY['the-van-de/vd-1107']; APPLY['the-van-de/vd-1107'] = () => { _a14(); issueComment(); };
+
+  /* ===== 15 Hôm nay học gì ===== */
+  CLICK_CARDS['hom-nay-hoc-gi'] = (c) => /Luyện đóng vai|Bài học/.test(T(c)) && T(c).length < 140;
+  CLICK['hom-nay-hoc-gi'] = (t) => {
+    const c = t.closest('.card.click');
+    if (c) { if (T(c).includes('Luyện đóng vai')) return go('dong-vai'); if (T(c).includes('đã xong')) { toast('Bài này đã học xong'); return; } toast('Mở bài học: ' + T($('b', c))); return; }
+    const b = t.closest('.btn'); if (b && /Học tiếp/.test(T(b))) { toast('Mở bài: Tủ đông trưng bày – giải thích phiên bản, hỏi kích thước (K.4, S.5)'); return; }
+    if (b && /Nhắn/.test(T(b))) { toast('Mở tin nhắn với chị Đoàn Thị Hồng Hà'); return; }
+    return false;
+  };
+
+  /* ===== 16 Bài thi ===== */
+  APPLY['bai-thi'] = () => {
+    const opts = $$('.card .col > .row').filter((r) => /^[ABCD]/.test(T(r)));
+    const pick = S.exam || 'B';
+    opts.forEach((r) => {
+      r.classList.add('card', 'click'); r.style.padding = '15px 18px'; r.dataset.opt = T(r)[0];
+      const on = r.dataset.opt === pick; r.style.border = on ? '2px solid var(--navy)' : '1.5px solid var(--line)'; r.style.background = on ? 'var(--ice)' : '#fff';
+      const dot = r.firstElementChild; dot.style.background = on ? 'var(--navy)' : 'var(--grays)'; dot.style.color = on ? '#fff' : 'var(--muted)';
+      const tag = $('.sp', r); if (tag) tag.remove(); if (on) r.insertAdjacentHTML('beforeend', '<span class="sp xs" style="color:var(--navy);font-weight:600">Đã chọn</span>');
+    });
+    if (S.examDone) { const res = S.exam === 'B'; const h = findIncl('.btn', 'Nộp bài'); if (h) h.insertAdjacentHTML('afterend', `<div class="card" style="padding:12px 14px;border-color:${res ? '#9FD3B6' : '#F0C3BC'}"><b class="sm" style="color:var(--${res ? 'ok' : 'bad'})">${res ? '✓ Câu 12 đúng' : '✕ Câu 12 sai – đáp án B'}</b><div class="xs muted" style="margin-top:4px">Khách đã nói mô hình nên không hỏi lại; bước tiếp theo trong K.1 là giải thích lạnh trực tiếp và quạt gió.</div></div>`); }
+  };
+  CLICK['bai-thi'] = (t) => {
+    const o = t.closest('[data-opt]'); if (o) { S.exam = o.dataset.opt; delete S.examDone; save(); render(); return; }
+    const b = t.closest('.btn'); if (!b) return false;
+    if (/Nộp bài/.test(T(b))) { S.examDone = true; save(); render(); toast('Bản thử chấm câu 12 · bộ 30 câu đầy đủ sẽ lấy từ ngân hàng câu hỏi'); return; }
+    if (/Câu sau|Câu trước/.test(T(b))) { toast('Bản thử có câu 12 · bộ 30 câu sẽ lấy từ ngân hàng câu hỏi theo DNA'); return; }
+    return false;
+  };
+
+  /* ===== 17 Phòng đóng vai ===== */
+  APPLY['dong-vai'] = () => {
+    const card = findIncl('.card', 'Anh Tuấn (vai khách)'); if (!card) return;
+    const bodyEl = card.children[2]; const wait = bodyEl.lastElementChild;
+    const rp = S.rp || { log: [] };
+    rp.log.forEach((h) => wait.insertAdjacentHTML('beforebegin', h));
+    inputInto($('.field', card.children[3]), 'Nhập câu trả lời như đang nhắn với khách…', (v) => {
+      const L = v.toLowerCase(); S.rp = S.rp || { log: [] };
+      if (/bớt|giảm|tặng|chiết khấu|khuyến mãi/.test(L) && !/không (tự )?(bớt|giảm)|không giảm|không bớt/.test(L)) S.rp.discount = true;
+      if (/mẫu rẻ|8\.?500|8 triệu 5/.test(L)) S.rp.cheap = true;
+      if (/không (tự )?(bớt|giảm)|giá bán lẻ|đã gồm vat/.test(L)) S.rp.held = true;
+      let reply = 'Anh vẫn thấy cao. Em xem có cách nào không?';
+      if (S.rp.discount) reply = 'Ok, em bớt thế thì anh chốt luôn, em gửi anh số tài khoản nhé.';
+      else if (S.rp.cheap && S.rp.held) reply = 'Ừ em nói rõ thế anh hiểu. Bếp chạy cả ngày thì anh lấy GoldCool trực tiếp, em xin địa chỉ đi.';
+      else if (S.rp.cheap) reply = 'Mẫu rẻ thì bảo hành có 12 tháng à? Thế GoldCool có bớt được không?';
+      const add = [`<div style="margin-left:auto;max-width:74%;background:var(--ice);border:1px solid #CFE0EE;border-radius:14px 4px 14px 14px;padding:9px 13px">${esc(v)}</div>`, `<div style="display:flex;gap:9px;max-width:74%"><span class="av" style="width:32px;height:32px;font-size:11px;background:#FDF1D8;color:#8A6A05">KH</span><div style="background:#fff;border:1px solid var(--line);border-radius:4px 14px 14px 14px;padding:9px 13px">${esc(reply)}</div></div>`];
+      S.rp.log = S.rp.log.concat(add); save();
+      add.forEach((h) => wait.insertAdjacentHTML('beforebegin', h)); wait.scrollIntoView({ block: 'nearest' });
+      const lc = findIncl('.row', 'Lượt'); if (lc) { const n = 7 + S.rp.log.length / 2; const bb = $('b', lc); if (bb) bb.textContent = `${n} / 20`; }
+    });
+  };
+  CLICK['dong-vai'] = (t) => {
+    const b = t.closest('.btn'); if (b && /Kết thúc và chấm điểm/.test(T(b))) { S.rp = S.rp || { log: [] }; S.rp.ended = true; save(); return go('ket-qua-dong-vai'); }
+    return false;
+  };
+
+  /* ===== 18 Kết quả đóng vai ===== */
+  APPLY['ket-qua-dong-vai'] = () => {
+    const rp = S.rp; if (!rp || !rp.log || !rp.log.length || rp.discount || !(rp.cheap || rp.held)) return;
+    const head = findIncl('.card', 'CHƯA ĐẠT'); if (!head) return;
+    head.style.borderColor = '#9FD3B6';
+    head.firstElementChild.style.background = 'conic-gradient(var(--ok) 0 100%,#EEF1F5 0)';
+    $('b', head.firstElementChild).textContent = '6/6';
+    setChip(findText('.chip', 'CHƯA ĐẠT', head), 'ok', 'ĐẠT'); $('.chip.ok', head).style.cssText = 'font-size:14px;padding:4px 14px';
+    const big = $$('div', head).find((d) => T(d).startsWith('Trượt tiêu chí')); if (big) big.textContent = 'Giữ đúng quyền hạn: không tự giảm giá, đưa mẫu rẻ để khách tự chọn.';
+    const bad = $$('.card').find((c) => T(c).startsWith('Đúng quyền hạn')); if (bad) { bad.style.cssText = 'padding:14px 16px'; bad.innerHTML = `<div class="row" style="gap:8px"><b class="sm" style="color:var(--ok)">✓ Đúng quyền hạn</b><span class="sp chip ok" style="font-size:11px">Đạt</span></div><div class="xs muted" style="margin-top:10px;font-weight:600">BẠN ĐÃ NÓI</div><div class="sm" style="margin-top:3px;padding-left:10px;border-left:3px solid #CDE7D8;font-style:italic">“${esc(T($('div', document.createRange().createContextualFragment(rp.log.filter((_, i) => i % 2 === 0).slice(-1)[0] || '<div></div>'))))}”</div><div class="xs muted" style="margin-top:10px;font-weight:600">NHẬN XÉT</div><div class="sm" style="margin-top:3px">Không tự bớt giá, giữ niềm tin lâu dài hơn doanh số trước mắt.</div>`; }
+  };
+  const _kq = APPLY['ket-qua-dong-vai'];
+  APPLY['ket-qua-dong-vai'] = () => {
+    _kq();
+    const rp = S.rp; if (!rp || !rp.log || !rp.log.length || rp.discount || !(rp.cheap || rp.held)) return;
+    const ch = $$('.chip').find((c) => T(c).includes('tự giảm giá')); if (ch) setChip(ch, 'ok', 'Đạt · giữ đúng quyền hạn');
+    const mt = findIncl('.card', 'Người kèm cặp'); const cm = mt && $$('.sm', mt).find((d) => T(d).length > 60);
+    if (cm) cm.textContent = 'Lần này xử lý khách đòi bớt rất đúng: không tự giảm, đưa mẫu rẻ để khách tự chọn. Đủ điều kiện qua nhóm Tủ bàn chặt & salad.';
+  };
+  CLICK['ket-qua-dong-vai'] = (t) => {
+    const b = t.closest('.btn'); if (!b) return false;
+    if (/Luyện lại/.test(T(b))) { delete S.rp; save(); return go('dong-vai'); }
+    if (/Xem lại cuộc chat/.test(T(b))) return go('dong-vai');
+    return false;
+  };
+
+  /* ===== 07, 11 ===== */
+  CLICK['bao-cao-ai'] = (t) => { const b = t.closest('.btn'); if (b && /Sổ lỗi/.test(T(b))) return go('chua-co/sales/Lỗi dữ liệu'); return false; };
+
+  save();
+  syncHash();
+})();
