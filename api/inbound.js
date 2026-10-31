@@ -1,7 +1,7 @@
 // Cổng nhận khách từ chatbot Fanpage (Retion, chatbot.ai.vn, n8n…) và danh sách cho Hộp thư AI Sales.
 // Chatbot gửi:  POST /api/inbound?key=<INBOUND_KEY>   (hoặc header x-goldcool-key)
-// Xem:          GET  /api/inbound (Sales thấy khách được chia cho mình; Giám đốc/HCNS thấy tất cả)
-// Cập nhật:     POST /api/inbound?id=<id> { status, note, zotech, assign (Giám đốc/HCNS) } · Tỉ lệ: POST /api/inbound?a=split { w: { ha: 40, … } }
+// Xem:          GET  /api/inbound (Sales thấy khách được chia cho mình; Giám đốc/Quản lý dữ liệu thấy tất cả)
+// Cập nhật:     POST /api/inbound?id=<id> { status, note, zotech, assign (Giám đốc/Quản lý dữ liệu) } · Tỉ lệ: POST /api/inbound?a=split { w: { ha: 40, … } }
 // Nếu có ZOTECH_WEBHOOK_URL: mỗi khách mới được chuyển tiếp nguyên dữ liệu sang Zotech.
 const crypto = require('crypto');
 const L = require('./_lib.js');
@@ -82,16 +82,16 @@ module.exports = async (req, res) => {
     }
     const me = L.session(req); if (!me) return L.send(res, 401, { error: 'Chưa đăng nhập' });
     const admin = L.ADMINS.includes(me.k);
-    // 2. Xem danh sách: Sales chỉ thấy khách của mình, Giám đốc / HCNS thấy tất cả
+    // 2. Xem danh sách: Sales chỉ thấy khách của mình, Giám đốc / Quản lý dữ liệu thấy tất cả
     if (req.method === 'GET') {
       const leads = (await all()).map(({ raw, ...x }) => x);
       const out = { leads: admin ? leads : leads.filter((l) => l.owner === me.k), statuses: STATUS, ready: !!KEY, zotech: !!ZOTECH, admin };
       if (admin) { const split = await getSplit(); const mk = month(); out.split = SALES.map((u) => ({ k: u.k, n: u.n, r: u.r, w: split[u.k] || 0, month: leads.filter((l) => l.owner === u.k && String(l.at).slice(0, 7) === mk).length })); out.unassigned = leads.filter((l) => !l.owner).length; }
       return L.send(res, 200, out);
     }
-    // 3. Giám đốc / HCNS đặt tỉ lệ chia
+    // 3. Giám đốc / Quản lý dữ liệu đặt tỉ lệ chia
     if (req.method === 'POST' && q.a === 'split') {
-      if (!admin) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc HCNS được đặt tỉ lệ' });
+      if (!admin) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc Quản lý dữ liệu được đặt tỉ lệ' });
       const b = await L.body(req); const w = {};
       SALES.forEach((u) => { const v = Math.max(0, Math.min(100, Math.round(+((b.w || {})[u.k]) || 0))); w[u.k] = v; });
       if (!Object.values(w).some((v) => v > 0)) return L.send(res, 400, { error: 'Cần ít nhất 1 Sales có tỉ lệ lớn hơn 0' });
@@ -99,7 +99,7 @@ module.exports = async (req, res) => {
       await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Chia khách', text: 'Đặt tỉ lệ chia khách: ' + SALES.map((u) => `${u.n.split(' ').pop()} ${w[u.k]}`).join(' · '), at: new Date().toISOString() });
       return L.send(res, 200, { ok: true, w });
     }
-    // 4. Thêm khách thủ công (gọi hotline, nhắn Zalo, khách đến kho): Sales thêm thì khách là của mình; Giám đốc/HCNS thêm thì chia theo tỉ lệ hoặc giao thẳng
+    // 4. Thêm khách thủ công (gọi hotline, nhắn Zalo, khách đến kho): Sales thêm thì khách là của mình; Giám đốc/Quản lý dữ liệu thêm thì chia theo tỉ lệ hoặc giao thẳng
     if (req.method === 'POST' && q.a === 'add') {
       const b = await L.body(req); const at = new Date().toISOString(); const id = L.stamp();
       const name = s(b.name, 80), phone = s(b.phone, 20).replace(/[^\d+ ]/g, '');
@@ -113,7 +113,7 @@ module.exports = async (req, res) => {
       await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Khách Fanpage', text: `Thêm khách ${lead.name}${u ? ' · giao cho ' + u.n : ''}`, at });
       return L.send(res, 200, { ok: true, lead });
     }
-    // 5. Cập nhật khách: Sales chỉ sửa khách của mình; Giám đốc / HCNS chuyển khách cho Sales khác
+    // 5. Cập nhật khách: Sales chỉ sửa khách của mình; Giám đốc / Quản lý dữ liệu chuyển khách cho Sales khác
     if (req.method === 'POST' && q.id) {
       const id = String(q.id).replace(/[^\w-]/g, '');
       const bs = await L.list(`inbound/${id}/`); if (!bs.length) return L.send(res, 404, { error: 'Không có khách này' });

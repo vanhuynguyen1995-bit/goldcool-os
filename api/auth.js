@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
     if (action === 'login') {
       const u = L.USERS.find((x) => x.k === b.k); if (!u) return L.send(res, 400, { error: 'Không có tài khoản này' });
       const r = await L.checkPw(u.k, b.password || '');
-      if (!r.ok) return L.send(res, 401, { error: 'Sai mật khẩu. Quên mật khẩu thì nhờ chị Huyền đặt lại.' });
+      if (!r.ok) return L.send(res, 401, { error: 'Sai mật khẩu. Quên mật khẩu thì nhờ Kiên hoặc anh Huy đặt lại.' });
       return L.send(res, 200, { user: L.pub(u), mustChange: r.mustChange }, L.makeCookie(u.k));
     }
     if (action === 'logout') return L.send(res, 200, { ok: true }, L.clearCookie);
@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
       await L.setPw(me.k, np, me.k, false); return L.send(res, 200, { ok: true });
     }
     if (action === 'reset') {
-      if (!L.ADMINS.includes(me.k)) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc HCNS được đặt lại mật khẩu' });
+      if (!L.ADMINS.includes(me.k)) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc Quản lý dữ liệu được đặt lại mật khẩu' });
       const u = L.USERS.find((x) => x.k === b.k); if (!u) return L.send(res, 400, { error: 'Không có tài khoản này' });
       await L.put(`users/${u.k}/pw-${L.stamp()}.json`, { reset: true, by: me.k, at: new Date().toISOString() });
       await L.put(`audit/${L.stamp()}.json`, { user: me.k, area: 'Nhân viên', text: 'Đặt lại mật khẩu cho ' + u.n });

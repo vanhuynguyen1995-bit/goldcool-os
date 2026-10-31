@@ -5,7 +5,7 @@ const TOKEN = process.env.BLOB_READ_WRITE_TOKEN || '';
 const API = 'https://vercel.com/api/blob';
 const H = (x = {}) => ({ authorization: 'Bearer ' + TOKEN, 'x-api-version': '12', ...x });
 const DEFAULT_PW = process.env.GC_DEFAULT_PASSWORD || 'goldcool2026';
-const ADMINS = ['huy', 'huyen']; // Giám đốc, HCNS & Hệ thống
+const ADMINS = ['huy', 'kien']; // Giám đốc, Quản lý dữ liệu (Kiên)
 
 async function put(pathname, obj) {
   const r = await fetch(`${API}/?pathname=${encodeURIComponent(pathname)}`, { method: 'PUT', headers: H({ 'x-vercel-blob-access': 'private', 'x-add-random-suffix': '0', 'x-allow-overwrite': '1', 'x-content-type': 'application/json', 'x-cache-control-max-age': '60' }), body: JSON.stringify(obj) });

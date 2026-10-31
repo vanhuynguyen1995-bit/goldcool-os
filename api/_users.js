@@ -9,12 +9,12 @@ module.exports = [
   "a": "NH"
  },
  {
-  "k": "huyen",
-  "n": "Chị Huyền",
-  "r": "HCNS & Hệ thống",
+  "k": "kien",
+  "n": "Kiên",
+  "r": "Quản lý dữ liệu · PFM",
   "d": "Ban giám đốc",
-  "home": "nhan-vien",
-  "a": "CH"
+  "home": "hop-thu",
+  "a": "K"
  },
  {
   "k": "ha",

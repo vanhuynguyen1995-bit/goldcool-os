@@ -71,7 +71,7 @@
         <label class="f" for="pw">Mật khẩu</label><input class="in" id="pw" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu">
         <p class="err" id="lerr">${esc(err || '')}</p>
         <button class="btn pri big wide" id="lbtn">Đăng nhập</button>
-        <p class="muted sm" style="margin:12px 0 0">Lần đầu đăng nhập sẽ được yêu cầu đổi mật khẩu. Quên mật khẩu: nhờ chị Huyền hoặc anh Huy đặt lại.</p>
+        <p class="muted sm" style="margin:12px 0 0">Lần đầu đăng nhập sẽ được yêu cầu đổi mật khẩu. Quên mật khẩu: nhờ Kiên hoặc anh Huy đặt lại.</p>
       </form></div></div>`;
     $$('.acc').forEach((b) => b.onclick = () => { pick = b.dataset.k; $$('.acc').forEach((x) => x.classList.toggle('on', x === b)); $('#pw').focus(); });
     const on = $('.acc.on'); if (on) on.scrollIntoView({ block: 'nearest' });
@@ -291,7 +291,22 @@
   function stats(arr) {
     const n = arr.length, by = (st) => arr.filter((l) => l.status === st).length;
     const touched = arr.filter((l) => l.status !== 'Mới').length, quoted = by('Đã báo giá') + by('Đã chốt');
-    return { n, moi: by('Mới'), lh: by('Đã liên hệ'), bg: by('Đã báo giá'), chot: by('Đã chốt'), khong: by('Không nhu cầu'), touched, quoted, ft: median(arr.map(firstTouch).filter((v) => v != null)) };
+    return { n, moi: by('Mới'), lh: by('Đã liên hệ'), bg: by('Đã báo giá'), chot: by('Đã chốt'), khong: by('Không nhu cầu'), touched, quoted, ft: median(arr.map(firstTouch).filter((v) => v != null)), late: arr.filter(due).length };
+  }
+  // Phễu bán hàng: mỗi tầng đếm khách đã đi tới tầng đó trở lên
+  const STAGES = [['Khách nhận', 'n'], ['Đã liên hệ', 'touched'], ['Đã báo giá', 'quoted'], ['Đã chốt', 'chot']];
+  function funnel(s) {
+    const v = STAGES.map(([name, k]) => ({ name, n: s[k] }));
+    const top = Math.max(1, v[0].n), MIN = 34;
+    const w = v.map((x) => MIN + (100 - MIN) * (x.n / top));
+    const conv = v.slice(1).map((x, i) => (v[i].n ? x.n / v[i].n : null));
+    let worst = -1; conv.forEach((c, i) => { if (c != null && v[i].n - v[i + 1].n > 0 && (worst < 0 || c < conv[worst])) worst = i; });
+    return `<div class="fun">${v.map((x, i) => {
+      const a = w[i], b = i < v.length - 1 ? w[i + 1] : w[i] * 0.86;
+      const clip = `polygon(${(100 - a) / 2}% 0,${(100 + a) / 2}% 0,${(100 + b) / 2}% 100%,${(100 - b) / 2}% 100%)`;
+      const link = i < v.length - 1 ? `<div class="fun-link${i === worst ? ' worst' : ''}"><span>${conv[i] == null ? '—' : Math.round(conv[i] * 100) + '%'} đi tiếp</span>${v[i].n - v[i + 1].n > 0 ? `<em>${v[i].n - v[i + 1].n} khách chưa đi tiếp${i === worst ? ' · tầng yếu nhất' : ''}</em>` : ''}</div>` : '';
+      return `<div class="fun-st fs${i}"><div class="fun-shape" style="clip-path:${clip};-webkit-clip-path:${clip}"></div><div class="fun-txt"><b>${x.n}</b><span>${x.name}</span></div><div class="fun-pct">${i ? pct(x.n, v[0].n) : '100%'}<small>${i ? 'so với khách nhận' : ''}</small></div></div>${link}`;
+    }).join('')}</div>`;
   }
   function paintReport() {
     const days = { 1: 1, 7: 7, 30: 30, all: 0 }[S.period];
@@ -303,24 +318,28 @@
     const max = Math.max(1, ...cols.map((c) => c.n));
     const tally = (f) => { const m = {}; arr.forEach((l) => { const v = (f(l) || '').trim(); if (v) m[v] = (m[v] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 6); };
     const hb = (rows) => { const mx = Math.max(1, ...rows.map((r) => r[1])); return rows.length ? rows.map(([k, v]) => `<div class="hbar"><span title="${esc(k)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k)}</span><i style="width:${(v / mx) * 100}%"></i><b>${v}</b></div>`).join('') : '<p class="muted sm">Chưa có dữ liệu</p>'; };
-    const sales = S.admin ? S.split.map((u) => ({ u, s: stats(arr.filter((l) => l.owner === u.k)) })) : [];
+    const lv = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6'].map((k) => [k, arr.filter((l) => l.level === k).length]);
+    const lvMax = Math.max(1, ...lv.map((x) => x[1])), noLv = arr.filter((l) => !l.level).length;
+    const team = S.admin ? S.split.map((u) => ({ u, s: stats(arr.filter((l) => l.owner === u.k)) })).filter((x) => x.s.n || x.u.w) : [];
     const none = arr.filter((l) => !l.owner).length;
+    const cell = (v, base, cls) => `<td><div class="cv${cls ? ' ' + cls : ''}"><i style="width:${base ? (v / base) * 100 : 0}%"></i><b>${v}</b><span>${base ? Math.round((v / base) * 100) + '%' : ''}</span></div></td>`;
     $('#body').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div class="seg">${[['1', 'Hôm nay'], ['7', '7 ngày'], ['30', '30 ngày'], ['all', 'Tất cả']].map(([k, t]) => `<button data-p="${k}" class="${S.period === k ? 'on' : ''}">${t}</button>`).join('')}</div>
         <span class="muted sm">Cập nhật ${hm(new Date().toISOString())} · tự làm mới mỗi 30 giây</span></div>
-      ${!S.leads.length ? '<div class="notice">Chưa có khách thật nào nên các số dưới đây đều bằng 0. Số liệu sẽ tự chạy khi Fanpage được nối hoặc Sales thêm khách.</div>' : ''}
-      <div class="kpis">
-        <div class="kpi"><small>Khách nhận</small><b>${s.n}</b><span>${days === 1 ? 'hôm nay' : days ? days + ' ngày qua' : 'từ trước đến nay'}</span></div>
-        <div class="kpi${s.moi ? ' warn' : ''}"><small>Chưa gọi</small><b>${s.moi}</b><span>đang ở trạng thái Mới</span></div>
-        <div class="kpi"><small>Đã liên hệ</small><b>${pct(s.touched, s.n)}</b><span>${s.touched} khách · gọi đầu ${fmtMin(s.ft)}</span></div>
-        <div class="kpi"><small>Đã báo giá</small><b>${pct(s.quoted, s.n)}</b><span>${s.quoted} khách</span></div>
-        <div class="kpi"><small>Đã chốt</small><b>${pct(s.chot, s.n)}</b><span>${s.chot} khách</span></div></div>
-      ${S.admin ? `<div class="card"><h3>Theo từng Sales</h3><div class="tscroll"><table class="t"><thead><tr><th>Sales</th><th>Nhận</th><th>Chưa gọi</th><th>Đã liên hệ</th><th>Báo giá</th><th>Chốt</th><th>Không nhu cầu</th><th>Tỉ lệ chốt</th><th>Gọi đầu (trung vị)</th></tr></thead><tbody>
-        ${sales.map(({ u, s: x }) => `<tr><td><b>${esc(u.n)}</b><div class="muted sm">tỉ lệ chia ${u.w}%</div></td><td>${x.n}</td><td${x.moi ? ' style="color:var(--bad);font-weight:700"' : ''}>${x.moi}</td><td>${x.lh}</td><td>${x.bg}</td><td>${x.chot}</td><td>${x.khong}</td><td>${pct(x.chot, x.n)}</td><td>${fmtMin(x.ft)}</td></tr>`).join('')}
-        ${none ? `<tr><td class="muted">Chưa chia</td><td>${none}</td><td colspan="7"></td></tr>` : ''}</tbody>
-        <tfoot><tr><td>Cả đội</td><td>${s.n}</td><td>${s.moi}</td><td>${s.lh}</td><td>${s.bg}</td><td>${s.chot}</td><td>${s.khong}</td><td>${pct(s.chot, s.n)}</td><td>${fmtMin(s.ft)}</td></tr></tfoot></table></div>
-        <p class="muted sm" style="margin:10px 0 0">"Gọi đầu" là thời gian từ lúc khách vào hệ thống đến lần cập nhật đầu tiên của Sales.</p></div>` : ''}
-      <div class="card"><h3>Khách vào theo ngày <span class="muted sm" style="font-weight:500">${span} ngày gần nhất</span></h3><div class="bars">${cols.map((c) => `<div class="b"><em>${c.n || ''}</em><i style="height:${(c.n / max) * 100}%"></i><span>${c.k.slice(8, 10)}/${c.k.slice(5, 7)}</span></div>`).join('')}</div></div>
+      ${!S.leads.length ? '<div class="notice">Chưa có khách thật nào nên phễu đang trống. Số liệu tự chạy khi Fanpage được nối hoặc Sales thêm khách.</div>' : ''}
+      <div class="rep-top">
+        <div class="card fun-card"><h3>Phễu bán hàng<span class="sp"></span><span class="muted sm" style="font-weight:500">${days === 1 ? 'Hôm nay' : days ? days + ' ngày qua' : 'Từ trước đến nay'}${S.admin ? ' · cả đội' : ''}</span></h3>${funnel(s)}</div>
+        <div class="rep-side">
+          <div class="kpi${s.moi ? ' warn' : ''}"><small>Chưa gọi</small><b>${s.moi}</b><span>khách đang ở trạng thái Mới</span></div>
+          <div class="kpi${s.late ? ' warn' : ''}"><small>Đến hẹn gọi lại</small><b>${s.late}</b><span>hôm nay hoặc đã quá hẹn</span></div>
+          <div class="kpi"><small>Gọi đầu (trung vị)</small><b>${fmtMin(s.ft)}</b><span>từ lúc khách vào đến lần xử lý đầu</span></div>
+          <div class="kpi"><small>Không nhu cầu</small><b>${s.khong}</b><span>${pct(s.khong, s.n)} số khách nhận</span></div>
+        </div></div>
+      ${S.admin ? `<div class="card"><h3>Phễu theo từng Sales<span class="sp"></span><span class="muted sm" style="font-weight:500">% tính trên số khách mỗi người nhận</span></h3><div class="tscroll"><table class="t cvt"><thead><tr><th>Sales</th><th>Khách nhận</th><th>Đã liên hệ</th><th>Đã báo giá</th><th>Đã chốt</th><th>Chưa gọi</th><th>Gọi đầu</th></tr></thead><tbody>
+        ${team.map(({ u, s: x }) => `<tr><td><b>${esc(u.n)}</b><div class="muted sm">chia ${u.w}%</div></td>${cell(x.n, Math.max(1, ...team.map((t) => t.s.n)), 'base')}${cell(x.touched, x.n)}${cell(x.quoted, x.n)}${cell(x.chot, x.n, 'gold')}<td${x.moi ? ' style="color:var(--bad);font-weight:700"' : ''}>${x.moi}</td><td>${fmtMin(x.ft)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">Chưa có Sales nào nhận khách</td></tr>'}
+        ${none ? `<tr><td class="muted">Chưa chia</td><td>${none}</td><td colspan="5"></td></tr>` : ''}</tbody></table></div></div>` : ''}
+      <div class="two"><div class="card"><h3>Cấp khách khi AI bàn giao</h3><div class="lvf">${lv.map(([k, n]) => `<div class="lv-row"><span>${k}</span><div><i style="width:${n ? 12 + 88 * (n / lvMax) : 0}%"></i></div><b>${n}</b></div>`).join('')}</div>${noLv ? `<p class="muted sm" style="margin:8px 0 0">${noLv} khách chưa có cấp (nhập tay hoặc chatbot chưa gửi).</p>` : ''}</div>
+        <div class="card"><h3>Khách vào theo ngày <span class="muted sm" style="font-weight:500">${span} ngày gần nhất</span></h3><div class="bars">${cols.map((c) => `<div class="b"><em>${c.n || ''}</em><i style="height:${(c.n / max) * 100}%"></i><span>${c.k.slice(8, 10)}/${c.k.slice(5, 7)}</span></div>`).join('')}</div></div></div>
       <div class="two"><div class="card"><h3>Sản phẩm khách hỏi</h3>${hb(tally((l) => l.product))}</div><div class="card"><h3>Nguồn khách</h3>${hb(tally((l) => l.source))}</div></div>`;
     $$('[data-p]').forEach((b) => b.onclick = () => { S.period = b.dataset.p; paintReport(); });
   }
