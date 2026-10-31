@@ -1,93 +1,43 @@
-# GoldCool OS – phần mềm quản trị GoldCool Việt Nam
+# GoldCool OS · AI Sales
 
-Phần mềm quản trị nội bộ GoldCool Việt Nam, gồm 3 phân hệ:
-- **AI Sales**: hộp thư Fanpage, khách của tôi, chuyển giao, phòng thử AI, báo cáo, cài đặt.
-- **Mục tiêu & KPI**: bảng số liệu Giám đốc, cây mục tiêu, báo cáo tuần, thẻ vấn đề.
-- **Học viện**: học, thi, đóng vai, kết quả.
+Hộp thư khách của đội Sales GoldCool Việt Nam. Khách từ Fanpage (đã được AI tư vấn theo DNA) được chia tự động cho Sales theo tỉ lệ; Sales gọi, ghi chú, hẹn gọi lại và cập nhật trạng thái đến khi chốt. Chỉ dùng dữ liệu thật, không có dữ liệu mẫu.
 
-Gồm đủ 45 màn hình trong danh sách (46 trang: màn C08 tách thành Báo vấn đề mới và Chi tiết thẻ). 18 màn hình chính lấy nguyên từ bản thiết kế đã duyệt; 28 màn còn lại dựng cùng bộ nhận diện. Dữ liệu bám DNA phiên bản 2: phễu L1–L6, 5 kịch bản AI, giá bán lẻ đã gồm VAT, nhân sự theo sơ đồ tổ chức.
+Link: https://goldcool-os-386s.vercel.app
 
-## Chạy thử trên máy
+## Các trang
 
-Mở file `index.html` bằng trình duyệt. Nếu ảnh không hiện, chạy một máy chủ tĩnh bất kỳ trong thư mục này, ví dụ `npx serve .`.
+| Trang | Ai dùng | Nội dung |
+|---|---|---|
+| Hộp thư | Tất cả | Việc cần làm ngay: khách khẩn (bảo hành, khiếu nại), khách mới chưa gọi, khách đến hẹn gọi lại. Giám đốc/HCNS thấy thêm khách chưa chia. |
+| Khách | Tất cả | Sales: khách của mình. Giám đốc/HCNS: khách cả đội. Tìm theo tên, SĐT, sản phẩm; lọc theo trạng thái, theo Sales. Nút **Thêm khách** cho khách gọi hotline, nhắn Zalo, đến kho. |
+| Báo cáo | Tất cả | Khách nhận, chưa gọi, tỉ lệ liên hệ, báo giá, chốt, thời gian gọi đầu. Giám đốc/HCNS xem thêm bảng theo từng Sales. |
+| Cài đặt | Tất cả | Đổi mật khẩu, đăng xuất. Giám đốc/HCNS: tỉ lệ chia khách, kết nối Fanpage, đặt lại mật khẩu nhân viên, nhật ký thay đổi. |
 
-## Đưa lên Vercel (không cần cài gì)
+Chi tiết một khách: nút Gọi, Zalo, mở hội thoại Fanpage; đổi trạng thái (Mới → Đã liên hệ → Đã báo giá → Đã chốt / Không nhu cầu); hẹn gọi lại; ghi chú; đánh dấu đã nhập Zotech; bản bàn giao từ AI; hội thoại với AI; lịch sử xử lý. Giám đốc/HCNS chuyển khách sang Sales khác.
 
-1. Vào github.com, đăng nhập, bấm **New repository**, đặt tên `goldcool-os`, chọn **Private**, rồi bấm **Create repository**.
-2. Ở trang repo vừa tạo, bấm **uploading an existing file**. Kéo **toàn bộ nội dung** thư mục này vào (gồm `index.html`, `vercel.json`, các thư mục `css`, `js`, `img`), rồi bấm **Commit changes**.
-3. Vào vercel.com, đăng nhập bằng GitHub, bấm **Add New… → Project**, chọn repo `goldcool-os`, rồi bấm **Import**.
-4. Ở mục **Framework Preset**, chọn **Other**. Không cần lệnh build. Bấm **Deploy**.
-5. Khoảng 30 giây sau, Vercel cấp link dạng `goldcool-os.vercel.app`.
+Trên điện thoại: menu ở đáy màn hình, chạm vào khách để mở chi tiết, nút Gọi/Zalo to. Có thể "Thêm vào màn hình chính" như một ứng dụng.
 
-Mỗi lần sửa file trên GitHub, Vercel tự đưa bản mới lên.
+## Tài khoản
 
-Nếu máy đã có Node.js: mở Terminal trong thư mục này và chạy `npx vercel --prod`.
+6 tài khoản trong `api/_users.js`: Giám đốc, HCNS (quản trị), 4 Sales. Mật khẩu ban đầu dùng chung, lần đầu đăng nhập bắt buộc đổi. Quên mật khẩu: Giám đốc hoặc HCNS bấm **Đặt lại mật khẩu** trong Cài đặt.
+
+## Nối chatbot Fanpage
+
+Chatbot gửi mỗi khách đủ điều kiện về `POST /api/inbound?key=<INBOUND_KEY>` (JSON). Các tên trường thường gặp (name, phone, address, product, level, summary, last_message, link, conversation…) được tự nhận. Mẫu đầy đủ xem trong Cài đặt › Kết nối Fanpage.
+
+Biến môi trường trên Vercel:
+- `BLOB_READ_WRITE_TOKEN` — kho dữ liệu (đã có)
+- `INBOUND_KEY` — khóa cổng nhận khách (đã có)
+- `ZOTECH_WEBHOOK_URL` — tùy chọn: chuyển tiếp mỗi khách mới sang Zotech
+- `GC_DEFAULT_PASSWORD` — tùy chọn: đổi mật khẩu ban đầu
 
 ## Cấu trúc
 
-| Thư mục / file | Nội dung |
+| File | Nội dung |
 |---|---|
-| `index.html` | Trang chính |
-| `js/screens.js` | 18 màn hình (sinh tự động từ bản thiết kế, không sửa tay) |
-| `js/app.js` | Điều hướng, thao tác, AI thử theo 5 kịch bản, lưu trạng thái |
-| `css/app.css` | Bộ nhận diện: navy #0F3D63, vàng #C9A227 |
-| `img/` | 19 ảnh sản phẩm thật, đặt tên theo quy tắc NHÓM_DÒNG_PHIÊNBẢN_LOẠI_STT |
-
-## Những gì đã chạy thật trong bản này
-
-- **Đăng nhập** chọn vai trò (Sales, Giám đốc, Trưởng phòng SX–VH, nhân viên mới), mỗi vai trò vào đúng màn chính. Bấm tên ở góc dưới bên trái để đăng xuất.
-- Điều hướng toàn bộ menu. Nút **☰ 46 màn hình** ở góc dưới bên phải để mở nhanh từng màn.
-- **Thông báo**, **Ghi nhận đồng nghiệp**, **Báo vấn đề mới** (thẻ hiện ngay trên bảng), **Đề xuất mục tiêu**, **Khung chat website** chạy cùng luật 5 kịch bản.
-- **Hộp thư**: tiếp nhận khách, nhắn tin, chặn câu hứa tồn kho hoặc ngày giao khi Kho chưa xác nhận.
-- **Chi tiết khách**: ghi kết quả liên hệ. Muốn lên L4 bắt buộc có ngày và hành động follow-up.
-- **Phòng thử AI**: gõ như khách để AI trả lời đúng 5 kịch bản. AI báo giá GoldCool trước, mẫu rẻ sau, gửi ảnh thật, chuyển Sales đúng lúc. AI không báo giá các nhóm tủ salad, tủ đông trưng bày, GoldWash.
-- **Bảng giá**: chọn ngày áp dụng rồi duyệt cả bảng.
-- **Cài đặt AI**: thêm hoặc bỏ câu bị cấm.
-- **Thẻ vấn đề**: Giám đốc chọn phương án; trao đổi.
-- **Báo cáo tuần**: nộp báo cáo.
-- **Bài thi**: chọn đáp án, chấm câu.
-- **Đóng vai**: khách AI phản hồi theo câu trả lời. Không tự giảm giá thì buổi luyện đạt; tự giảm giá thì chưa đạt.
-
-## Đăng nhập và dữ liệu dùng chung (bản trên Vercel)
-
-- 25 tài khoản theo sơ đồ tổ chức. Mật khẩu ban đầu do Giám đốc giữ; lần đầu đăng nhập bắt buộc đặt mật khẩu riêng (ít nhất 8 ký tự). Mật khẩu được mã hóa một chiều (scrypt).
-- Giám đốc và chị Huyền đặt lại mật khẩu ở màn **Nhân viên** (nút “Đặt lại MK”, bấm 2 lần để xác nhận).
-- Bấm tên ở góc dưới bên trái để **đổi mật khẩu** hoặc **đăng xuất**.
-- Dữ liệu dùng chung lưu trong kho Vercel Blob riêng tư `goldcool-os-data` (Singapore): tiếp nhận khách, cấp khách, duyệt giá, câu bị cấm, quyết định thẻ vấn đề, ghi nhận, trao đổi, thẻ vấn đề mới. Mọi thay đổi ghi vào **Nhật ký thay đổi** kèm tên người sửa.
-- API: `api/auth.js` (đăng nhập, đổi / đặt lại mật khẩu), `api/state.js` (dữ liệu dùng chung). Không cần cài thư viện.
-- Mở file trực tiếp (không có API) thì app chạy ở chế độ xem thử: mật khẩu bất kỳ, dữ liệu lưu trên trình duyệt.
-
-## Chưa có trong bản này (bước tích hợp tiếp theo)
-
-- Kết nối Fanpage Facebook, CRM Zotech, Zalo nhóm Sales.
-- Đăng nhập, phân quyền theo vai trò, cơ sở dữ liệu dùng chung cho cả công ty.
-- AI thật gọi mô hình ngôn ngữ (bản này mô phỏng đúng luật của 5 kịch bản).
-- Đăng nhập thật bằng tài khoản công ty (bản này cho chọn vai trò để thử).
-
-## Thư mục `_nguon`
-
-Mã nguồn sinh 18 màn hình: `lib.js`, `batch1v2.js`, `batch2v2.js` (18 màn chính) và `batch3.js` (28 màn còn lại) là bản thiết kế. `build_app.js` đóng gói chúng thành `js/screens.js`. Thư mục này không được đưa lên Vercel.
-
-## Website GoldCool (thư mục `web`)
-
-- Link: https://goldcool-website.vercel.app · Quản trị: https://goldcool-website.vercel.app/admin/
-- Vercel project `goldcool-website` (Root Directory `web`), kho dữ liệu riêng tư `goldcool-website-data` (Singapore).
-- Trang: trang chủ, tin tức, bài viết; form “Nhận tư vấn” lưu vào kho, xem ở trang quản trị.
-- Quản trị: 9 tài khoản (Quản trị: anh Huy, chị Huyền · Biên tập: Lan, Nguyệt, Kiên, Đạt · Sales: Hà, Ánh, Yến). Mật khẩu ban đầu giống GoldCool OS, bắt buộc đổi lần đầu.
-- Sửa giao diện trang: sửa `_nguon/web_build.js` rồi chạy `node _nguon/web_build.js`.
-
-## Website: đồ bếp inox & combo (31/10/2026)
-- Trang mới: `do-bep-inox.html` (8 nhóm inox), `combo-bep.html` (4 combo gợi ý theo mô hình quán), `san-pham.html?s=...` (chi tiết).
-- Quản trị → “Đồ inox & combo”: thêm/sửa/ẩn sản phẩm, tải ảnh thật. API `api/products.js`, danh mục và combo mẫu ở `api/_catalog.js`.
-- Không hiện giá bán: chặn số tiền ở cả trang quản trị và API.
-
-## Website giới thiệu sản phẩm (31/10/2026)
-- `san-pham.html`: toàn bộ danh mục. Trang từng dòng: `tu-dong-cong-nghiep`, `tu-mat-trung-bay`, `ban-mat-tu-salad`, `tu-dong-trung-bay`, `may-rua-bat-goldwash` (ảnh thật, phiên bản, bảng thông số), `do-bep-inox`, `combo-bep`.
-- Dữ liệu dòng sản phẩm: `_nguon/web_catalog.js` (từ DNA – Product Master). Sửa xong chạy `node _nguon/web_build.js`.
-- Trang chi tiết sản phẩm đăng từ quản trị: `chi-tiet.html?s=...`.
-
-## Cổng nhận khách từ chatbot Fanpage (31/10/2026)
-- URL: `POST https://goldcool-os-386s.vercel.app/api/inbound?key=<INBOUND_KEY>` (hoặc header `x-goldcool-key`). INBOUND_KEY xem trong Vercel → goldcool-os-386s → Settings → Environment Variables.
-- Body JSON, các trường nhận được (tên nào cũng được trong ngoặc): name (full_name, customer_name, customer.name), phone (phone_number, sdt), address, source, business_model, product, size, cooling, choice, price_sent, concern, level (L1–L6), last_message, summary (handover), next_action, conversation (mảng {role,text} hoặc chuỗi), link (conversation_url), psid.
-- Khách mới được chia tự động theo tỉ lệ (Giám đốc/HCNS đặt ở Hộp thư → "Tỉ lệ chia", mặc định Hà 34 · Ánh 33 · Yến 33 · NVKD4 0). Mỗi khách giao cho Sales đang thiếu nhiều nhất so với tỉ lệ trong tháng. Sales chỉ thấy và sửa khách của mình; Giám đốc/HCNS thấy tất cả và chuyển khách.
-- Đặt `ZOTECH_WEBHOOK_URL` thì mỗi khách mới được chuyển tiếp sang Zotech.
+| `index.html`, `css/sales.css`, `js/sales.js` | Giao diện (không cần build) |
+| `api/auth.js` | Đăng nhập, đổi / đặt lại mật khẩu, danh sách tài khoản |
+| `api/inbound.js` | Cổng nhận khách, chia theo tỉ lệ, danh sách, cập nhật, thêm khách |
+| `api/state.js` | Nhật ký thay đổi |
+| `web/` | Website catalog (dự án Vercel riêng) |
+| `_nguon/ban-thiet-ke/` | Bản thiết kế 46 màn hình cũ, lưu tham khảo, không đưa lên Vercel |

@@ -99,7 +99,21 @@ module.exports = async (req, res) => {
       await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Chia khách', text: 'Đặt tỉ lệ chia khách: ' + SALES.map((u) => `${u.n.split(' ').pop()} ${w[u.k]}`).join(' · '), at: new Date().toISOString() });
       return L.send(res, 200, { ok: true, w });
     }
-    // 4. Cập nhật khách: Sales chỉ sửa khách của mình; Giám đốc / HCNS chuyển khách cho Sales khác
+    // 4. Thêm khách thủ công (gọi hotline, nhắn Zalo, khách đến kho): Sales thêm thì khách là của mình; Giám đốc/HCNS thêm thì chia theo tỉ lệ hoặc giao thẳng
+    if (req.method === 'POST' && q.a === 'add') {
+      const b = await L.body(req); const at = new Date().toISOString(); const id = L.stamp();
+      const name = s(b.name, 80), phone = s(b.phone, 20).replace(/[^\d+ ]/g, '');
+      if (!name && !phone) return L.send(res, 400, { error: 'Cần tên hoặc số điện thoại khách' });
+      const lead = { id, at, status: 'Mới', owner: '', history: [], name: name || 'Khách ' + phone, phone, address: s(b.address, 120), source: s(b.source, 40) || 'Nhập tay', product: s(b.product, 120), lastMessage: s(b.note, 500), summary: '', lines: [], level: '', urgent: /khiếu nại|bảo hành|hỏng|không lạnh|không chạy|lỗi/i.test(String(b.note || '')), manual: me.n };
+      let u = null;
+      if (!admin) u = me; else if (b.owner) u = SALES.find((x) => x.k === b.owner) || null; else { const k = pick(await getSplit(), await all()); u = SALES.find((x) => x.k === k) || null; }
+      if (u) { lead.owner = u.k; lead.ownerName = u.n; }
+      lead.history.push({ by: me.n, at, status: 'Mới', note: 'Nhập tay' + (u ? ' · giao cho ' + u.n : '') });
+      await L.put(`inbound/${id}/${L.stamp()}.json`, lead);
+      await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Khách Fanpage', text: `Thêm khách ${lead.name}${u ? ' · giao cho ' + u.n : ''}`, at });
+      return L.send(res, 200, { ok: true, lead });
+    }
+    // 5. Cập nhật khách: Sales chỉ sửa khách của mình; Giám đốc / HCNS chuyển khách cho Sales khác
     if (req.method === 'POST' && q.id) {
       const id = String(q.id).replace(/[^\w-]/g, '');
       const bs = await L.list(`inbound/${id}/`); if (!bs.length) return L.send(res, 404, { error: 'Không có khách này' });
@@ -110,9 +124,11 @@ module.exports = async (req, res) => {
       if (b.status && STATUS.includes(b.status)) cur.status = b.status;
       if (b.zotech !== undefined) cur.zotech = b.zotech ? at : '';
       if (b.note !== undefined) cur.staffNote = s(b.note, 1000);
-      cur.history = (cur.history || []).concat([{ by: me.n, at, status: cur.status, note: [moved ? 'Chuyển cho ' + moved : '', b.note ? s(b.note, 300) : ''].filter(Boolean).join(' · ') }]).slice(-30);
+      if (b.followUp !== undefined) cur.followUp = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(b.followUp)) ? String(b.followUp) : '';
+      ['name', 'phone', 'address', 'product'].forEach((f) => { if (b[f] !== undefined) cur[f] = f === 'phone' ? s(b[f], 20).replace(/[^\d+ ]/g, '') : s(b[f], f === 'product' ? 120 : 120); });
+      cur.history = (cur.history || []).concat([{ by: me.n, at, status: cur.status, note: [moved ? 'Chuyển cho ' + moved : '', b.followUp ? 'Hẹn gọi lại ' + String(b.followUp).replace('T', ' ') : '', b.note ? s(b.note, 300) : ''].filter(Boolean).join(' · ') }]).slice(-30);
       await L.put(`inbound/${id}/${L.stamp()}.json`, cur);
-      await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Khách Fanpage', text: `${cur.name}: ${moved ? 'chuyển cho ' + moved + ' · ' : ''}${cur.status}${b.zotech ? ' · đã nhập Zotech' : ''}`, at });
+      await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Khách Fanpage', text: `${cur.name}: ${moved ? 'chuyển cho ' + moved + ' · ' : ''}${cur.status}${b.followUp ? ' · hẹn gọi lại ' + b.followUp.replace('T', ' ') : ''}${b.zotech ? ' · đã nhập Zotech' : ''}`, at });
       const old = (await L.list(`inbound/${id}/`)).sort((a, c) => a.pathname.localeCompare(c.pathname)).slice(0, -3); await L.del(old.map((x) => x.url));
       return L.send(res, 200, { ok: true, lead: (({ raw, ...x }) => x)(cur) });
     }

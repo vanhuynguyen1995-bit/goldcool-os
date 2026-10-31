@@ -3,6 +3,7 @@ const L = require('./_lib.js');
 module.exports = async (req, res) => {
   try {
     const action = (req.query && req.query.a) || '';
+    if (req.method === 'GET' && action === 'users') return L.send(res, 200, { users: L.USERS.map((u) => ({ k: u.k, n: u.n, r: u.r, d: u.d, a: u.a })) });
     if (req.method === 'GET') { const u = L.session(req); return u ? L.send(res, 200, { user: L.pub(u) }) : L.send(res, 401, { error: 'Chưa đăng nhập' }); }
     const b = await L.body(req);
     if (action === 'login') {
