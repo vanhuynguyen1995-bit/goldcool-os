@@ -15,6 +15,17 @@ const tbl = (cols, rows) => `<table class="tbl"><thead><tr>${cols.map((c) => `<t
 const tabs = (arr, on = 0) => `<div class="tabs">${arr.map(([t, n], i) => `<a class="${i === on ? 'on' : ''}">${t}${n !== undefined ? ` <i>${n}</i>` : ''}</a>`).join('')}</div>`;
 const PRINC = ['Bán bằng sự am hiểu', 'Tạo niềm tin bằng chất lượng', 'Giữ khách hàng bằng trách nhiệm', 'Niềm tin lâu dài hơn doanh số trước mắt', 'Sản phẩm phù hợp hơn sản phẩm giá cao', 'Làm đúng trước, nhanh sau', 'Minh bạch khi có vấn đề'];
 
+const DEPTS = ['Ban giám đốc', 'Kinh doanh & Marketing', 'Sản xuất – Vận hành', 'Kế toán', 'Khách hàng & Hậu mãi'];
+const USERS = [
+  ['huy', 'Nguyễn Văn Huy', 'Giám đốc', 'Ban giám đốc', 'bang-so-lieu'], ['huyen', 'Chị Huyền', 'HCNS & Hệ thống', 'Ban giám đốc', 'nhan-vien'],
+  ['ha', 'Đoàn Thị Hồng Hà', 'Sales · NVKD1', 'Kinh doanh & Marketing', 'trang-chu'], ['anh', 'Trần Thị Ánh', 'Sales · NVKD2', 'Kinh doanh & Marketing', 'trang-chu'], ['yen', 'Trịnh Hải Yến', 'Sales · NVKD3', 'Kinh doanh & Marketing', 'trang-chu'], ['nvkd4', 'Nhân viên mới', 'Sales NVKD4 · Học viện', 'Kinh doanh & Marketing', 'hom-nay-hoc-gi'],
+  ['lan', 'Nguyễn Thị Lan', 'Content', 'Kinh doanh & Marketing', 'kho-tai-lieu'], ['nguyet', 'Bùi Minh Nguyệt', 'Content', 'Kinh doanh & Marketing', 'kho-tai-lieu'], ['kien', 'Kiên', 'Ads – Dữ liệu', 'Kinh doanh & Marketing', 'bao-cao-ai'], ['dat', 'Đạt', 'Website', 'Kinh doanh & Marketing', 'chat-website'],
+  ['chinh', 'Nguyễn Văn Chính', 'Trưởng phòng Sản xuất – Vận hành', 'Sản xuất – Vận hành', 'danh-sach-san-pham'], ['hung', 'Nguyễn Mạnh Hùng', 'Kỹ thuật bảo hành', 'Sản xuất – Vận hành', 'so-loi'],
+  ['phong', 'Sin Văn Phong', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['thiet', 'Thiên Văn Thiết', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['kinh', 'Vàng Văn Kinh', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['suong', 'Vàng Văn Sương', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['duong', 'Vàng Văn Dương', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'], ['nam', 'Nguyễn Bảo Nam', 'Công nhân', 'Sản xuất – Vận hành', 'bao-cao-tuan'],
+  ['ut', 'Nguyễn Thị Út', 'Kế toán tổng hợp', 'Kế toán', 'bang-gia'], ['thutrang', 'Trần Thị Thu Trang', 'Kế toán bán hàng kiêm thủ quỹ', 'Kế toán', 'bang-gia'], ['thanh', 'Đỗ Huyền Thanh', 'Thủ kho', 'Kế toán', 'thong-bao'],
+  ['quan', 'Lương Văn Quân', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'], ['hieu', 'Lương Văn Hiếu', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'], ['thang', 'Nguyễn Đăng Đại Thắng', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'], ['luong', 'Nguyễn Hữu Lương', 'Lái xe', 'Khách hàng & Hậu mãi', 'bao-cao-tuan'],
+].map(([k, n, r, d, home]) => { const p = n.split(' '); return { k, n, r, d, home, a: p.length === 1 ? p[0][0] : (p[0][0] + p[p.length - 1][0]).toUpperCase() }; });
+S.__USERS = USERS;
 /* ===== A01 Đăng nhập ===== */
 S['A01_Dang_nhap'] = page(`<div style="min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr;width:100%;min-width:1100px">
  <div style="background:linear-gradient(160deg,#0F3D63,#0B2F4D);color:#fff;padding:56px 64px;display:flex;flex-direction:column;position:relative;overflow:hidden">
@@ -28,9 +39,10 @@ S['A01_Dang_nhap'] = page(`<div style="min-height:100vh;display:grid;grid-templa
    <div class="h1">Đăng nhập</div><div class="sub1">Dùng email công ty để vào phần mềm.</div>
    <div class="lbl" style="margin-top:22px">Email</div><input class="field" id="lg-email" value="kinhdoanh@goldcool.vn">
    <div class="lbl" style="margin-top:14px">Mật khẩu</div><input class="field" id="lg-pass" type="password" value="goldcool">
-   <div class="lbl" style="margin-top:14px">Vào với vai trò (bản thử)</div>
-   <div class="col" style="gap:8px" id="lg-roles">
-    ${[['ha', 'Đoàn Thị Hồng Hà', 'Sales · NVKD1', 'HH'], ['huy', 'Nguyễn Văn Huy', 'Giám đốc', 'NH'], ['chinh', 'Nguyễn Văn Chính', 'TP Sản xuất – Vận hành', 'NC'], ['nvkd4', 'Nhân viên mới', 'Sales NVKD4 · Học viện', 'N4']].map(([k, n, r, a], i) => `<div class="field row click" data-role="${k}" style="gap:10px;cursor:pointer;${i === 0 ? 'border-color:var(--navy);background:var(--ice)' : ''}">${av(a, 28)}<div><b class="sm">${n}</b><div class="xs muted">${r}</div></div></div>`).join('')}
+   <div class="lbl" style="margin-top:14px">Chọn tài khoản (bản thử · ${USERS.length} người)</div>
+   <input class="field" id="lg-find" placeholder="Tìm tên hoặc phòng ban…" style="margin-bottom:8px">
+   <div id="lg-roles" style="max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px">
+    ${DEPTS.map((d) => `<div class="lg-grp"><div class="xs muted" style="font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:8px 8px 4px">${d}</div>${USERS.filter((u) => u.d === d).map((u) => `<div class="row click lg-u" data-role="${u.k}" data-find="${(u.n + ' ' + u.r + ' ' + d).toLowerCase()}" style="gap:10px;cursor:pointer;padding:7px 8px;border-radius:8px;border:1px solid transparent;${u.k === 'ha' ? 'border-color:var(--navy);background:var(--ice)' : ''}">${av(u.a, 28)}<div style="min-width:0"><b class="sm">${u.n}</b><div class="xs muted">${u.r}</div></div></div>`).join('')}</div>`).join('')}
    </div>
    <span class="btn pri" id="lg-go" style="width:100%;height:44px;margin-top:20px">Đăng nhập</span>
    <div class="row xs" style="margin-top:12px"><span class="muted">Bản thử: mật khẩu bất kỳ</span><a class="sp" style="color:var(--navy);font-weight:600;cursor:pointer">Quên mật khẩu?</a></div>

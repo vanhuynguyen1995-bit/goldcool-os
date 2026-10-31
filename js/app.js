@@ -71,6 +71,7 @@
     document.title = m.title + ' · GoldCool OS';
     $$('.card').forEach((c) => { if (CLICK_CARDS[m.id] && CLICK_CARDS[m.id](c)) c.classList.add('click'); });
     (APPLY[m.id] || (() => {}))();
+    if (typeof personalize === 'function') personalize(m.id);
     menuMark(m.id);
   }
   const syncHash = () => { CUR = fromHash(); render(); };
@@ -501,13 +502,14 @@
   CLICK['bao-cao-ai'] = (t) => { const b = t.closest('.btn'); if (b && /Sổ lỗi/.test(T(b))) return go('so-loi'); return false; };
 
   /* ===== Các màn bổ sung ===== */
-  const HOME = { ha: 'trang-chu', huy: 'bang-so-lieu', chinh: 'danh-sach-san-pham', nvkd4: 'hom-nay-hoc-gi' };
+  const UMAP = {}; (window.USERS || []).forEach((u) => { UMAP[u.k] = u; });
+  const me = () => UMAP[S.role] || UMAP.ha;
   function CLICK2(r, t) {
     const b = t.closest('.btn'); const lab = b ? T(b) : '';
     if (r === 'dang-nhap') {
       const ro = t.closest('[data-role]');
-      if (ro) { S.role = ro.dataset.role; save(); $$('[data-role]').forEach((x) => { const on = x === ro; x.style.borderColor = on ? 'var(--navy)' : ''; x.style.background = on ? 'var(--ice)' : ''; }); return; }
-      if (t.closest('#lg-go')) { const em = $('#lg-email').value.trim(); if (!/@/.test(em)) { toast('Nhập email công ty, ví dụ kinhdoanh@goldcool.vn', 'bad'); return; } S.loggedIn = true; save(); toast('Đăng nhập thành công', 'ok'); go(HOME[S.role || 'ha']); return; }
+      if (ro) { S.role = ro.dataset.role; save(); $$('[data-role]').forEach((x) => { const on = x === ro; x.style.borderColor = on ? 'var(--navy)' : 'transparent'; x.style.background = on ? 'var(--ice)' : ''; }); return; }
+      if (t.closest('#lg-go')) { const em = $('#lg-email').value.trim(); if (!/@/.test(em)) { toast('Nhập email công ty, ví dụ kinhdoanh@goldcool.vn', 'bad'); return; } S.loggedIn = true; save(); toast('Xin chào ' + me().n, 'ok'); go(me().home); return; }
       if (/Quên mật khẩu/.test(T(t))) { toast('Liên hệ chị Huyền (HCNS & Hệ thống) để cấp lại mật khẩu'); return; }
     }
     if (r === 'thong-bao' && /Đánh dấu đã đọc hết/.test(lab)) { $$('.noti .dot').forEach((d) => d.remove()); $$('.noti').forEach((n) => { n.style.background = ''; }); toast('Đã đánh dấu đã đọc', 'ok'); return; }
@@ -532,6 +534,18 @@
     if (r === 'hom-nay-hoc-gi') { const c = t.closest('.card'); if (c && T(c).includes('Bài học') && !T(c).includes('đã xong')) return go('xem-bai-hoc'); }
     if (r === 'trang-chu') { const c = t.closest('.card'); if (c && /Chứng nhận tư vấn/.test(T(c))) return go('ho-so-nang-luc'); }
     return false;
+  }
+  function personalize(id) {
+    if (id === 'dang-nhap') {
+      const f = $('#lg-find'); if (f) f.oninput = () => { const q = f.value.toLowerCase().trim(); $$('.lg-u').forEach((u) => { u.hidden = q && !u.dataset.find.includes(q); }); $$('.lg-grp').forEach((g) => { g.hidden = !$$('.lg-u', g).some((u) => !u.hidden); }); };
+      const cur = $(`[data-role="${S.role || 'ha'}"]`); if (cur) cur.click();
+      return;
+    }
+    if (!S.loggedIn || !S.role) return;
+    const u = me();
+    const box = $('.me'); if (box) { $('.av', box).textContent = u.a; $('b', box).textContent = u.n; $('span', box).textContent = u.r; }
+    const ta = $('.top > .av'); if (ta) ta.textContent = u.a;
+    if (id === 'trang-chu' && S.role !== 'ha') { const h = $('.h1'); if (h) h.textContent = 'Chào buổi sáng, ' + u.n.split(' ').pop(); }
   }
   APPLY['ghi-nhan'] = () => { const l = $('#kd-list'); if (l) (S.kudos || []).slice().reverse().forEach((k) => l.insertAdjacentHTML('afterbegin', `<div style="padding:12px 18px;border-top:1px solid var(--line);background:#FFFCF2"><div class="row sm" style="gap:8px"><b>Đoàn Thị Hồng Hà</b><span class="muted">→</span><b>${esc(k.who)}</b><span class="sp xs muted">${k.at}</span></div><span class="chip blue" style="font-size:11px;margin-top:6px">${esc(k.val)}</span><div class="sm muted" style="margin-top:6px">“${esc(k.tx)}”</div></div>`)); };
   const _tvd = APPLY['the-van-de'];

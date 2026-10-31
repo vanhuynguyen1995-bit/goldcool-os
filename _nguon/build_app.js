@@ -45,6 +45,7 @@ for (const [k, html] of Object.entries({ ...A, ...B })) {
   screens[id] = body(html);
   meta.push({ id, mod, title, no: CODES[k.slice(0, 2)], mobile: k.includes('dien_thoai') });
 }
+const STAFF = B3.__USERS; delete B3.__USERS;
 for (const [k, html] of Object.entries(B3)) {
   const [id, mod, title] = R3[k];
   screens[id] = body(html);
@@ -79,7 +80,7 @@ for f in os.listdir(src):
     im=Image.open(os.path.join(src,f)); im.thumbnail((900,900)); im.save(os.path.join(out,f),quality=82)
 "`);
 const iconSvg = (n) => require('./lib.js').ic(n, 26, 'var(--navy)');
-fs.writeFileSync(path.join(OUT, 'js/screens.js'), '// Tự sinh từ 18 màn hình thiết kế – không sửa tay\nwindow.SCREENS=' + JSON.stringify(screens) + ';\nwindow.SCREEN_META=' + JSON.stringify(meta) + ';\nwindow.PLACEHOLDERS=' + JSON.stringify(placeholders) + ';\nwindow.ICONS=' + JSON.stringify({ file: iconSvg('file'), layers: iconSvg('layers') }) + ';\n');
+fs.writeFileSync(path.join(OUT, 'js/screens.js'), '// Tự sinh từ 18 màn hình thiết kế – không sửa tay\nwindow.SCREENS=' + JSON.stringify(screens) + ';\nwindow.USERS=' + JSON.stringify(STAFF) + ';\nwindow.SCREEN_META=' + JSON.stringify(meta) + ';\nwindow.PLACEHOLDERS=' + JSON.stringify(placeholders) + ';\nwindow.ICONS=' + JSON.stringify({ file: iconSvg('file'), layers: iconSvg('layers') }) + ';\n');
 const extra = fs.readFileSync(path.join(__dirname, 'app_extra.css'), 'utf8');
 fs.writeFileSync(path.join(OUT, 'css/app.css'), CSS + '\n' + extra);
 fs.copyFileSync(path.join(__dirname, 'app.js'), path.join(OUT, 'js/app.js'));
