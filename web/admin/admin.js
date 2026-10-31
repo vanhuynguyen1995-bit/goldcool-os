@@ -137,7 +137,7 @@
       <label class="lbl">Nội dung</label>
       <div class="tb"><button data-i="## ">Tiêu đề mục</button><button data-w="**">Đậm</button><button data-i="- ">Danh sách</button><button data-i="> ">Trích dẫn</button><label class="btn l sm" style="height:30px;padding:0 10px;font-size:13px;cursor:pointer">Chèn ảnh<input type="file" id="upi" accept="image/*" hidden></label></div>
       <textarea class="inp" id="bd" rows="22" style="font-family:ui-monospace,Menlo,monospace;font-size:14px">${esc(p.body)}</textarea>
-      <p class="xs muted" style="margin-top:6px">## tiêu đề · **chữ đậm** · - danh sách · 1. danh sách số · &gt; trích dẫn · [chữ](liên kết). Không viết “tiết kiệm điện 50%”, không tự đưa giá ngoài bảng giá đã duyệt.</p>
+      <p class="xs muted" style="margin-top:6px">## tiêu đề · **chữ đậm** · - danh sách · 1. danh sách số · &gt; trích dẫn · [chữ](liên kết). Không viết “tiết kiệm điện 50%”. Website không hiện giá bán – mời khách để lại thông tin để nhận báo giá.</p>
      </div><div><div class="xs muted" style="font-weight:700;margin-bottom:8px">XEM TRƯỚC</div><div class="pv" id="pv"></div></div></div>`;
     let cover = p.cover;
     const pv = () => { $('#pv').innerHTML = `${cover ? `<img src="${esc(imgUrl(cover))}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px">` : ''}<div class="eyebrow" style="margin-top:16px">${esc($('#ca').value)}</div><h1 style="font-size:28px;letter-spacing:-.02em;margin-top:6px;line-height:1.2">${esc($('#t').value || 'Tiêu đề bài viết')}</h1><div class="prose">${md($('#bd').value)}</div>`; };
@@ -158,6 +158,7 @@
     const save = async (status) => {
       const body = { id: p.id, title: $('#t').value, slug: $('#sl').value, category: $('#ca').value, excerpt: $('#ex').value, cover, body: ta.value, status };
       if (/tiết kiệm (điện )?50 ?%/i.test(body.body + body.title + body.excerpt)) { toast('DNA không cho phép viết “tiết kiệm điện 50%”', 'bad'); return; }
+      if (/\d{1,3}([.,]\d{3}){1,3}\s*(đ|đồng|vnđ|vnd|₫)|\d+([.,]\d+)?\s*(triệu|tr)\b/i.test(body.body + body.title + body.excerpt)) { toast('Website không hiện giá bán. Hãy bỏ con số giá trong bài.', 'bad'); return; }
       const r = await api('/api/posts', { method: 'POST', body: JSON.stringify(body) });
       if (!r.ok) { toast(r.j.error || 'Chưa lưu được', 'bad'); return; }
       toast(status === 'published' ? 'Đã đăng bài' : 'Đã lưu nháp', 'ok'); postsView();

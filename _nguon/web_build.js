@@ -37,7 +37,7 @@ const footer = `<footer class="ft"><div class="wrap in">
   <div><h4>Hỗ trợ</h4><ul><li><a href="index.html#so-sanh">Bảo hành 24 tháng</a></li><li><a href="index.html#so-sanh">Đổi mới 30 ngày</a></li><li><a href="index.html#quy-trinh">Giao hàng &amp; lắp đặt</a></li><li><a href="tin-tuc.html">Tin tức &amp; kiến thức</a></li></ul></div>
   <div><h4>Liên hệ</h4><ul><li><a href="tel:0865868868">Hotline / Zalo: 0865 868 868</a></li><li>Kho CN05 KCN Nguyên Khê, Phúc Thịnh, Hà Nội</li><li>goldcool.vn</li></ul></div>
  </div>
- <div class="bot"><span>© 2026 GoldCool Việt Nam</span><span>Giá niêm yết đã gồm VAT, chưa gồm vận chuyển</span></div>
+ <div class="bot"><span>© 2026 GoldCool Việt Nam</span><span>Hotline / Zalo 0865 868 868</span></div>
 </div></footer>
 <div class="fab"><a href="https://zalo.me/0865868868" target="_blank" rel="noopener" aria-label="Nhắn Zalo" style="background:#0068FF;color:#fff;font-weight:800;font-size:13px">Zalo</a><a href="tel:0865868868" aria-label="Gọi hotline" style="background:var(--gold)">${ic('phone', 22, '#072238')}</a></div>`;
 const head = (title, desc, extra = '') => `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -56,7 +56,7 @@ const form = `<section class="sec form-sec" id="tu-van"><div class="wrap in">
    <svg style="position:absolute;right:-80px;bottom:-80px;opacity:.06" width="380" height="380" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width=".6" aria-hidden="true">${I.snow}</svg>
    <div class="eyebrow">Nhận tư vấn miễn phí</div>
    <h2 class="h2 d">Kể cho chúng tôi<br>về quán của bạn.</h2>
-   <p>Tư vấn viên GoldCool sẽ liên hệ lại để đề xuất thiết bị phù hợp và gửi báo giá đã gồm VAT.</p>
+   <p>Tư vấn viên GoldCool sẽ liên hệ lại để đề xuất thiết bị phù hợp và gửi báo giá riêng cho quán của bạn.</p>
    <div class="ct">
     <div><span class="ic" style="background:rgba(201,162,39,.18)">${ic('phone', 20, '#E6C35C')}</span><div><b><a href="tel:0865868868">0865 868 868</a></b><small>Hotline &amp; Zalo</small></div></div>
     <div><span class="ic" style="background:rgba(201,162,39,.18)">${ic('pin', 20, '#E6C35C')}</span><div><b>Kho CN05 KCN Nguyên Khê</b><small>Phúc Thịnh, Hà Nội · xem hàng trực tiếp</small></div></div>
@@ -109,7 +109,7 @@ const index = head('GoldCool – Tủ đông, tủ mát, thiết bị bếp cho 
  <div class="in"><div class="trust">
   <div><span class="ic" style="background:rgba(201,162,39,.16)">${ic('snow', 20, '#E6C35C')}</span><div><b>Dàn lạnh đồng</b><span>Tủ đông 4 và 6 cánh GoldCool dùng dàn đồng 100%</span></div></div>
   <div><span class="ic" style="background:rgba(201,162,39,.16)">${ic('shield', 20, '#E6C35C')}</span><div><b>Bảo hành 24 tháng</b><span>Đổi mới trong 30 ngày đầu nếu có lỗi kỹ thuật</span></div></div>
-  <div><span class="ic" style="background:rgba(201,162,39,.16)">${ic('tag', 20, '#E6C35C')}</span><div><b>Giá minh bạch</b><span>Giá niêm yết đã gồm VAT, báo trước phí vận chuyển</span></div></div>
+  <div><span class="ic" style="background:rgba(201,162,39,.16)">${ic('tag', 20, '#E6C35C')}</span><div><b>Tư vấn đúng nhu cầu</b><span>Hỏi kỹ mô hình quán trước khi đề xuất thiết bị</span></div></div>
   <div><span class="ic" style="background:rgba(201,162,39,.16)">${ic('pin', 20, '#E6C35C')}</span><div><b>Kho tại Hà Nội</b><span>CN05 KCN Nguyên Khê, Phúc Thịnh · xem hàng trực tiếp</span></div></div>
  </div></div>
 </div></section>
@@ -126,13 +126,13 @@ const index = head('GoldCool – Tủ đông, tủ mát, thiết bị bếp cho 
 <section class="sec prod" id="san-pham"><div class="wrap in">
  <div class="shead"><div><div class="eyebrow">5 dòng sản phẩm</div><h2 class="h2 d">Đủ thiết bị lạnh cho<br>một căn bếp chuyên nghiệp</h2></div><a class="btn n r" href="#tu-van">Nhận báo giá</a></div>
  <div class="pg">
-  <a class="pc big" href="#tu-van"><div class="im"><img src="img/td4c-gc.jpg" alt="Tủ đông 4 cánh GoldCool trong bếp nhà hàng" style="object-position:50% 65%" loading="lazy"></div><div class="bd"><div class="k">Tủ đông 4 &amp; 6 cánh</div><h3>Tủ đông inox cho bếp nhà hàng</h3><p>Lạnh trực tiếp hoặc quạt gió, dàn lạnh đồng 100%. Phù hợp quán lẩu, nướng, nhà hàng trữ thịt và hải sản.</p><div class="row"><div class="price">Từ 16.100.000đ<small>Tủ 4 cánh lạnh trực tiếp · đã gồm VAT</small></div><span class="more">Nhận tư vấn →</span></div></div></a>
-  <a class="pc" href="#tu-van"><div class="im"><img src="img/tm2c-gc.jpg" alt="Tủ mát 2 cánh GoldCool" style="object-position:50% 45%" loading="lazy"></div><div class="bd"><div class="k">Tủ mát 2 &amp; 3 cánh</div><h3>Tủ mát kính trưng bày</h3><p>Dung tích 1050L đến 1800L cho đồ uống, siêu thị mini.</p><div class="row"><span class="chip gd">Từ 16.100.000đ</span><span class="more">→</span></div></div></a>
-  <a class="pc" href="#tu-van"><div class="im"><img src="img/bc-gc.jpg" alt="Tủ bàn chặt GoldCool" style="object-position:50% 70%" loading="lazy"></div><div class="bd"><div class="k">Tủ bàn chặt</div><h3>Bàn mát, bàn đông</h3><p>Dài 1,2 – 1,5 – 1,8 m, vừa làm mặt bàn sơ chế vừa trữ lạnh.</p><div class="row"><span class="chip gd">Từ 9.660.000đ</span><span class="more">→</span></div></div></a>
+  <a class="pc big" href="#tu-van"><div class="im"><img src="img/td4c-gc.jpg" alt="Tủ đông 4 cánh GoldCool trong bếp nhà hàng" style="object-position:50% 65%" loading="lazy"></div><div class="bd"><div class="k">Tủ đông 4 &amp; 6 cánh</div><h3>Tủ đông inox cho bếp nhà hàng</h3><p>Lạnh trực tiếp hoặc quạt gió, dàn lạnh đồng 100%. Phù hợp quán lẩu, nướng, nhà hàng trữ thịt và hải sản.</p><div class="row"><span class="chip gd">Lạnh trực tiếp · Quạt gió</span><span class="more">Nhận báo giá →</span></div></div></a>
+  <a class="pc" href="#tu-van"><div class="im"><img src="img/tm2c-gc.jpg" alt="Tủ mát 2 cánh GoldCool" style="object-position:50% 45%" loading="lazy"></div><div class="bd"><div class="k">Tủ mát 2 &amp; 3 cánh</div><h3>Tủ mát kính trưng bày</h3><p>Dung tích 1050L đến 1800L cho đồ uống, siêu thị mini.</p><div class="row"><span class="chip gd">1050L – 1800L</span><span class="more">→</span></div></div></a>
+  <a class="pc" href="#tu-van"><div class="im"><img src="img/bc-gc.jpg" alt="Tủ bàn chặt GoldCool" style="object-position:50% 70%" loading="lazy"></div><div class="bd"><div class="k">Tủ bàn chặt</div><h3>Bàn mát, bàn đông</h3><p>Dài 1,2 – 1,5 – 1,8 m, vừa làm mặt bàn sơ chế vừa trữ lạnh.</p><div class="row"><span class="chip gd">1,2 · 1,5 · 1,8 m</span><span class="more">→</span></div></div></a>
   <a class="pc" href="#tu-van"><div class="im"><img src="img/tdtb-gc-kinhcong.jpg" alt="Tủ đông trưng bày kính cong GoldCool" style="object-position:50% 72%" loading="lazy"></div><div class="bd"><div class="k">Tủ đông trưng bày</div><h3>Kính cong, kính phẳng, xả đá</h3><p>Trưng bày kem, đồ đông lạnh cho cửa hàng, siêu thị.</p><div class="row"><span class="chip">Tư vấn theo phiên bản</span><span class="more">→</span></div></div></a>
   <a class="pc" href="#tu-van"><div class="im"><img src="img/gw-gc.jpg" alt="Máy rửa bát GoldWash" style="object-position:50% 70%" loading="lazy"></div><div class="bd"><div class="k">GoldWash</div><h3>Máy rửa bát cho bếp lớn</h3><p>Bồn inox SUS 304, chọn theo chiều dài và lượng bát đĩa mỗi ngày.</p><div class="row"><span class="chip">Tư vấn theo kích thước</span><span class="more">→</span></div></div></a>
  </div>
- <div class="fine">${ic('info', 18, '#5B6878')}Có thêm tủ salad. Giá niêm yết đã gồm VAT, chưa gồm vận chuyển.</div>
+ <div class="fine">${ic('info', 18, '#5B6878')}Có thêm tủ salad. Để lại thông tin để nhận báo giá theo đúng phiên bản quán cần.</div>
 </div></section>
 
 <section class="sec" id="so-sanh"><div class="wrap in cmp">
@@ -145,8 +145,7 @@ const index = head('GoldCool – Tủ đông, tủ mát, thiết bị bếp cho 
   <div class="r" role="row"><div class="lb">Hiệu suất &amp; ổn định</div><div>Tốt hơn</div><div>Tiêu chuẩn</div></div>
   <div class="r" role="row"><div class="lb">Bảo hành</div><div>24 tháng</div><div>12 tháng</div></div>
   <div class="r" role="row"><div class="lb">Đổi mới</div><div>30 ngày đầu nếu lỗi kỹ thuật</div><div>—</div></div>
-  <div class="r" role="row"><div class="lb">Tủ đông 4 cánh</div><div>16.100.000đ / 23.920.000đ</div><div>12.500.000đ / 18.500.000đ</div></div>
- </div><div style="margin-top:10px;font-size:13.5px;color:var(--muted);text-align:right">Giá tủ đông 4 cánh: lạnh trực tiếp / lạnh quạt gió · đã gồm VAT · chưa gồm vận chuyển</div></div>
+ </div></div>
 </div></section>
 
 <section class="sec proc" id="quy-trinh"><div class="wrap in">
@@ -154,7 +153,7 @@ const index = head('GoldCool – Tủ đông, tủ mát, thiết bị bếp cho 
  <div class="steps">
   <div class="st"><div class="dot">1</div><h3>Hiểu mô hình quán</h3><p>Món bán, lượng khách, mặt hàng cần trữ, chỗ đặt dài bao nhiêu.</p></div>
   <div class="st"><div class="dot">2</div><h3>Chọn đúng phiên bản</h3><p>Lạnh trực tiếp hay quạt gió, kích thước, GoldCool hay mẫu rẻ.</p></div>
-  <div class="st"><div class="dot">3</div><h3>Báo giá minh bạch</h3><p>Giá đã gồm VAT, ảnh thật đúng sản phẩm và phản hồi khách đã dùng.</p></div>
+  <div class="st"><div class="dot">3</div><h3>Báo giá minh bạch</h3><p>Báo giá riêng cho quán, kèm ảnh thật đúng sản phẩm và phản hồi khách đã dùng.</p></div>
   <div class="st"><div class="dot">4</div><h3>Giao và lắp đặt</h3><p>Kiểm tra tồn kho, hẹn lịch giao, nghiệm thu và kích hoạt bảo hành.</p></div>
   <div class="st"><div class="dot">5</div><h3>Chăm sóc sau bán</h3><p>Hỏi thăm sau giao, sau 7 ngày và 30 ngày để tủ chạy ổn định.</p></div>
  </div>
@@ -195,7 +194,7 @@ ${header('Tin tức', true)}
 <section style="padding-bottom:96px"><div class="wrap in"><div class="article">
  <div class="cover" id="a-cover"></div>
  <div class="prose" id="a-body"></div>
- <div class="cta-box"><div style="flex:1;min-width:240px"><b>Cần chọn thiết bị cho quán?</b><span>Để lại thông tin, tư vấn viên GoldCool gọi lại và báo giá đã gồm VAT.</span></div><a class="btn g" href="index.html#tu-van">Nhận tư vấn</a></div>
+ <div class="cta-box"><div style="flex:1;min-width:240px"><b>Cần chọn thiết bị cho quán?</b><span>Để lại thông tin, tư vấn viên GoldCool gọi lại và gửi báo giá riêng cho quán.</span></div><a class="btn g" href="index.html#tu-van">Nhận tư vấn</a></div>
 </div></div></section>
 ${footer}${tail}`;
 

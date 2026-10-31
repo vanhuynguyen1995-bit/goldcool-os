@@ -32,6 +32,7 @@ module.exports = async (req, res) => {
       await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Bài viết', text: 'Xóa bài ' + id, at: new Date().toISOString() });
       return L.send(res, 200, { ok: true });
     }
+    if (/\d{1,3}([.,]\d{3}){1,3}\s*(đ|đồng|vnđ|vnd|₫)|\d+([.,]\d+)?\s*(triệu|tr)\b/i.test(String(b.title) + String(b.body) + String(b.excerpt))) return L.send(res, 400, { error: 'Website không hiện giá bán. Hãy bỏ con số giá trong bài.' });
     const title = String(b.title || '').trim().slice(0, 160); if (title.length < 5) return L.send(res, 400, { error: 'Tiêu đề cần ít nhất 5 ký tự' });
     const id = b.id ? String(b.id).replace(/[^\w-]/g, '') : 'p' + Date.now().toString(36);
     const old = ps.find((p) => p.id === id);

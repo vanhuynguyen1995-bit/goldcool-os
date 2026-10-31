@@ -21,9 +21,7 @@ module.exports = [
 ## Nên chọn loại nào?
 Nếu quán cần vừa trữ đông vừa trữ mát trong cùng một tủ, lạnh trực tiếp với 2 ngăn riêng thường phù hợp hơn. Nếu bếp mở tủ nhiều trong giờ cao điểm và không muốn mất công xả đá, hãy cân nhắc lạnh quạt gió.
 
-> Mỗi quán khác nhau. Hãy cho tư vấn viên biết món bạn bán, mặt hàng cần trữ và chỗ đặt dài bao nhiêu để được đề xuất đúng.
-
-Giá tủ đông 4 cánh GoldCool: lạnh trực tiếp **16.100.000đ**, lạnh quạt gió **23.920.000đ** (đã gồm VAT, chưa gồm vận chuyển).`,
+> Mỗi quán khác nhau. Hãy cho tư vấn viên biết món bạn bán, mặt hàng cần trữ và chỗ đặt dài bao nhiêu để được đề xuất đúng.`,
   },
   {
     id: 'seed-goldcool-hay-mau-re', slug: 'goldcool-hay-mau-re', title: 'GoldCool hay mẫu rẻ: khác nhau ở đâu và khi nào nên chọn mẫu rẻ?', category: 'Minh bạch', cover: 'img/td4c-mr.jpg', status: 'published', author: 'GoldCool', createdAt: at, publishedAt: '2026-10-30T08:00:00.000Z', at,
@@ -35,10 +33,6 @@ Giá tủ đông 4 cánh GoldCool: lạnh trực tiếp **16.100.000đ**, lạnh
 - **Hoàn thiện:** GoldCool chắc chắn hơn, mẫu rẻ hoàn thiện cơ bản.
 - **Hiệu suất và độ ổn định:** GoldCool tốt hơn.
 - **Bảo hành:** GoldCool 24 tháng và đổi mới 30 ngày đầu nếu có lỗi kỹ thuật theo chính sách; mẫu rẻ bảo hành 12 tháng.
-
-## Ví dụ giá tủ đông 4 cánh (đã gồm VAT)
-- GoldCool: lạnh trực tiếp 16.100.000đ, quạt gió 23.920.000đ.
-- Mẫu rẻ: lạnh trực tiếp 12.500.000đ, quạt gió 18.500.000đ.
 
 ## Khi nào nên chọn mẫu rẻ?
 Khi quán cần đầu tư ban đầu thấp và mức sử dụng không quá nặng. Còn nếu quán chạy cả ngày, mở tủ nhiều và cần dùng lâu dài, GoldCool thường là lựa chọn an tâm hơn.
