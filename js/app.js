@@ -32,16 +32,16 @@
   const fold = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const SLUG = {}; const slugOf = (r) => { const k = r.split('/').map(fold).join('--'); SLUG[k] = r; return k; };
   let CUR = 'trang-chu';
-  const go = (r) => { CUR = r; const h = '#' + slugOf(r); try { if (location.hash !== h) { history.pushState(null, '', h); } } catch (e) { /* bỏ qua */ } render(); };
-  const NAV_TOP = { 'Trang chủ': 'trang-chu', 'AI Sales': 'hop-thu', 'Mục tiêu & KPI': 'bang-so-lieu', 'Học viện': 'hom-nay-hoc-gi', 'Dữ liệu': 'san-pham', 'Cài đặt': 'chua-co/set/Cài đặt chung' };
+  const go = (r) => { r = SLUG[r] || r; CUR = r; const h = '#' + slugOf(r); try { if (location.hash !== h) { history.pushState(null, '', h); } } catch (e) { /* bỏ qua */ } render(); };
+  const NAV_TOP = { 'Trang chủ': 'trang-chu', 'AI Sales': 'hop-thu', 'Mục tiêu & KPI': 'bang-so-lieu', 'Học viện': 'hom-nay-hoc-gi', 'Dữ liệu': 'danh-sach-san-pham', 'Cài đặt': 'nhan-vien' };
   const NAV_SUB = {
-    'AI Sales': { 'Hộp thư': 'hop-thu', 'Khách của tôi': 'khach-cua-toi', 'Báo cáo tuần': 'bao-cao-ai', 'Phòng thử AI': 'phong-thu-ai', 'Cài đặt AI': 'cai-dat-ai' },
-    'Mục tiêu & KPI': { 'Bảng số liệu': 'bang-so-lieu', 'Cây mục tiêu': 'cay-muc-tieu', 'Báo cáo tuần': 'bao-cao-tuan', 'Thẻ vấn đề': 'the-van-de' },
-    'Học viện': { 'Hôm nay học gì': 'hom-nay-hoc-gi', 'Bài thi': 'bai-thi', 'Phòng đóng vai': 'dong-vai' },
-    'Dữ liệu': { 'Sản phẩm': 'san-pham', 'Bảng giá bán lẻ': 'bang-gia' },
+    'AI Sales': { 'Hộp thư': 'hop-thu', 'Khách của tôi': 'khach-cua-toi', 'Báo cáo tuần': 'bao-cao-ai', 'Phòng thử AI': 'phong-thu-ai', 'Lỗi dữ liệu': 'so-loi', 'Cài đặt AI': 'cai-dat-ai' },
+    'Mục tiêu & KPI': { 'Bảng số liệu': 'bang-so-lieu', 'Cây mục tiêu': 'cay-muc-tieu', 'Báo cáo tuần': 'bao-cao-tuan', 'Thẻ vấn đề': 'the-van-de', 'Ghi nhận': 'ghi-nhan', 'Thư viện quyết định': 'thu-vien-quyet-dinh' },
+    'Học viện': { 'Hôm nay học gì': 'hom-nay-hoc-gi', 'Thư viện bài học': 'thu-vien-bai-hoc', 'Bài thi': 'bai-thi', 'Phòng đóng vai': 'dong-vai', 'Hồ sơ năng lực': 'ho-so-nang-luc' },
+    'Dữ liệu': { 'Sản phẩm': 'danh-sach-san-pham', 'Bảng giá bán lẻ': 'bang-gia', 'Bảng giá đại lý': 'bang-gia-dai-ly', 'Kho tài liệu': 'kho-tai-lieu' },
   };
   const MOD_KEY = { 'AI Sales': 'sales', 'Mục tiêu & KPI': 'kpi', 'Học viện': 'hv', 'Dữ liệu': 'data' };
-  const MOBILE_NAV = { 'Trang chủ': 'trang-chu', 'Khách': 'khach-cua-toi', 'Hộp thư': 'hop-thu', 'Học': 'hom-nay-hoc-gi', 'Báo cáo': 'bao-cao-tuan', 'Tôi': 'chua-co/home/Hồ sơ của tôi' };
+  const MOBILE_NAV = { 'Trang chủ': 'trang-chu', 'Khách': 'khach-cua-toi', 'Hộp thư': 'hop-thu', 'Học': 'hom-nay-hoc-gi', 'Báo cáo': 'bao-cao-tuan', 'Tôi': 'nhan-vien/ho-so' };
   const labelOf = (a) => { const c = a.cloneNode(true); $$('.cnt', c).forEach((x) => x.remove()); return T(c); };
 
   function currentRoute() { return CUR; }
@@ -64,8 +64,9 @@
     }
     const m = META.find((x) => x.id === r) || META[0];
     const html = window.SCREENS[m.id];
-    if (m.mobile) {
-      root.innerHTML = `<div class="phone-wrap"><div class="phone-info"><div class="xs muted" style="font-weight:700;letter-spacing:.05em">MÀN ${m.no} · ĐIỆN THOẠI</div><h2>${esc(m.title.replace(' (điện thoại)', ''))}</h2><p class="sub1" style="margin-top:6px">Màn hình này dành cho nhân viên dùng trên điện thoại. Mở bằng điện thoại sẽ hiện toàn màn hình.</p><div class="col" style="gap:8px;margin-top:18px"><span class="btn" data-go="trang-chu">← Về Trang chủ</span><span class="btn" data-open-menu="1">Xem 18 màn hình</span></div></div><div class="phone"><div>${html}</div></div></div>`;
+    if (m.full) { root.innerHTML = html; }
+    else if (m.mobile) {
+      root.innerHTML = `<div class="phone-wrap"><div class="phone-info"><div class="xs muted" style="font-weight:700;letter-spacing:.05em">MÀN ${m.no} · ĐIỆN THOẠI</div><h2>${esc(m.title.replace(' (điện thoại)', ''))}</h2><p class="sub1" style="margin-top:6px">Màn hình này dành cho nhân viên dùng trên điện thoại. Mở bằng điện thoại sẽ hiện toàn màn hình.</p><div class="col" style="gap:8px;margin-top:18px"><span class="btn" data-go="trang-chu">← Về Trang chủ</span><span class="btn" data-open-menu="1">Xem tất cả màn hình</span></div></div><div class="phone"><div>${html}</div></div></div>`;
     } else root.innerHTML = html;
     document.title = m.title + ' · GoldCool OS';
     $$('.card').forEach((c) => { if (CLICK_CARDS[m.id] && CLICK_CARDS[m.id](c)) c.classList.add('click'); });
@@ -76,9 +77,9 @@
   window.addEventListener('hashchange', syncHash); window.addEventListener('popstate', syncHash);
 
   /* ---------- Menu 18 màn hình ---------- */
-  const btn = document.createElement('div'); btn.className = 'scr-btn'; btn.innerHTML = '☰ 18 màn hình';
+  const btn = document.createElement('div'); btn.className = 'scr-btn'; btn.innerHTML = '☰ ' + META.length + ' màn hình';
   const menu = document.createElement('div'); menu.className = 'scr-menu';
-  const GROUPS = { home: 'Trang chủ', sales: 'AI Sales', data: 'Dữ liệu', kpi: 'Mục tiêu & KPI', hv: 'Học viện' };
+  const GROUPS = { home: 'Trang chủ', sales: 'AI Sales', data: 'Dữ liệu', kpi: 'Mục tiêu & KPI', hv: 'Học viện', set: 'Cài đặt & hệ thống' };
   menu.innerHTML = Object.keys(GROUPS).map((g) => `<div class="g">${GROUPS[g]}</div>` + META.filter((m) => m.mod === g).map((m) => `<a data-go="${m.id}" data-id="${m.id}"><b>${m.no}</b>${esc(m.title)}</a>`).join('')).join('') + '<div class="g">Dữ liệu thử</div><a data-reset="1"><b>↺</b>Đặt lại dữ liệu thử</a>';
   document.body.append(btn, menu);
   btn.onclick = () => menu.classList.toggle('on');
@@ -102,11 +103,14 @@
     }
     const mn = t.closest('nav > div.col');
     if (mn && t.closest('.phone')) { go(MOBILE_NAV[T(mn)] || 'trang-chu'); return; }
-    if (t.closest('.bellw')) { toast('3 thông báo mới: 1 khách chờ quá 5 phút · 2 việc cần duyệt'); return; }
+    if (t.closest('.bellw')) { go('thong-bao'); return; }
+    if (t.closest('.top > .av')) { go('nhan-vien/ho-so'); return; }
+    if (t.closest('.me')) { S.loggedIn = false; save(); toast('Đã đăng xuất'); go('dang-nhap'); return; }
     if (t.closest('.searchb')) { toast('Tìm kiếm sẽ hoạt động khi nối dữ liệu khách và sản phẩm thật'); return; }
     if (t.closest('.logo')) { go('trang-chu'); return; }
     const r = currentRoute();
     if (CLICK[r] && CLICK[r](t, e) !== false) return;
+    if (CLICK2(r, t) !== false) return;
     const b = t.closest('.btn, .tabs a');
     if (b) toast(`“${T(b)}” sẽ hoạt động khi nối dữ liệu thật (Fanpage, Zotech, Zalo).`);
   });
@@ -494,8 +498,57 @@
   };
 
   /* ===== 07, 11 ===== */
-  CLICK['bao-cao-ai'] = (t) => { const b = t.closest('.btn'); if (b && /Sổ lỗi/.test(T(b))) return go('chua-co/sales/Lỗi dữ liệu'); return false; };
+  CLICK['bao-cao-ai'] = (t) => { const b = t.closest('.btn'); if (b && /Sổ lỗi/.test(T(b))) return go('so-loi'); return false; };
+
+  /* ===== Các màn bổ sung ===== */
+  const HOME = { ha: 'trang-chu', huy: 'bang-so-lieu', chinh: 'danh-sach-san-pham', nvkd4: 'hom-nay-hoc-gi' };
+  function CLICK2(r, t) {
+    const b = t.closest('.btn'); const lab = b ? T(b) : '';
+    if (r === 'dang-nhap') {
+      const ro = t.closest('[data-role]');
+      if (ro) { S.role = ro.dataset.role; save(); $$('[data-role]').forEach((x) => { const on = x === ro; x.style.borderColor = on ? 'var(--navy)' : ''; x.style.background = on ? 'var(--ice)' : ''; }); return; }
+      if (t.closest('#lg-go')) { const em = $('#lg-email').value.trim(); if (!/@/.test(em)) { toast('Nhập email công ty, ví dụ kinhdoanh@goldcool.vn', 'bad'); return; } S.loggedIn = true; save(); toast('Đăng nhập thành công', 'ok'); go(HOME[S.role || 'ha']); return; }
+      if (/Quên mật khẩu/.test(T(t))) { toast('Liên hệ chị Huyền (HCNS & Hệ thống) để cấp lại mật khẩu'); return; }
+    }
+    if (r === 'thong-bao' && /Đánh dấu đã đọc hết/.test(lab)) { $$('.noti .dot').forEach((d) => d.remove()); $$('.noti').forEach((n) => { n.style.background = ''; }); toast('Đã đánh dấu đã đọc', 'ok'); return; }
+    if (r === 'bang-so-lieu') { const c = t.closest('.card'); if (c && /Nộp báo cáo tuần 44/.test(T(c))) return go('bao-cao-doi'); if (c && /Trợ lý AI gợi ý/.test(T(c))) return go('tom-tat-ai'); }
+    if (r === 'cay-muc-tieu') { if (/Đề xuất mục tiêu/.test(lab)) return go('de-xuat-muc-tieu'); const c = t.closest('.card'); if (c && /liên hệ/i.test(T(c))) return go('muc-tieu/chi-tiet'); }
+    if (r === 'the-van-de' && /Báo vấn đề/.test(lab)) return go('the-van-de/moi');
+    if (r === 'the-van-de/moi') {
+      if (lab === 'Tạo thẻ') { const v = (id) => ($('#' + id) || {}).value || ''; if (!v('iss-1') || !v('iss-2') || !v('iss-3')) { toast('Điền đủ Vấn đề, Nguyên nhân, Phương án', 'bad'); return; } S.newIssues = (S.newIssues || []).concat({ t: v('iss-1'), due: v('iss-6') }); save(); toast('Đã tạo thẻ vấn đề', 'ok'); return go('the-van-de'); }
+      if (lab === 'Hủy') return go('the-van-de');
+    }
+    if (r === 'de-xuat-muc-tieu' && /Gửi duyệt/.test(lab)) { toast('Đã gửi đề xuất cho Nguyễn Văn Huy duyệt', 'ok'); return go('cay-muc-tieu'); }
+    if (r === 'ghi-nhan') {
+      const ch = t.closest('[data-val]'); if (ch) { $$('[data-val]').forEach((x) => { x.className = 'chip click ' + (x === ch ? 'goldc' : 'gray'); }); return; }
+      if (/Gửi ghi nhận/.test(lab)) { const who = $('#kd-who').value.trim(), tx = $('#kd-text').value.trim(); const val = T($('[data-val].goldc') || $('[data-val]')); if (!who || !tx) { toast('Ghi rõ người được ghi nhận và việc cụ thể', 'bad'); return; } S.kudos = [{ who, tx, val, at: now() }].concat(S.kudos || []); save(); render(); toast('Đã gửi ghi nhận cho ' + who, 'ok'); return; }
+    }
+    if (r === 'xem-bai-hoc') {
+      const q = t.closest('[data-quiz]'); if (q) { const ok = q.dataset.quiz === '1'; q.style.borderColor = ok ? 'var(--ok)' : 'var(--bad)'; q.style.background = ok ? 'var(--oks)' : 'var(--bads)'; toast(ok ? 'Đúng: nhóm này AI không báo giá' : 'Chưa đúng: tủ đông trưng bày AI không báo giá', ok ? 'ok' : 'bad'); return; }
+      if (/Đánh dấu đã học/.test(lab)) { toast('Đã hoàn thành bài học', 'ok'); return go('hom-nay-hoc-gi'); }
+    }
+    if (r === 'ket-qua-thi' && /Học tiếp/.test(lab)) return go('hom-nay-hoc-gi');
+    if (r === 'bai-thi' && /Nộp bài/.test(lab)) return go('ket-qua-thi');
+    if (r === 'hom-nay-hoc-gi') { const c = t.closest('.card'); if (c && T(c).includes('Bài học') && !T(c).includes('đã xong')) return go('xem-bai-hoc'); }
+    if (r === 'trang-chu') { const c = t.closest('.card'); if (c && /Chứng nhận tư vấn/.test(T(c))) return go('ho-so-nang-luc'); }
+    return false;
+  }
+  APPLY['ghi-nhan'] = () => { const l = $('#kd-list'); if (l) (S.kudos || []).slice().reverse().forEach((k) => l.insertAdjacentHTML('afterbegin', `<div style="padding:12px 18px;border-top:1px solid var(--line);background:#FFFCF2"><div class="row sm" style="gap:8px"><b>Đoàn Thị Hồng Hà</b><span class="muted">→</span><b>${esc(k.who)}</b><span class="sp xs muted">${k.at}</span></div><span class="chip blue" style="font-size:11px;margin-top:6px">${esc(k.val)}</span><div class="sm muted" style="margin-top:6px">“${esc(k.tx)}”</div></div>`)); };
+  const _tvd = APPLY['the-van-de'];
+  APPLY['the-van-de'] = () => { if (_tvd) _tvd(); const col = $$('.content div').find((c) => c.style.background === 'rgb(238, 242, 246)' && T(c).startsWith('Mới')); if (!col) return; (S.newIssues || []).forEach((n) => col.firstElementChild.insertAdjacentHTML('afterend', `<div class="card" style="padding:12px 14px;border-color:#9FD3B6"><div class="row" style="gap:6px"><span class="chip gray" style="font-size:11px">KD & MKT</span><span class="chip ok" style="font-size:11px">Mới tạo</span></div><b class="sm" style="display:block;margin-top:8px">${esc(n.t)}</b><div class="row xs" style="margin-top:10px;gap:6px"><span>Đoàn Thị Hồng Hà</span><span class="sp chip gray" style="font-size:11px">Hạn ${fmtDate(n.due)}</span></div></div>`)); };
+  APPLY['chat-website'] = () => {
+    const body = $('#web-body'); const f = $('#web-in'); if (!body || !f) return;
+    const W = S.web || { cv: {}, log: [] };
+    W.log.forEach((h) => body.insertAdjacentHTML('beforeend', h));
+    inputInto(f, 'Nhập tin nhắn…', (v) => {
+      const keep = S.cv; S.cv = W.cv;
+      const add = [`<div style="align-self:flex-end;background:var(--navy);color:#fff;border-radius:14px 4px 14px 14px;padding:9px 12px;max-width:85%" class="sm">${esc(v)}</div>`].concat(aiReply(v).map((h) => `<div class="wl" style="zoom:.85">${h}</div>`));
+      W.cv = S.cv; S.cv = keep; W.log = W.log.concat(add); S.web = W; save();
+      add.forEach((h) => body.insertAdjacentHTML('beforeend', h)); body.scrollTop = body.scrollHeight;
+    });
+  };
 
   save();
-  syncHash();
+  if (!S.loggedIn && !location.hash) CUR = 'dang-nhap'; else CUR = fromHash();
+  render();
 })();

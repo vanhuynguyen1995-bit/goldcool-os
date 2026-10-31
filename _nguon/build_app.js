@@ -27,14 +27,30 @@ const ROUTES = {
   '17_Phong_dong_vai': ['dong-vai', 'hv', 'Phòng đóng vai'],
   '18_Ket_qua_buoi_dong_vai': ['ket-qua-dong-vai', 'hv', 'Kết quả buổi đóng vai'],
 };
+const B3 = require('./batch3.js');
+const CODES = { '01': 'A02', '02': 'B01', '03': 'B02', '04': 'B03', '05': 'B07', '06': 'A08', '07': 'B06', '08': 'B08', '09': 'A07', '10': 'C01', '11': 'C02', '12': 'C05', '13': 'C07', '14': 'C08', '15': 'D01', '16': 'D04', '17': 'D07', '18': 'D08' };
+const R3 = {
+  A01_Dang_nhap: ['dang-nhap', 'set', 'Đăng nhập'], A03_Thong_bao: ['thong-bao', 'home', 'Thông báo'], A04_Nhan_vien: ['nhan-vien', 'set', 'Danh sách nhân viên'], A05_Ho_so_nhan_vien: ['nhan-vien/ho-so', 'set', 'Hồ sơ nhân viên'],
+  A06_Danh_sach_san_pham: ['danh-sach-san-pham', 'data', 'Danh sách sản phẩm'], A09_Bang_gia_dai_ly: ['bang-gia-dai-ly', 'data', 'Bảng giá đại lý'], A10_Kho_tai_lieu: ['kho-tai-lieu', 'data', 'Kho tài liệu'], A11_Nhat_ky_thay_doi: ['nhat-ky', 'set', 'Nhật ký thay đổi'],
+  B04_So_loi_du_lieu: ['so-loi', 'sales', 'Sổ lỗi dữ liệu'], B05_Cham_chat_luong: ['cham-chat-luong', 'sales', 'Chấm chất lượng tư vấn tuần'], B09_Khung_chat_website: ['chat-website', 'sales', 'Khung chat trên website'],
+  C03_Chi_tiet_muc_tieu: ['muc-tieu/chi-tiet', 'kpi', 'Chi tiết mục tiêu'], C04_De_xuat_muc_tieu: ['de-xuat-muc-tieu', 'kpi', 'Đề xuất / duyệt mục tiêu'], C06_Bao_cao_cua_doi: ['bao-cao-doi', 'kpi', 'Báo cáo tuần của đội'], C08_Tao_the_van_de: ['the-van-de/moi', 'kpi', 'Báo vấn đề mới'],
+  C09_Ghi_nhan: ['ghi-nhan', 'kpi', 'Ghi nhận đồng nghiệp'], C10_Danh_gia_thang: ['danh-gia-thang', 'kpi', 'Đánh giá cách làm việc tháng'], C11_Thu_vien_quyet_dinh: ['thu-vien-quyet-dinh', 'kpi', 'Thư viện quyết định'], C12_Bang_diem_quy: ['bang-diem-quy', 'kpi', 'Bảng điểm quý'], C13_Tom_tat_AI: ['tom-tat-ai', 'kpi', 'Tóm tắt tuần của Trợ lý AI'], C14_Cai_dat_KPI: ['cai-dat-kpi', 'set', 'Cài đặt KPI'],
+  D02_Thu_vien_bai_hoc: ['thu-vien-bai-hoc', 'hv', 'Thư viện bài học'], D03_Xem_bai_hoc: ['xem-bai-hoc', 'hv', 'Xem bài học'], D05_Ket_qua_bai_thi: ['ket-qua-thi', 'hv', 'Kết quả bài thi'], D06_Chon_tinh_huong: ['chon-tinh-huong', 'hv', 'Chọn tình huống đóng vai'], D09_Ho_so_nang_luc: ['ho-so-nang-luc', 'hv', 'Hồ sơ năng lực và chứng nhận'], D10_Theo_doi_doi_hoc: ['theo-doi-doi-hoc', 'hv', 'Theo dõi đội học'], D11_Quan_ly_noi_dung: ['quan-ly-noi-dung', 'hv', 'Quản lý nội dung Học viện'],
+};
 const body = (html) => html.slice(html.indexOf('<body>') + 6, html.lastIndexOf('</body>'));
 const screens = {};
 const meta = [];
 for (const [k, html] of Object.entries({ ...A, ...B })) {
   const [id, mod, title] = ROUTES[k];
   screens[id] = body(html);
-  meta.push({ id, mod, title, no: k.slice(0, 2), mobile: k.includes('dien_thoai') });
+  meta.push({ id, mod, title, no: CODES[k.slice(0, 2)], mobile: k.includes('dien_thoai') });
 }
+for (const [k, html] of Object.entries(B3)) {
+  const [id, mod, title] = R3[k];
+  screens[id] = body(html);
+  meta.push({ id, mod, title, no: k.slice(0, 3), mobile: false, full: /^(A01|B09)/.test(k) });
+}
+meta.sort((a, b) => a.no.localeCompare(b.no));
 // Khung cho các màn chưa có bản thiết kế chi tiết (giữ đúng bộ nhận diện)
 const USERS = { home: undefined, sales: undefined, kpi: ['Nguyễn Văn Huy', 'Giám đốc', 'NH'], hv: ['Nhân viên mới', 'Sales NVKD4 · ngày 9/30', 'N4'], data: ['Nguyễn Văn Chính', 'TP Sản xuất – Vận hành', 'NC'], set: ['Nguyễn Văn Huy', 'Giám đốc', 'NH'] };
 const placeholders = {};
@@ -48,7 +64,7 @@ for (const mod of Object.keys(USERS)) {
 <div class="sub1" style="max-width:560px;margin:6px auto 0">Bản hiện tại triển khai 18 màn hình chính đã duyệt. Màn hình này sẽ được dựng ở giai đoạn tiếp theo theo đúng bản mô tả phần mềm.</div>
 <div class="row" style="justify-content:center;gap:8px;margin-top:18px"><span class="btn pri" data-go="trang-chu">Về Trang chủ</span><span class="btn" data-open-menu="1">Xem 18 màn hình</span></div></div></div></main></div>`;
 }
-fs.rmSync(OUT, { recursive: true, force: true });
+['css', 'js', 'img'].forEach((d) => fs.rmSync(path.join(OUT, d), { recursive: true, force: true }));
 fs.mkdirSync(path.join(OUT, 'img'), { recursive: true });
 fs.mkdirSync(path.join(OUT, 'js'), { recursive: true });
 fs.mkdirSync(path.join(OUT, 'css'), { recursive: true });
