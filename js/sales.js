@@ -60,7 +60,7 @@
     const groups = {}; users.forEach((u) => { (groups[u.d] = groups[u.d] || []).push(u); });
     let pick = (() => { try { return localStorage.getItem('gc_last') || ''; } catch (e) { return ''; } })();
     $('#root').innerHTML = `<div class="login">
-      <div class="login-brand"><div class="brand"><span class="logo">${I.flake.replace('<svg', '<svg style="width:24px;height:24px;color:#0F3D63"')}</span><span><b>GoldCool</b> OS</span></div>
+      <div class="login-brand"><div class="brand"><span class="logo">${I.flake.replace('<svg', '<svg style="width:24px;height:24px;color:#053B27"')}</span><span><b>GoldCool</b> OS</span></div>
         <span class="flake" style="color:#fff">${I.flake}</span>
         <div><h1>CHỌN ĐÚNG –<br>DÙNG LÂU</h1><p>Hộp thư khách của đội Sales: khách từ Fanpage được AI tư vấn, chia theo tỉ lệ, Sales gọi và chốt.</p></div>
         <div class="addr">Kho CN05 KCN Nguyên Khê, Phúc Thịnh, Hà Nội · Hotline 0865 868 868 · goldcool.vn</div></div>
@@ -127,7 +127,7 @@
   function shell() {
     const nav = (cls) => NAV.map(([k, t, ic]) => `<a href="#${k}" data-r="${k}" class="${cls}">${I[ic]}<span>${t}</span><span class="badge hide" data-b="${k}"></span></a>`).join('');
     $('#root').innerHTML = `<div class="app" id="app">
-      <aside class="side"><div class="brand"><span class="logo">${I.flake.replace('<svg', '<svg style="width:20px;height:20px;color:#0F3D63"')}</span><span><b>GoldCool</b> OS</span></div>
+      <aside class="side"><div class="brand"><span class="logo">${I.flake.replace('<svg', '<svg style="width:20px;height:20px;color:#fff"')}</span><span><b>GoldCool</b> OS</span></div>
         <nav class="nav">${nav('')}</nav>
         <div class="me"><span class="av">${esc(S.me.a)}</span><div><b>${esc(S.me.n)}</b><small>${esc(S.me.r)}</small></div></div></aside>
       <main class="main"><header class="top" id="top"></header><div class="body" id="body"></div>
@@ -149,7 +149,7 @@
   function paint() {
     if (!S.me) return; badges();
     const top = $('#top'), body = $('#body');
-    if (!S.loaded) { top.innerHTML = `<h1>${NAV.find((n) => n[0] === S.route)[1]}</h1>`; body.className = 'body'; body.innerHTML = '<div class="empty"><span class="spin"></span></div>'; return; }
+    if (!S.loaded) { top.innerHTML = `<h1>${NAV.find((n) => n[0] === S.route)[1]}</h1>`; body.className = 'body'; body.innerHTML = '<div style="padding:16px">' + Array.from({ length: 6 }, (_, i) => `<div class="sk-row"><div class="sk" style="height:14px;width:${46 + (i * 13) % 30}%"></div><div class="sk" style="height:11px;width:${70 - (i * 7) % 25}%"></div><div class="sk" style="height:18px;width:38%"></div></div>`).join('') + '</div>'; return; }
     if (S.route === 'hop-thu' || S.route === 'khach') {
       const isIn = S.route === 'hop-thu';
       top.innerHTML = `<div><h1>${isIn ? 'Hộp thư' : S.admin ? 'Tất cả khách' : 'Khách của tôi'}</h1><div class="sub">${isIn ? 'Khách cần xử lý ngay: khẩn, khách mới, đến hẹn gọi lại' : 'Toàn bộ khách' + (S.admin ? ' của cả đội' : ' được chia cho anh/chị')}</div></div><span class="sp"></span><button class="btn" id="addb">${I.plus}<span>Thêm khách</span></button>`;
