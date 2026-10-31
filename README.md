@@ -80,3 +80,8 @@ Mã nguồn sinh 18 màn hình: `lib.js`, `batch1v2.js`, `batch2v2.js` (18 màn 
 - Trang mới: `do-bep-inox.html` (8 nhóm inox), `combo-bep.html` (4 combo gợi ý theo mô hình quán), `san-pham.html?s=...` (chi tiết).
 - Quản trị → “Đồ inox & combo”: thêm/sửa/ẩn sản phẩm, tải ảnh thật. API `api/products.js`, danh mục và combo mẫu ở `api/_catalog.js`.
 - Không hiện giá bán: chặn số tiền ở cả trang quản trị và API.
+
+## Website giới thiệu sản phẩm (31/10/2026)
+- `san-pham.html`: toàn bộ danh mục. Trang từng dòng: `tu-dong-cong-nghiep`, `tu-mat-trung-bay`, `ban-mat-tu-salad`, `tu-dong-trung-bay`, `may-rua-bat-goldwash` (ảnh thật, phiên bản, bảng thông số), `do-bep-inox`, `combo-bep`.
+- Dữ liệu dòng sản phẩm: `_nguon/web_catalog.js` (từ DNA – Product Master). Sửa xong chạy `node _nguon/web_build.js`.
+- Trang chi tiết sản phẩm đăng từ quản trị: `chi-tiet.html?s=...`.

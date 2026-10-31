@@ -84,7 +84,7 @@
     fetch('/api/products?group=inox').then((r) => r.json()).then((j) => {
       (j.products || []).forEach((p) => {
         const l = $(`[data-list="${CSS.escape(p.category)}"]`, ig); if (!l) return;
-        l.insertAdjacentHTML('beforeend', `<a href="san-pham.html?s=${encodeURIComponent(p.slug)}">${p.image ? `<img src="${esc(imgUrl(p.image))}" alt="" loading="lazy">` : '<img alt="">'}<span>${esc(p.name)}</span></a>`);
+        l.insertAdjacentHTML('beforeend', `<a href="chi-tiet.html?s=${encodeURIComponent(p.slug)}">${p.image ? `<img src="${esc(imgUrl(p.image))}" alt="" loading="lazy">` : '<img alt="">'}<span>${esc(p.name)}</span></a>`);
         const card = l.closest('.icard'); const ia = $('.ia', card);
         if (p.image && !ia.dataset.photo) { ia.dataset.photo = '1'; ia.innerHTML = `<img src="${esc(imgUrl(p.image))}" alt="${esc(p.category)}" loading="lazy">`; }
       });
@@ -96,7 +96,7 @@
   if (cbg) {
     fetch('/api/products?group=combo').then((r) => r.json()).then((j) => {
       const ps = j.products || [];
-      cbg.innerHTML = ps.length ? ps.map((p) => `<article class="cb"><div class="im">${p.image ? `<img src="${esc(imgUrl(p.image))}" alt="${esc(p.name)}" loading="lazy">` : ''}</div><div class="bd"><div class="k">${esc(p.category)}</div><h3>${esc(p.name)}</h3><p>${esc(p.summary || '')}</p><ul class="chk">${(p.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul><div class="act"><a class="btn g" href="#tu-van" data-pre="Combo thiết bị bếp" data-n="${esc(p.name)}">Nhận báo giá combo</a><a class="btn l" href="san-pham.html?s=${encodeURIComponent(p.slug)}">Chi tiết</a></div></div></article>`).join('') : '<div class="empty">Chưa có combo. Gọi 0865 868 868 để được tư vấn setup bếp.</div>';
+      cbg.innerHTML = ps.length ? ps.map((p) => `<article class="cb"><div class="im">${p.image ? `<img src="${esc(imgUrl(p.image))}" alt="${esc(p.name)}" loading="lazy">` : ''}</div><div class="bd"><div class="k">${esc(p.category)}</div><h3>${esc(p.name)}</h3><p>${esc(p.summary || '')}</p><ul class="chk">${(p.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul><div class="act"><a class="btn g" href="#tu-van" data-pre="Combo thiết bị bếp" data-n="${esc(p.name)}">Nhận báo giá combo</a><a class="btn l" href="chi-tiet.html?s=${encodeURIComponent(p.slug)}">Chi tiết</a></div></div></article>`).join('') : '<div class="empty">Chưa có combo. Gọi 0865 868 868 để được tư vấn setup bếp.</div>';
     }).catch(() => { cbg.innerHTML = '<div class="empty">Chưa tải được combo. Gọi 0865 868 868 để được tư vấn.</div>'; });
   }
 
