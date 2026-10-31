@@ -73,7 +73,8 @@
   /* ---------- Bản chỉ dùng AI Sales: tắt Trang chủ, Mục tiêu & KPI, Học viện, Dữ liệu ---------- */
   const ONLY_SALES = true;
   const HOME = 'hop-thu';
-  const TRAIN = { 'chon-tinh-huong': 'Luyện đóng vai', 'dong-vai': 'Luyện đóng vai', 'ket-qua-dong-vai': 'Luyện đóng vai', 'bai-thi': 'Bài thi', 'ket-qua-thi': 'Bài thi' };
+  const TRAIN_ON = false; // Luyện tập (đóng vai, bài thi): đang tắt theo yêu cầu – đổi thành true để bật lại
+  const TRAIN = TRAIN_ON ? { 'chon-tinh-huong': 'Luyện đóng vai', 'dong-vai': 'Luyện đóng vai', 'ket-qua-dong-vai': 'Luyện đóng vai', 'bai-thi': 'Bài thi', 'ket-qua-thi': 'Bài thi' } : {};
   const ALLOW = new Set(META.filter((m) => m.mod === 'sales' || TRAIN[m.id] || ['dang-nhap', 'nhan-vien', 'nhat-ky'].includes(m.id)).map((m) => m.id));
   const SALES_SUB = [['Hộp thư', 'hop-thu'], ['Khách của tôi', 'khach-cua-toi'], ['Báo cáo tuần', 'bao-cao-ai'], ['Phòng thử AI', 'phong-thu-ai'], ['Lỗi dữ liệu', 'so-loi'], ['Cài đặt AI', 'cai-dat-ai']];
   const TRAIN_SUB = [['Luyện đóng vai', 'chon-tinh-huong'], ['Bài thi', 'bai-thi']];
@@ -82,7 +83,7 @@
     NAV_TOP['Trang chủ'] = HOME;
     Object.assign(MOBILE_NAV, { 'Trang chủ': HOME, 'Báo cáo': 'bao-cao-ai' });
     NAV_SUB['Cài đặt'] = { 'Nhân viên': 'nhan-vien', 'Nhật ký thay đổi': 'nhat-ky' };
-    NAV_SUB['AI Sales']['Luyện đóng vai'] = 'chon-tinh-huong'; NAV_SUB['AI Sales']['Bài thi'] = 'bai-thi';
+    if (TRAIN_ON) { NAV_SUB['AI Sales']['Luyện đóng vai'] = 'chon-tinh-huong'; NAV_SUB['AI Sales']['Bài thi'] = 'bai-thi'; }
   }
   const allowed = (r) => !ONLY_SALES || ALLOW.has(r);
   function trimNav() {
@@ -93,7 +94,7 @@
     if (ai) {
       let sub = ai.nextElementSibling;
       if (TRAIN[CUR]) { ai.classList.add('on'); if (!sub || !sub.classList.contains('sub')) { sub = document.createElement('div'); sub.className = 'sub'; ai.after(sub); sub.innerHTML = SALES_SUB.map(([t]) => `<a>${t}</a>`).join(''); } }
-      if (sub && sub.classList.contains('sub')) { $$('a', sub).forEach((x) => { if (TRAIN[CUR]) x.classList.remove('on'); }); sub.insertAdjacentHTML('beforeend', '<div class="xs" style="color:#8FA8C0;font-weight:700;letter-spacing:.05em;padding:10px 0 4px 40px">LUYỆN TẬP</div>' + TRAIN_SUB.map(([t]) => `<a class="${TRAIN[CUR] === t ? 'on' : ''}">${t}</a>`).join('')); }
+      if (TRAIN_ON && sub && sub.classList.contains('sub')) { $$('a', sub).forEach((x) => { if (TRAIN[CUR]) x.classList.remove('on'); }); sub.insertAdjacentHTML('beforeend', '<div class="xs" style="color:#8FA8C0;font-weight:700;letter-spacing:.05em;padding:10px 0 4px 40px">LUYỆN TẬP</div>' + TRAIN_SUB.map(([t]) => `<a class="${TRAIN[CUR] === t ? 'on' : ''}">${t}</a>`).join('')); }
     }
     if (TRAIN[CUR]) { const cr = $('.top .crumb'); if (cr) cr.innerHTML = cr.innerHTML.replace('Học viện', 'AI Sales <span>/</span> Luyện tập').replace('Chặng 1 – Sản phẩm, giá và kịch bản', 'Bài thi Sales'); }
     // Cài đặt chỉ còn Nhân viên và Nhật ký
