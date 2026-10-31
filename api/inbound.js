@@ -16,23 +16,23 @@ const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(Str
 function normalize(b) {
   const conv = first(b, ['conversation', 'transcript', 'messages', 'history', 'chat']);
   const lines = Array.isArray(conv) ? conv.slice(-40).map((m) => (typeof m === 'string' ? m : `${s(m.role || m.from || m.sender || m.who || '', 20)}: ${s(m.text || m.content || m.message || '', 500)}`)) : conv ? s(conv, 6000).split(/\n/).slice(-40) : [];
-  const lv = s(first(b, ['level', 'funnel', 'cap', 'stage', 'lead_level']), 10).toUpperCase().replace(/^C3$/, 'L1');
+  const lv = s(first(b, ['level', 'funnel', 'cap', 'stage', 'lead_level', 'cap_khach', 'cap_do']), 10).toUpperCase().replace(/^C3$/, 'L1');
   return {
-    name: s(first(b, ['name', 'full_name', 'fullname', 'customer_name', 'customer.name', 'contact.name', 'user.name', 'ten']), 80) || 'Khách Fanpage',
-    phone: s(first(b, ['phone', 'phone_number', 'sdt', 'customer.phone', 'contact.phone', 'mobile']), 20).replace(/[^\d+ ]/g, ''),
-    address: s(first(b, ['address', 'dia_chi', 'city', 'province', 'location', 'customer.address']), 120),
-    source: s(first(b, ['source', 'channel', 'page', 'page_name', 'platform']), 40) || 'Fanpage',
+    name: s(first(b, ['name', 'full_name', 'fullname', 'customer_name', 'customer.name', 'contact.name', 'user.name', 'ten', 'ho_ten', 'ho_va_ten', 'ten_khach', 'ten_khach_hang', 'khach_hang']), 80) || 'Khách Fanpage',
+    phone: s(first(b, ['phone', 'phone_number', 'sdt', 'customer.phone', 'contact.phone', 'mobile', 'so_dien_thoai', 'dien_thoai', 'sdt_khach']), 20).replace(/[^\d+ ]/g, ''),
+    address: s(first(b, ['address', 'dia_chi', 'city', 'province', 'location', 'customer.address', 'tinh_thanh', 'khu_vuc']), 120),
+    source: s(first(b, ['source', 'channel', 'page', 'page_name', 'platform', 'nguon', 'kenh']), 40) || 'Fanpage',
     psid: s(first(b, ['psid', 'sender_id', 'user_id', 'customer_id', 'contact.id', 'conversation_id']), 80),
-    link: s(first(b, ['link', 'conversation_url', 'chat_url', 'url']), 300),
+    link: s(first(b, ['link', 'conversation_url', 'chat_url', 'url', 'link_hoi_thoai']), 300),
     model: s(first(b, ['business', 'business_model', 'mo_hinh', 'model']), 80),
-    product: s(first(b, ['product', 'san_pham', 'interest', 'product_interest', 'nhom_san_pham']), 120),
+    product: s(first(b, ['product', 'san_pham', 'interest', 'product_interest', 'nhom_san_pham', 'san_pham_quan_tam']), 120),
     size: s(first(b, ['size', 'kich_thuoc', 'dung_tich', 'capacity']), 60),
     cooling: s(first(b, ['cooling', 'lam_lanh', 'hinh_thuc_lam_lanh']), 40),
     choice: s(first(b, ['choice', 'brand', 'goldcool_or_cheap', 'lua_chon']), 40),
     quoted: s(first(b, ['quoted', 'price_sent', 'gia_da_gui']), 200),
     concern: s(first(b, ['concern', 'objection', 'ban_khoan']), 300),
-    lastMessage: s(first(b, ['last_message', 'lastMessage', 'message', 'text', 'tin_cuoi']), 500),
-    summary: s(first(b, ['summary', 'handover', 'note', 'ban_giao', 'tom_tat']), 2000),
+    lastMessage: s(first(b, ['last_message', 'lastMessage', 'message', 'text', 'tin_cuoi', 'tin_nhan', 'noi_dung', 'tin_nhan_cuoi']), 500),
+    summary: s(first(b, ['summary', 'handover', 'note', 'ban_giao', 'tom_tat', 'ghi_chu', 'ban_giao_sales']), 2000),
     next: s(first(b, ['next_action', 'next', 'viec_tiep_theo']), 300),
     level: /^L[1-6]$/.test(lv) ? lv : '',
     urgent: /khiếu nại|bảo hành|hỏng|hư |không lạnh|không chạy|lỗi|khẩn/i.test(JSON.stringify(b).slice(0, 4000)),
@@ -61,6 +61,18 @@ async function all() {
   const out = await Promise.all(ids.map((id) => L.read(L.latest(by[id]).url)));
   return out.filter(Boolean);
 }
+async function intake(b, test) {
+  const id = L.stamp(); const at = new Date().toISOString();
+  const lead = { id, at, status: 'Mới', owner: '', history: [], ...normalize(b), raw: s(b, 8000) };
+  if (test) lead.test = true;
+  const split = await getSplit(); const k = pick(split, await all());
+  if (k) { const u = SALES.find((x) => x.k === k); lead.owner = k; lead.ownerName = u.n; lead.history.push({ by: 'Hệ thống', at, status: 'Mới', note: 'Chia tự động theo tỉ lệ cho ' + u.n }); }
+  await L.put(`inbound/${id}/${L.stamp()}.json`, lead);
+  let forwarded = false;
+  if (ZOTECH && !test) { try { const r = await fetch(ZOTECH, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...b, goldcool_id: id, sales: lead.ownerName || '' }) }); forwarded = r.ok; } catch (e) { forwarded = false; } }
+  if (forwarded) { lead.zotech = at; await L.put(`inbound/${id}/${L.stamp()}.json`, lead); }
+  return { lead, forwarded };
+}
 module.exports = async (req, res) => {
   try {
     const q = req.query || {};
@@ -69,21 +81,13 @@ module.exports = async (req, res) => {
     if (req.method === 'POST' && !q.id && !q.a && given) {
       if (!KEY) return L.send(res, 503, { error: 'Chưa cài INBOUND_KEY trên Vercel' });
       if (!safeEq(given, KEY)) return L.send(res, 401, { error: 'Sai khóa kết nối' });
-      const b = await L.body(req);
-      const id = L.stamp(); const at = new Date().toISOString();
-      const lead = { id, at, status: 'Mới', owner: '', history: [], ...normalize(b), raw: s(b, 8000) };
-      const split = await getSplit(); const k = pick(split, await all());
-      if (k) { const u = SALES.find((x) => x.k === k); lead.owner = k; lead.ownerName = u.n; lead.history.push({ by: 'Hệ thống', at, status: 'Mới', note: 'Chia tự động theo tỉ lệ cho ' + u.n }); }
-      await L.put(`inbound/${id}/${L.stamp()}.json`, lead);
-      let forwarded = false;
-      if (ZOTECH) { try { const r = await fetch(ZOTECH, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...b, goldcool_id: id, sales: lead.ownerName || '' }) }); forwarded = r.ok; } catch (e) { forwarded = false; } }
-      if (forwarded) { lead.zotech = at; await L.put(`inbound/${id}/${L.stamp()}.json`, lead); }
-      return L.send(res, 200, { ok: true, id, sales: lead.ownerName || '', forwarded });
+      const r = await intake(await L.body(req), false);
+      return L.send(res, 200, { ok: true, id: r.lead.id, sales: r.lead.ownerName || '', forwarded: r.forwarded });
     }
     const me = L.session(req); if (!me) return L.send(res, 401, { error: 'Chưa đăng nhập' });
     const admin = L.ADMINS.includes(me.k);
     // 2. Xem danh sách: Sales chỉ thấy khách của mình, Giám đốc / Quản lý dữ liệu thấy tất cả
-    if (req.method === 'GET') {
+    if (req.method === 'GET' && q.a !== 'key') {
       const leads = (await all()).map(({ raw, ...x }) => x);
       const out = { leads: admin ? leads : leads.filter((l) => l.owner === me.k), statuses: STATUS, ready: !!KEY, zotech: !!ZOTECH, admin };
       if (admin) { const split = await getSplit(); const mk = month(); out.split = SALES.map((u) => ({ k: u.k, n: u.n, r: u.r, w: split[u.k] || 0, month: leads.filter((l) => l.owner === u.k && String(l.at).slice(0, 7) === mk).length })); out.unassigned = leads.filter((l) => !l.owner).length; }
@@ -98,6 +102,28 @@ module.exports = async (req, res) => {
       await L.put(`config/split/${L.stamp()}.json`, { w, by: me.k, at: new Date().toISOString() });
       await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Chia khách', text: 'Đặt tỉ lệ chia khách: ' + SALES.map((u) => `${u.n.split(' ').pop()} ${w[u.k]}`).join(' · '), at: new Date().toISOString() });
       return L.send(res, 200, { ok: true, w });
+    }
+    // Kết nối: Giám đốc / Quản lý dữ liệu xem khóa, gửi khách thử, xóa khách
+    if (req.method === 'GET' && q.a === 'key') {
+      if (!admin) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc Quản lý dữ liệu' });
+      if (!KEY) return L.send(res, 503, { error: 'Chưa cài INBOUND_KEY trên Vercel' });
+      await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Kết nối Fanpage', text: 'Xem khóa kết nối', at: new Date().toISOString() });
+      return L.send(res, 200, { key: KEY });
+    }
+    if (req.method === 'POST' && q.a === 'test') {
+      if (!admin) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc Quản lý dữ liệu' });
+      const r = await intake({ name: 'Khách thử kết nối', phone: '0900000000', product: 'Tủ đông 4 cánh', level: 'L3', source: 'Gửi thử', last_message: 'Đây là khách thử để kiểm tra đường đi. Xóa được.', summary: 'Khách thử do ' + me.n + ' tạo để kiểm tra chia khách.' }, true);
+      await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Kết nối Fanpage', text: 'Gửi khách thử · chia cho ' + (r.lead.ownerName || 'chưa chia'), at: new Date().toISOString() });
+      return L.send(res, 200, { ok: true, lead: (({ raw, ...x }) => x)(r.lead) });
+    }
+    if (req.method === 'POST' && q.a === 'del' && q.id) {
+      if (!admin) return L.send(res, 403, { error: 'Chỉ Giám đốc hoặc Quản lý dữ liệu được xóa khách' });
+      const id = String(q.id).replace(/[^\w-]/g, ''); const bs = await L.list(`inbound/${id}/`);
+      if (!bs.length) return L.send(res, 404, { error: 'Không có khách này' });
+      const cur = await L.read(L.latest(bs).url);
+      await L.del(bs.map((x) => x.url));
+      await L.put(`audit/${L.stamp()}.json`, { user: me.k, name: me.n, area: 'Khách Fanpage', text: 'Xóa khách ' + ((cur && cur.name) || id), at: new Date().toISOString() });
+      return L.send(res, 200, { ok: true });
     }
     // 4. Thêm khách thủ công (gọi hotline, nhắn Zalo, khách đến kho): Sales thêm thì khách là của mình; Giám đốc/Quản lý dữ liệu thêm thì chia theo tỉ lệ hoặc giao thẳng
     if (req.method === 'POST' && q.a === 'add') {

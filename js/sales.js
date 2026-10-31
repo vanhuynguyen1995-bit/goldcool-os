@@ -172,6 +172,7 @@
       l.product ? `<span class="tag">${esc(l.product.slice(0, 28))}</span>` : '',
       S.admin ? `<span class="tag">${esc(l.ownerName ? l.ownerName.split(' ').pop() : 'Chưa chia')}</span>` : '',
       !l.phone ? '<span class="tag">Chưa có SĐT</span>' : '',
+      l.test ? '<span class="tag bad">Khách thử</span>' : '',
     ].join('');
     return `<button class="row${l.id === S.sel ? ' on' : ''}" data-id="${esc(l.id)}"><div class="l1"><span class="nm">${esc(l.name)}</span><span class="tm">${esc(opt.time || when(l.at))}</span></div>
       <div class="msg">${esc(l.lastMessage || l.summary || l.product || l.source || '')}</div><div class="tags">${tags}</div></button>`;
@@ -230,7 +231,7 @@
         <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="zt"${l.zotech ? ' checked' : ''}> Đã nhập Zotech</label><span class="sp" style="flex:1"></span><button class="btn pri" id="save">Lưu</button></div>
       </div>
       ${hasAi ? `<div class="card"><h3>Bàn giao từ AI</h3>${l.summary ? `<div class="handover">${esc(l.summary)}</div>` : ''}${ai.some((r) => r[1]) ? `<div style="margin-top:${l.summary ? 12 : 0}px">${kv(ai)}</div>` : ''}</div>` : ''}
-      <div class="card"><h3>Thông tin khách<span class="sp"></span><button class="btn ghost sm" id="edit">${I.edit}<span>Sửa</span></button></h3>
+      <div class="card"><h3>Thông tin khách<span class="sp"></span>${S.admin ? '<button class="btn ghost sm" id="delb" style="color:var(--bad)">Xóa</button>' : ''}<button class="btn ghost sm" id="edit">${I.edit}<span>Sửa</span></button></h3>
         ${kv([['Điện thoại', l.phone || 'Chưa có'], ['Địa chỉ', l.address], ['Nguồn', l.source], ['Cấp khách', l.level], ['Tin nhắn cuối', l.lastMessage], ['Người nhập', l.manual], ['Zotech', l.zotech ? 'Đã nhập ' + when(l.zotech) : '']])}</div>
       ${l.lines && l.lines.length ? `<div class="card"><h3>Hội thoại với AI <span class="muted sm" style="font-weight:500">${l.lines.length} tin gần nhất</span></h3><div class="chat">${l.lines.map((x) => { const m = String(x).match(/^\s*([^:]{1,20}):\s*([\s\S]*)$/); const who = m ? m[1] : ''; const isAi = /^(ai|bot|assistant|page|fanpage|goldcool|tư vấn|shop)$/i.test(who.trim()); return `<div class="bub${isAi ? ' ai' : ''}">${who ? `<small>${esc(isAi ? 'AI' : 'Khách')}</small>` : ''}${esc(m ? m[2] : x)}</div>`; }).join('')}</div></div>` : ''}
       <div class="card"><h3>Lịch sử</h3><ul class="hist">${(l.history || []).slice().reverse().map((h) => `<li><time>${when(h.at)}</time><div><b>${esc(h.by)}</b> · ${esc(h.status)}${h.note ? ' · ' + esc(h.note) : ''}</div></li>`).join('') || '<li class="muted">Chưa có</li>'}</ul></div>
@@ -244,6 +245,10 @@
       save(l, { note: $('#note', box).value, followUp: d ? d + (t ? 'T' + t : '') : '', zotech: $('#zt', box).checked }, $('#save', box));
     };
     $('#edit', box).onclick = () => editLead(l);
+    const delb = $('#delb', box); if (delb) delb.onclick = () => {
+      const m = modal(`<h3>Xóa khách này?</h3><p>Xóa hẳn <b>${esc(l.name)}</b> khỏi hệ thống (dùng cho khách thử, tin rác, khách trùng). Không khôi phục được.</p><div class="foot"><button class="btn" data-close>Hủy</button><button class="btn pri" id="dy" style="background:var(--bad);border-color:var(--bad)">Xóa</button></div>`);
+      $('#dy', m).onclick = async () => { busy($('#dy', m), true); const r = await post('/api/inbound?a=del&id=' + encodeURIComponent(l.id)); m.remove(); if (!r.ok) return toast(r.j.error || 'Chưa xóa được', 'bad'); S.leads = S.leads.filter((x) => x.id !== l.id); toast('Đã xóa khách', 'ok'); location.hash = S.route; badges(); };
+    };
   }
   async function save(l, body, btn) {
     busy(btn, true); const r = await post('/api/inbound?id=' + encodeURIComponent(l.id), body); busy(btn, false);
@@ -361,8 +366,9 @@
           <dt>Chuyển sang Zotech</dt><dd><span class="dot ${S.zotech ? 'ok' : ''}"></span> ${S.zotech ? 'Đang bật: mỗi khách mới được gửi sang Zotech' : 'Chưa bật (cần ZOTECH_WEBHOOK_URL)'}</dd>
           <dt>Khách đã nhận</dt><dd>${S.leads.length} khách${S.unassigned ? ` · ${S.unassigned} chưa chia` : ''}</dd></dl>
         <p class="sm" style="margin:14px 0 6px"><b>Gửi cho người cài chatbot (Kiên / Retion / chatbot.ai.vn):</b> chatbot gửi mỗi khách đủ điều kiện về địa chỉ dưới đây, phương thức POST, dữ liệu JSON.</p>
-        <div class="code">POST ${esc(host)}/api/inbound?key=&lt;INBOUND_KEY&gt;</div>
-        <p class="muted sm" style="margin:8px 0">Giá trị INBOUND_KEY xem trong Vercel › goldcool-os › Settings › Environment Variables. Không gửi khóa này qua nhóm chat chung.</p>
+        <div class="code" id="ep">POST ${esc(host)}/api/inbound?key=&lt;KHÓA&gt;</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" id="showkey">Hiện địa chỉ đầy đủ</button><button class="btn hide" id="copykey">Sao chép</button><button class="btn pri" id="testlead">Gửi khách thử</button></div>
+        <p class="muted sm" style="margin:0 0 10px">Địa chỉ đầy đủ có khóa bí mật: chỉ dán vào phần cài đặt chatbot hoặc gửi riêng cho người cài, không đăng nhóm chung. "Gửi khách thử" tạo một khách giả đi đúng đường chia khách để kiểm tra; xem xong có thể xóa.</p>
         <div class="code">{
   "name": "Phạm Thu Trang", "phone": "09xxxxxxxx", "address": "Hà Đông, Hà Nội",
   "product": "Tủ đông 4 cánh", "level": "L3", "choice": "GoldCool",
@@ -376,6 +382,17 @@
     $('#cp').onclick = () => changePw('', false);
     $('#lo').onclick = async () => { await post('/api/auth?a=logout'); S.me = null; clearInterval(S.timer); location.hash = ''; showLogin(); };
     if (!S.admin) return;
+    $('#showkey').onclick = async () => {
+      const r = await api('/api/inbound?a=key'); if (!r.ok) return toast(r.j.error || 'Chưa lấy được khóa', 'bad');
+      const full = `${host}/api/inbound?key=${r.j.key}`; $('#ep').textContent = 'POST ' + full; $('#showkey').classList.add('hide');
+      const c = $('#copykey'); c.classList.remove('hide'); c.onclick = async () => { try { await navigator.clipboard.writeText(full); toast('Đã sao chép địa chỉ', 'ok'); } catch (e) { toast('Bôi đen rồi sao chép thủ công', 'bad'); } };
+    };
+    $('#testlead').onclick = async () => {
+      busy($('#testlead'), true); const r = await post('/api/inbound?a=test'); busy($('#testlead'), false);
+      if (!r.ok) return toast(r.j.error || 'Gửi thử chưa được', 'bad');
+      S.leads.unshift(r.j.lead); if (S.seen) S.seen.add(r.j.lead.id); badges();
+      toast('Đã nhận khách thử · chia cho ' + (r.j.lead.ownerName || 'chưa ai'), 'ok');
+    };
     const sum = () => { const t = $$('[data-w]').reduce((a, i) => a + (+i.value || 0), 0); $('#wsum').textContent = 'Tổng ' + t + '%' + (t !== 100 ? ' (không bắt buộc đúng 100%, hệ thống chia theo tỉ lệ tương đối)' : ''); };
     $$('[data-w]').forEach((i) => i.oninput = sum); sum();
     $('#ws').onclick = async () => {
