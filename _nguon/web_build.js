@@ -38,7 +38,7 @@ const footer = `<footer class="ft"><div class="wrap in">
   <div>${logo.replace('class="logo"', 'class="logo" style="color:#fff"')}<p style="margin-top:18px;font-size:14.5px;line-height:1.6;max-width:320px">Chọn đúng – Dùng lâu. Lạnh sâu – Bền lâu – Tiết kiệm điện. Thiết bị lạnh và thiết bị bếp cho cơ sở F&amp;B.</p></div>
   <div><h4>Sản phẩm</h4><ul>${SUB().map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join('')}</ul></div>
   <div><h4>Hỗ trợ</h4><ul><li><a href="index.html#so-sanh">Bảo hành 24 tháng</a></li><li><a href="index.html#so-sanh">Đổi mới 30 ngày</a></li><li><a href="index.html#quy-trinh">Giao hàng &amp; lắp đặt</a></li><li><a href="tin-tuc.html">Tin tức &amp; kiến thức</a></li></ul></div>
-  <div><h4>Liên hệ</h4><ul><li><a href="tel:0865868868">Hotline / Zalo: 0865 868 868</a></li><li>Kho CN05 KCN Nguyên Khê, Phúc Thịnh, Hà Nội</li><li>goldcool.vn</li></ul></div>
+  <div><h4>Liên hệ</h4><ul><li><a href="tel:0865868868">Hotline / Zalo: 0865 868 868</a></li><li>Kho CN05 KCN Nguyên Khê, Phúc Thịnh, Hà Nội</li><li><a href="https://goldcool.vn/" target="_blank" rel="noopener">goldcool.vn</a></li></ul></div>
  </div>
  <div class="bot"><span>© 2026 GoldCool Việt Nam</span><span>Hotline / Zalo 0865 868 868</span></div>
 </div></footer>
@@ -63,7 +63,7 @@ const form = `<section class="sec form-sec" id="tu-van"><div class="wrap in">
    <div class="ct">
     <div><span class="ic" style="background:rgba(201,162,39,.18)">${ic('phone', 20, '#E6C35C')}</span><div><b><a href="tel:0865868868">0865 868 868</a></b><small>Hotline &amp; Zalo</small></div></div>
     <div><span class="ic" style="background:rgba(201,162,39,.18)">${ic('pin', 20, '#E6C35C')}</span><div><b>Kho CN05 KCN Nguyên Khê</b><small>Phúc Thịnh, Hà Nội · xem hàng trực tiếp</small></div></div>
-    <div><span class="ic" style="background:rgba(201,162,39,.18)">${ic('globe', 20, '#E6C35C')}</span><div><b>goldcool.vn</b><small>Website chính thức</small></div></div>
+    <div><span class="ic" style="background:rgba(201,162,39,.18)">${ic('globe', 20, '#E6C35C')}</span><div><b><a href="https://goldcool.vn/" target="_blank" rel="noopener">goldcool.vn</a></b><small>Website chính thức</small></div></div>
    </div>
    <div class="promise"><div>✓ Không gọi làm phiền ngoài nhu cầu bạn để lại</div><div>✓ Thông tin chỉ dùng để tư vấn, không chia sẻ cho bên khác</div></div>
   </div>
