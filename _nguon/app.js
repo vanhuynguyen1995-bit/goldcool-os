@@ -696,11 +696,122 @@
     $$('.content .card').forEach((card) => {
       const title = T($('b', card)); const ready = /bàn chặt/i.test(title);
       const chip = $$('.chip', card).slice(-1)[0]; const btn2 = $('.btn', card);
-      if (ready) { const rp = S.rp; const st = rp && rp.ended ? (rp.discount || !(rp.cheap || rp.held) ? ['bad', 'Chưa đạt'] : ['ok', 'Đạt']) : rp && rp.log && rp.log.length ? ['warn', 'Đang luyện'] : ['gray', 'Chưa luyện']; setChip(chip, st[0], st[1]); card.style.borderColor = 'var(--navy)'; }
+      if (ready) { const rp = S.rp && S.rp.v === 2 ? S.rp : null; const st = rp && rp.grade ? (rp.grade.pass ? ['ok', 'Đạt'] : ['bad', 'Chưa đạt']) : rp && rp.log.length ? ['warn', 'Đang luyện'] : ['gray', 'Chưa luyện']; setChip(chip, st[0], st[1]); card.style.borderColor = 'var(--navy)'; }
       else { card.removeAttribute('data-go'); card.dataset.soon = '1'; card.style.opacity = '.6'; setChip(chip, 'gray', 'Chưa có kịch bản'); if (btn2) btn2.textContent = 'Sắp có'; }
     });
   };
   CLICK['chon-tinh-huong'] = (t) => { if (t.closest('[data-soon]')) { toast('Tình huống này sẽ mở khi nối AI đóng vai thật'); return true; } return false; };
+
+  /* ===== Luyện đóng vai: AI thật (khi có ANTHROPIC_API_KEY) hoặc kịch bản dự phòng ===== */
+  const RP_BASE = [
+    ['sales', 'Dạ em chào anh Tuấn, em là Sales của GoldCool. Em thấy anh chọn bản lạnh trực tiếp 1,5 m. Bếp mình để rau, thịt sơ chế hay đồ uống ạ?'],
+    ['kh', 'Để thịt, rau sơ chế. Anh cũng thấy GoldCool hơi cao.'],
+    ['sales', 'Dạ, bản GoldCool trực tiếp 1,5 m là 10.120.000đ, mẫu rẻ 8.500.000đ, giá đã gồm VAT ạ. Khác nhau chính là GoldCool dàn đồng, bảo hành 24 tháng, đổi mới 30 ngày đầu nếu lỗi kỹ thuật; mẫu rẻ dàn nhôm, bảo hành 12 tháng.'],
+    ['kh', 'Bếp anh chạy cả ngày, cái cũ hỏng sau 2 năm.'],
+    ['sales', 'Dạ với bếp chạy cả ngày thì độ ổn định quan trọng. Em gửi anh video tủ bàn chặt GoldCool chạy tại một quán cơm để anh xem thực tế nhé.'],
+    ['kh', 'Ừ. Nhưng chỗ khác bán còn bớt. Em bớt anh 1 triệu thì anh lấy GoldCool luôn.'],
+  ].map(([who, text]) => ({ who, text }));
+  let RP_AI = null; // null = chưa kiểm tra
+  const RP = () => { if (!S.rp || S.rp.v !== 2) S.rp = { v: 2, log: [], st: {}, said: [] }; return S.rp; };
+  const OK_PRICES = ['10.120.000', '16.560.000', '8.500.000', '12.500.000'];
+  function rpScan(text, st) {
+    const l = ' ' + text.toLowerCase() + ' ';
+    const neg = /(không|ko|k|chưa|hông)\s*(thể\s*|được\s*)?(tự\s*)?(bớt|giảm|tặng|chiết khấu)/.test(l);
+    if (!neg && /(bớt|giảm|chiết khấu|tặng|khuyến mãi|miễn phí|free ship|freeship|hỗ trợ (anh|thêm) \d)/.test(l)) { st.disc = true; st.discQ = text; }
+    if (neg || /chính sách|giá (bán lẻ|niêm yết|chung|công ty)|đã gồm vat|giá (đã )?tốt|giá chuẩn|đúng giá/.test(l)) { st.held = true; st.heldQ = text; }
+    if (/mẫu rẻ|bản rẻ|hàng rẻ|loại rẻ|rẻ hơn|8[.,]?5|8 triệu|dàn nhôm|tiết kiệm chi phí|bản thấp hơn/.test(l)) { st.cheap = true; st.cheapQ = text; }
+    if (/dàn đồng|24 tháng|bảo hành|đổi mới|30 ngày|ổn định|bền|chạy cả ngày|hiệu suất|dùng lâu|lâu dài/.test(l)) { st.value = true; st.valueQ = text; }
+    if (/địa chỉ|giao (về|đến|tới) đâu|khi nào anh cần|bao giờ anh cần|thời điểm|số điện thoại|sđt|zalo|lên đơn|chốt đơn|xác nhận đơn|báo phí|kế toán|kiểm tra (kho|lịch)/.test(l)) { st.next = true; st.nextQ = text; }
+    if (/(giao|lắp|chuyển)\s*(ngay|luôn|trong ngày|ngày mai|mai|hôm nay|sáng mai|chiều nay|trong \d+)|còn (hàng|sẵn)|có sẵn hàng|hàng sẵn/.test(l)) { st.date = true; st.dateQ = text; }
+    if (/hàng chợ|đểu|dỏm|rởm|(bên|chỗ|hãng) (khác|kia)[^.]{0,30}(kém|tệ|lừa|không bằng|không tốt)/.test(l)) { st.disp = true; st.dispQ = text; }
+    (text.match(/\d{1,3}(?:[.,]\d{3}){2}/g) || []).forEach((n) => { const k = n.replace(/,/g, '.'); if (!OK_PRICES.includes(k)) { st.badPrice = true; st.badPriceQ = text; } });
+    if (/\d+([.,]\d+)?\s*(triệu|tr)\b/.test(l) && /(còn|giá|lấy)\s*\d/.test(l) && !/8[.,]5|8 triệu|10[.,]1|16[.,]5|12[.,]5/.test(l)) { st.badPrice = true; st.badPriceQ = text; }
+  }
+  function rpReply(rp, text) {
+    const st = rp.st; const before = { ...st }; rpScan(text, st); st.turn = (st.turn || 0) + 1;
+    const pick = (pool) => { const lastSaid = rp.said[rp.said.length - 1]; const f = pool.find((x) => !rp.said.includes(x)) || pool.find((x) => x !== lastSaid) || 'Em nói lại giúp anh với, anh chưa hiểu lắm.'; rp.said.push(f); return f; };
+    if (st.disc) return pick(['Ok em bớt thế thì anh lấy luôn. Em gửi anh số tài khoản nhé.', 'Được rồi, em gửi số tài khoản đi anh chuyển cọc.', 'Anh chờ số tài khoản của em đấy.']);
+    if (st.date && !before.date) return pick(['Thế giao ngay được thật à? Vậy em lên đơn cho anh, anh cần gấp.', 'Ok vậy em giao đúng hẹn nhé, anh đợi đấy.']);
+    if (st.disp && !before.disp) return 'Em đừng chê bên khác, anh chỉ hỏi giá thôi mà.';
+    if (st.stage === 'won') return pick(['Ừ em cứ báo phí vận chuyển rồi anh chuyển khoản.', 'Ok em, có gì nhắn anh qua Zalo này nhé.', 'Được rồi, cảm ơn em.']);
+    if (st.stage === 'delivery') {
+      if (st.next) { st.stage = 'won'; return pick(['Quán anh ở Cầu Giấy. Em kiểm tra rồi báo anh phí ship, chốt GoldCool trực tiếp 1,5 m nhé.', 'Ok, chốt GoldCool trực tiếp 1,5 m. Em báo phí ship qua Zalo cho anh.']); }
+      return pick(['Thế bao giờ giao được em? Quán anh ở Cầu Giấy.', 'Em chưa trả lời anh vụ giao hàng?']);
+    }
+    if (st.held && st.cheap && st.value) {
+      if (st.next) { st.stage = 'won'; return pick(['Ừ em nói rõ thế anh hiểu, bếp anh chạy cả ngày thì lấy loại bền. Quán anh ở Cầu Giấy, em kiểm tra rồi báo phí ship, anh lấy GoldCool trực tiếp 1,5 m.']); }
+      st.stage = 'delivery';
+      return pick(['Ừ em nói rõ thế anh hiểu. Bếp anh chạy cả ngày thì lấy loại bền, anh lấy GoldCool. Thế bao giờ giao được em?']);
+    }
+    if (st.held && st.value && !st.cheap) return pick(['Ừ tủ tốt thì anh hiểu, nhưng tiền thì vẫn cao. Thế có loại nào rẻ hơn không em?', 'Anh vẫn thấy hơi cao. Có loại nào rẻ hơn không?', 'Thôi em xem lại giúp anh, không thì anh đi xem chỗ khác.']);
+    if (st.held && st.cheap && !st.value) return pick(['Mẫu rẻ bảo hành có 12 tháng à? Thế GoldCool hơn được gì mà đắt hơn gần 2 triệu?', 'Bếp anh chạy cả ngày, mẫu rẻ có trụ được không em?']);
+    if (st.held) return pick(['Không giảm thì thôi, nhưng sao GoldCool đắt hơn hẳn thế em?', 'Chính sách thì anh biết rồi, thế anh mua thì được gì hơn chỗ khác?', 'Anh vẫn thấy cao. Em xem có cách nào không?']);
+    return pick(['Anh vẫn thấy cao. Em xem có cách nào không?', 'Chỗ khác họ bớt 500 nghìn còn tặng khay inox, em không được à?', 'Thế miễn phí vận chuyển cho anh được không?', 'Thôi để anh tham khảo thêm chỗ khác vậy.']);
+  }
+  function rpGradeLocal(rp) {
+    const st = rp.st; const last = (rp.log.filter((m) => m.who === 'sales').slice(-1)[0] || {}).text || '';
+    const C = [
+      { name: 'Hỏi nhu cầu', pass: true, quote: 'Bếp mình để rau, thịt sơ chế hay đồ uống ạ?', comment: 'Hỏi đúng mặt hàng, không hỏi lại điều AI đã ghi.' },
+      { name: 'Giải thích phiên bản', pass: true, quote: 'GoldCool dàn đồng, bảo hành 24 tháng… mẫu rẻ dàn nhôm, bảo hành 12 tháng.', comment: 'Nói đúng khác biệt theo kịch bản.' },
+      { name: 'Báo giá đúng kịch bản', pass: !st.badPrice, quote: st.badPrice ? st.badPriceQ : 'Bản GoldCool trực tiếp 1,5 m là 10.120.000đ, mẫu rẻ 8.500.000đ', comment: st.badPrice ? 'Có nêu con số giá không đúng bảng giá bán lẻ.' : 'Đúng giá, đúng kích thước, GoldCool trước.', better: 'Dạ GoldCool trực tiếp 1,5 m là 10.120.000đ, mẫu rẻ 8.500.000đ, giá đã gồm VAT ạ.' },
+      { name: 'Đúng quyền hạn', pass: !st.disc && !st.date, quote: st.disc ? st.discQ : st.date ? st.dateQ : (st.heldQ || last), comment: st.disc ? 'Tự giảm giá hoặc tặng ngoài chính sách.' : st.date ? 'Hứa ngày giao hoặc xác nhận tồn kho khi chưa kiểm tra.' : 'Không tự giảm giá, không hứa ngoài quyền.', better: st.disc ? 'Dạ giá bên em là giá bán lẻ đã gồm VAT nên em không tự bớt được. Nếu anh cần tiết kiệm, mẫu rẻ 1,5 m là 8.500.000đ; còn bếp chạy cả ngày thì em vẫn khuyên GoldCool để dùng lâu ạ.' : 'Dạ em kiểm tra kho và lịch giao rồi báo anh ngay, kèm phí vận chuyển về quán mình ạ.' },
+      { name: 'Bằng chứng & khác biệt', pass: !st.disp && st.value && st.cheap, quote: st.disp ? st.dispQ : (st.valueQ || st.cheapQ || last), comment: st.disp ? 'Có chê bai bên khác – DNA không cho phép hạ thấp đối thủ.' : (st.value && st.cheap) ? 'Nhắc lại khác biệt gắn với bếp chạy cả ngày và đưa mẫu rẻ để khách tự chọn.' : st.value ? 'Có nhắc giá trị GoldCool nhưng chưa đưa mẫu rẻ để khách tự so sánh và chọn.' : st.cheap ? 'Có đưa mẫu rẻ nhưng chưa nhắc lại khác biệt gắn với nỗi lo bếp chạy cả ngày.' : 'Khi khách ép giá, chưa nhắc lại khác biệt và chưa đưa mẫu rẻ để khách tự chọn.', better: 'Dạ bếp mình chạy cả ngày, tủ cũ hỏng sau 2 năm, nên GoldCool dàn đồng, bảo hành 24 tháng, đổi mới 30 ngày đầu nếu lỗi kỹ thuật sẽ yên tâm hơn ạ. Nếu anh ưu tiên chi phí thì mẫu rẻ 8.500.000đ.' },
+      { name: 'Bước tiếp theo', pass: !!st.next, quote: st.next ? st.nextQ : last, comment: st.next ? 'Có bước tiếp theo rõ ràng.' : 'Chưa chốt bước tiếp theo (xin địa chỉ, thời điểm cần, báo phí vận chuyển).', better: 'Anh cho em xin địa chỉ quán để em kiểm tra lịch giao và báo phí vận chuyển ạ.' },
+    ];
+    const ok = C.filter((c) => c.pass).length; const pass = ok >= 5 && C[2].pass && C[3].pass;
+    return { criteria: C, ok, pass, at: new Date().toISOString(), by: 'local', summary: pass ? 'Giữ đúng quyền hạn và đưa khách tới bước tiếp theo. Tốt.' : st.disc ? 'Khách đòi bớt thì nhớ “niềm tin lâu dài hơn doanh số trước mắt”: không tự giảm, đưa mẫu rẻ để khách tự chọn.' : 'Khi khách ép giá: giữ giá lịch sự, nhắc lại khác biệt gắn với nỗi lo của khách, đưa mẫu rẻ để khách tự chọn, rồi chốt bước tiếp theo.' };
+  }
+  const rpBubble = (m) => m.who === 'kh'
+    ? `<div style="display:flex;gap:9px;max-width:74%"><span class="av" style="width:32px;height:32px;font-size:11px;background:#FDF1D8;color:#8A6A05;flex:none">KH</span><div style="background:#fff;border:1px solid var(--line);border-radius:4px 14px 14px 14px;padding:9px 13px">${esc(m.text)}</div></div>`
+    : `<div style="margin-left:auto;max-width:74%;background:var(--ice);border:1px solid #CFE0EE;border-radius:14px 4px 14px 14px;padding:9px 13px">${esc(m.text)}</div>`;
+  APPLY['dong-vai'] = () => {
+    const card = findIncl('.card', 'Anh Tuấn (vai khách)'); if (!card) return;
+    const bodyEl = card.children[2]; const wait = bodyEl.lastElementChild; const rp = RP();
+    rp.log.forEach((m) => wait.insertAdjacentHTML('beforebegin', rpBubble(m)));
+    const turns = () => { const lc = findIncl('.row', 'Lượt'); if (lc) { const bb = $('b', lc); if (bb) bb.textContent = `${3 + rp.log.filter((m) => m.who === 'sales').length} / 20`; } };
+    turns();
+    const sub = $$('div', card.children[1] || card).find((d) => T(d).startsWith('AI đóng vai'));
+    const mode = (ai) => { if (sub) sub.innerHTML = ai ? '<b style="color:var(--ok)">● AI thật đóng vai khách</b> · trả lời như khách thật, không gợi ý đáp án' : '<b style="color:#B07A00">● Kịch bản dự phòng</b> · chưa nối AI thật, khách trả lời theo kịch bản soạn sẵn'; };
+    if (RP_AI === null && SERVER) api('/api/roleplay').then((r) => { RP_AI = !!(r.ok && r.j.ai); mode(RP_AI); }); else mode(!!RP_AI);
+    if (rp.ended) toast('Buổi này đã chấm. Bấm “Luyện lại” ở trang kết quả để luyện lần mới.');
+    inputInto($('.field', card.children[3]), 'Nhập câu trả lời như đang nhắn với khách…', async (v) => {
+      if (rp.ended) { toast('Buổi này đã chấm xong'); return; }
+      const me1 = { who: 'sales', text: v }; rp.log.push(me1); wait.insertAdjacentHTML('beforebegin', rpBubble(me1)); turns();
+      const waitTxt = wait.innerHTML; wait.innerHTML = '<span class="xs muted">Khách đang trả lời…</span>';
+      let reply = '';
+      if (RP_AI) {
+        const r = await api('/api/roleplay', { method: 'POST', body: JSON.stringify({ action: 'reply', log: RP_BASE.concat(rp.log) }) });
+        if (r.ok) { reply = r.j.reply; rpScan(v, rp.st); } else { toast('AI chưa trả lời được (' + (r.j.error || r.status) + '), dùng kịch bản dự phòng', 'bad'); }
+      }
+      if (!reply) reply = rpReply(rp, v);
+      const kh = { who: 'kh', text: reply }; rp.log.push(kh); save();
+      wait.innerHTML = waitTxt; wait.insertAdjacentHTML('beforebegin', rpBubble(kh)); wait.scrollIntoView({ block: 'nearest' });
+    });
+  };
+  CLICK['dong-vai'] = (t) => {
+    const b = t.closest('.btn'); if (!b || !/Kết thúc và chấm điểm/.test(T(b))) return false;
+    const rp = RP(); if (!rp.log.length) { toast('Hãy trả lời khách ít nhất 1 lượt trước khi chấm'); return true; }
+    if (rp.grade) return go('ket-qua-dong-vai');
+    (async () => {
+      b.textContent = 'Đang chấm…'; b.classList.add('is-off');
+      let g = null;
+      if (RP_AI) { const r = await api('/api/roleplay', { method: 'POST', body: JSON.stringify({ action: 'grade', log: RP_BASE.concat(rp.log) }) }); if (r.ok) g = r.j.grade; else toast('AI chưa chấm được (' + (r.j.error || r.status) + '), chấm theo quy tắc', 'bad'); }
+      if (!g) { g = rpGradeLocal(rp); if (SERVER) api('/api/state', { method: 'POST', body: JSON.stringify({ type: 'log', key: 'exams', item: { who: S.role, roleplay: true, ok: g.ok, pass: g.pass, at: g.at }, note: `Đóng vai “Quán cơm chê giá bàn chặt 1,5 m”: ${g.ok}/6 · ${g.pass ? 'Đạt' : 'Chưa đạt'}` }) }).catch(() => {}); }
+      rp.grade = g; rp.ended = true; save(); go('ket-qua-dong-vai');
+    })();
+    return true;
+  };
+  APPLY['ket-qua-dong-vai'] = () => {
+    const c = $('.content'); if (!c) return;
+    const rp = S.rp && S.rp.v === 2 ? S.rp : null; const g = rp && rp.grade;
+    if (!g) { c.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div class="h1">Chưa có kết quả</div><div class="sub1" style="margin-top:6px">Bạn chưa kết thúc buổi luyện nào.</div><span class="btn pri" data-go="dong-vai" style="margin-top:18px">Vào luyện</span></div>`; return; }
+    const pct = Math.round(g.ok / 6 * 100); const must = [2, 3];
+    c.innerHTML = `<div class="card row" style="gap:24px;align-items:center;padding:24px;border-color:${g.pass ? '#9FD3B6' : '#F0C3BC'}"><div style="width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--${g.pass ? 'ok' : 'bad'}) 0 ${pct}%,#EEF1F5 0)"><div style="width:86px;height:86px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center"><div><b style="font-size:24px">${g.ok}/6</b><div class="xs muted">tiêu chí</div></div></div></div>
+      <div style="flex:1"><span class="chip ${g.pass ? 'ok' : 'bad'}" style="font-size:14px;padding:4px 14px">${g.pass ? 'ĐẠT' : 'CHƯA ĐẠT'}</span><div style="font-size:19px;font-weight:700;margin-top:8px">Quán cơm chê giá tủ mát bàn chặt 1,5 m · Khó · ${rp.log.filter((m) => m.who === 'sales').length + 3} lượt</div><div class="sm muted" style="margin-top:4px">${esc(g.summary || '')}</div><div class="xs muted" style="margin-top:6px">Đạt khi đạt từ 5/6 tiêu chí và đạt cả 2 tiêu chí bắt buộc (Báo giá đúng kịch bản, Đúng quyền hạn) · ${g.by === 'ai' ? 'AI chấm' : 'chấm theo quy tắc (chưa nối AI)'}</div></div>
+      <span class="btn pri" data-rp="again">Luyện lại</span><span class="btn" data-go="dong-vai">Xem lại cuộc chat</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">${g.criteria.map((x, k) => `<div class="card" style="padding:16px 18px;${x.pass ? '' : 'border-color:#F0C3BC'}"><div class="row" style="gap:8px"><b class="sm" style="color:var(--${x.pass ? 'ok' : 'bad'})">${x.pass ? '✓' : '✕'} ${esc(x.name)}${must.includes(k) ? ' *' : ''}</b><span class="sp chip ${x.pass ? 'ok' : 'bad'}" style="font-size:11px">${x.pass ? 'Đạt' : 'Chưa đạt'}</span></div>${x.quote ? `<div class="xs muted" style="margin-top:10px;font-weight:600">BẠN ĐÃ NÓI</div><div class="sm" style="margin-top:3px;padding-left:10px;border-left:3px solid ${x.pass ? '#CDE7D8' : '#F0C3BC'};font-style:italic">“${esc(x.quote)}”</div>` : ''}<div class="xs muted" style="margin-top:10px;font-weight:600">NHẬN XÉT</div><div class="sm" style="margin-top:3px">${esc(x.comment || '')}</div>${!x.pass && x.better ? `<div class="xs" style="margin-top:10px;font-weight:600;color:var(--ok)">NÊN NÓI THẾ NÀY</div><div class="sm" style="margin-top:3px">“${esc(x.better)}”</div>` : ''}</div>`).join('')}</div>`;
+  };
+  CLICK['ket-qua-dong-vai'] = (t) => { const b = t.closest('[data-rp]'); if (b) { delete S.rp; save(); go('dong-vai'); return true; } return false; };
 
   /* ===== Đăng nhập thật, đổi mật khẩu, đặt lại mật khẩu ===== */
   const ov = document.createElement('div'); ov.id = 'acct'; ov.hidden = true; document.body.append(ov);
