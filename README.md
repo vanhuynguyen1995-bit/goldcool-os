@@ -67,3 +67,11 @@ Nếu máy đã có Node.js: mở Terminal trong thư mục này và chạy `npx
 ## Thư mục `_nguon`
 
 Mã nguồn sinh 18 màn hình: `lib.js`, `batch1v2.js`, `batch2v2.js` (18 màn chính) và `batch3.js` (28 màn còn lại) là bản thiết kế. `build_app.js` đóng gói chúng thành `js/screens.js`. Thư mục này không được đưa lên Vercel.
+
+## Website GoldCool (thư mục `web`)
+
+- Link: https://goldcool-website.vercel.app · Quản trị: https://goldcool-website.vercel.app/admin/
+- Vercel project `goldcool-website` (Root Directory `web`), kho dữ liệu riêng tư `goldcool-website-data` (Singapore).
+- Trang: trang chủ, tin tức, bài viết; form “Nhận tư vấn” lưu vào kho, xem ở trang quản trị.
+- Quản trị: 9 tài khoản (Quản trị: anh Huy, chị Huyền · Biên tập: Lan, Nguyệt, Kiên, Đạt · Sales: Hà, Ánh, Yến). Mật khẩu ban đầu giống GoldCool OS, bắt buộc đổi lần đầu.
+- Sửa giao diện trang: sửa `_nguon/web_build.js` rồi chạy `node _nguon/web_build.js`.
