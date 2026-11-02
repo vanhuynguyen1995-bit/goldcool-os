@@ -61,7 +61,16 @@ async function score(kind, payload) {
   return r;
 }
 
+let HEALTH = null;
 const handlers = {
+  async health() {
+    if (HEALTH && Date.now() - HEALTH.at < 600000) return HEALTH;
+    const { aiPing } = await import('../lib/ai.js');
+    let ai; try { ai = { ok: true, reply: await aiPing() }; } catch (e) { ai = { ok: false, error: String(e.message || e).slice(0, 300) }; }
+    HEALTH = { at: Date.now(), ai, oidc: !!process.env.VERCEL_OIDC_TOKEN };
+    return HEALTH;
+  },
+
   async login({ name, pin }) {
     name = String(name || '').trim();
     if (name.toLowerCase() === 'admin') {
@@ -222,7 +231,7 @@ export default async function handler(req, res) {
     const fn = handlers[action];
     if (!fn) return res.status(400).json({ error: 'Không có chức năng ' + action });
     let me = null;
-    if (action !== 'login') {
+    if (action !== 'login' && action !== 'health') {
       me = verify((req.headers.authorization || '').replace(/^Bearer\s+/i, ''));
       if (!me) return res.status(401).json({ error: 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại' });
     }
