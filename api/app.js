@@ -2,7 +2,7 @@ import { readDoc, writeDoc } from '../lib/store.js';
 import { sign, verify, hashPin, newSalt, newId, todayVN } from '../lib/auth.js';
 import { SCENARIOS } from '../lib/scenarios.js';
 import { CRITERIA, GROUPS, PERSONAS } from '../lib/kb.js';
-import { hasAI, aiScoreDrill, aiScoreChat, aiCustomer } from '../lib/ai.js';
+import { hasAI, setOidc, aiScoreDrill, aiScoreChat, aiCustomer } from '../lib/ai.js';
 import { fallbackScore, total } from '../lib/score.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
@@ -121,6 +121,12 @@ const handlers = {
     return { list: list.slice().reverse().slice(0, 60), stats: stats(list) };
   },
 
+  async aiTest(_, me) {
+    admin(me);
+    const { aiCustomer } = await import('../lib/ai.js');
+    try { return { ok: true, reply: await aiCustomer('td', 'de', []) }; } catch (e) { return { ok: false, error: String(e.message || e) }; }
+  },
+
   // ===== QUẢN LÝ
   async adminOverview(_, me) {
     admin(me);
@@ -208,6 +214,7 @@ function admin(me) { if (me.role !== 'admin') throw new Error('Chỉ quản lý 
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  setOidc(req.headers['x-vercel-oidc-token']);
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
