@@ -184,7 +184,7 @@ async function vHome(){
   <div class="card"><h2>${d.quota} cuộc tư vấn hôm nay</h2>
    ${d.tasks.map(t=>`<div class="task ${next&&t.n===next.n?'next':''}" data-n="${t.n}" style="cursor:pointer">
      <div class="n">${t.n}</div>
-     <div class="t"><b>${esc(t.title)}</b><span class="mute"><span class="dot" style="background:${GC[t.g]}"></span> ${SHORT[t.g]} · ${esc(PN(t.persona))}</span></div>
+     <div class="t"><b>${esc(t.title)}</b><span class="mute"><span class="dot" style="background:${GC[t.g]}"></span> ${SHORT[t.g]} · ${esc(PN(t.persona))}${t.area?' · '+esc(t.area.split(',')[0]):''}</span></div>
      ${t.done?`<span class="sc" style="background:${color(t.done.total)}">${t.done.total}</span>`:`<span class="go">${next&&t.n===next.n?'Bắt đầu':'Làm'} ›</span>`}
    </div>`).join('')}
   </div>
@@ -265,10 +265,10 @@ function screen(html,cls=''){const s=document.createElement('div');s.className='
   s.close=()=>{s.remove();if(!document.querySelector('.screen'))document.body.style.overflow=''};return s}
 async function openChat(opt){
   let info;try{info=await api('startTask',opt.n?{n:opt.n}:{g:opt.g,persona:opt.persona,sid:opt.sid})}catch(e){return toast(e.message)}
-  const ctx={n:opt.n||null,sid:info.sid||null,g:info.g,persona:info.persona};
+  const ctx={n:opt.n||null,sid:info.sid||null,g:info.g,persona:info.persona,v:info.v};
   const msgs=[{role:'assistant',content:info.first}];let busy=false,ended=false,scored=false;
-  const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="av">${esc(PN(info.persona)[0]||'K')}</div>
-    <div class="ttl"><b>Khách · ${esc(SHORT[info.g])}</b><span>${opt.n?`Cuộc ${opt.n}/${opt.total} · `:'Luyện thêm · '}${esc(PN(info.persona))}</span></div>
+  const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="av">${esc((info.name||'K').split(' ').pop()[0])}</div>
+    <div class="ttl"><b>${esc(info.name?info.name.replace(/^./,c=>c.toUpperCase()):'Khách')} · ${esc(info.area||SHORT[info.g])}</b><span>${esc(SHORT[info.g])} · ${opt.n?`Cuộc ${opt.n}/${opt.total} · `:'Luyện thêm · '}${esc(PN(info.persona))}</span></div>
     <button class="btn sm" id="fin">Chấm điểm</button></div>
    <div class="body chatbody" id="bd"><div class="inner">
     <div class="ctx"><b>${esc(info.title)}</b> <span class="pill">${esc(info.stage)}</span><div style="margin-top:4px">${esc(info.ctx)}</div>

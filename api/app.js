@@ -1,6 +1,7 @@
 import { readDoc, writeDoc } from '../lib/store.js';
 import { sign, verify, hashPin, newSalt, newId, todayVN } from '../lib/auth.js';
 import { SCENARIOS } from '../lib/scenarios.js';
+import { SCENARIOS2 } from '../lib/scenarios2.js';
 import { CRITERIA, GROUPS, PERSONAS, docs } from '../lib/kb.js';
 import { hasAI, setOidc, aiScoreChat, aiCustomer, aiPing } from '../lib/ai.js';
 import { fallbackScore, total } from '../lib/score.js';
@@ -16,7 +17,7 @@ const KINDS = ['anh', 'video', 'feedback', 'maure'];
 
 const users = () => readDoc('users', []);
 const customSc = () => readDoc('scenarios', []);
-const allSc = async () => SCENARIOS.concat(await customSc());
+const allSc = async () => SCENARIOS.concat(SCENARIOS2, await customSc());
 const atts = (uid) => readDoc('att-' + uid, []);
 const saveAtts = (uid, a) => writeDoc('att-' + uid, a);
 const finalTotal = (a) => (a.final ? a.final.total : a.ai ? a.ai.total : 0);
@@ -26,17 +27,49 @@ const strip = ({ kw, ...rest }) => rest;
 function rng(seed) { let h = 2166136261; for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0; return () => (h = (Math.imul(h, 1103515245) + 12345) >>> 0) / 4294967296; }
 
 // Kế hoạch trong ngày: mỗi cuộc = 1 nhóm + 1 tình huống + 1 kiểu khách, không trùng tổ hợp, xáo trộn thứ tự
-function makePlan(list, uid, day, quota) {
+// Biến thể khách: tên, khu vực, thử thách phụ – để cùng 1 tình huống mỗi lần chat vẫn khác nhau
+const NAMES = ['anh Tuấn', 'chị Hoa', 'anh Hùng', 'chị Lan', 'anh Dũng', 'chị Mai', 'anh Phong', 'chị Thảo', 'anh Nam', 'chị Hằng', 'anh Quân', 'chị Ngọc', 'anh Long', 'chị Trang', 'anh Sơn', 'chị Yến'];
+const AREAS = ['Cầu Giấy, Hà Nội', 'Long Biên, Hà Nội', 'Hà Đông, Hà Nội', 'Đông Anh, Hà Nội', 'Từ Sơn, Bắc Ninh', 'TP Bắc Ninh', 'Văn Lâm, Hưng Yên', 'TP Hải Dương', 'Lê Chân, Hải Phòng', 'TP Thái Nguyên', 'Phúc Yên, Vĩnh Phúc', 'TP Nam Định', 'TP Thanh Hóa', 'Phủ Lý, Hà Nam', 'Việt Trì, Phú Thọ', 'TP Lạng Sơn'];
+const TWISTS = [
+  'giữa chừng hỏi phí vận chuyển về chỗ bạn là bao nhiêu',
+  'nói đã xem bên khác rẻ hơn 2–3 triệu',
+  'hỏi nếu hỏng thì ai sửa, bảo hành thế nào',
+  'hỏi tủ/máy có tốn điện không',
+  'nói muốn lấy 2 cái và hỏi có bớt không',
+  'nói để hỏi ý vợ/chồng hoặc người nhà đã',
+  'hỏi có trả góp hoặc trả sau được không',
+  'hỏi bao giờ giao được hàng',
+  'nghi ngờ hàng Trung Quốc, hỏi xuất xứ',
+  'trả lời rất cụt, chỉ "ừ", "ok", Sale phải tự dẫn dắt',
+  'xin xem ảnh hoặc video thực tế đang dùng ở quán khác',
+  'hỏi có xem hàng trực tiếp ở kho được không',
+  'than đang hơi kẹt tiền, chưa chắc mua ngay',
+  'hỏi có lắp đặt, hướng dẫn sử dụng không',
+];
+export function variant(v) {
+  v = Math.abs(Number(v) || 0);
+  return { v, name: NAMES[v % NAMES.length], area: AREAS[Math.floor(v / 7) % AREAS.length], twist: TWISTS[Math.floor(v / 3) % TWISTS.length] };
+}
+
+// Kế hoạch trong ngày: ưu tiên tình huống Sale chưa làm / lâu chưa gặp, ghép kiểu khách + biến thể, xáo trộn thứ tự
+export function makePlan(list, uid, day, quota, history) {
   const r = rng(uid + '|' + day);
+  const last = {}; const lastPair = new Set();
+  for (const a of history) if (a.date < day && a.scenarioId) { if (!last[a.scenarioId] || last[a.scenarioId] < a.date) last[a.scenarioId] = a.date; lastPair.add(a.scenarioId + '|' + a.persona); }
   const counts = {}; let sum = 0;
   for (const g of GKEYS) { counts[g] = Math.round(SPLIT[g] * quota / 20); sum += counts[g]; }
   let i = 0; while (sum < quota) { counts[GKEYS[i++ % 6]]++; sum++; } i = 0; while (sum > quota) { const g = GKEYS[5 - (i++ % 6)]; if (counts[g] > 0) { counts[g]--; sum--; } }
   const tasks = [];
   for (const g of GKEYS) {
-    const pool = list.filter(s => s.g === g);
+    const pool = list.filter(s => s.g === g).map(s => ({ s, key: last[s.id] || '', rnd: r() }))
+      .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : a.rnd - b.rnd));
     if (!pool.length) continue;
-    const off = Math.floor(r() * pool.length), poff = Math.floor(r() * PKEYS.length);
-    for (let k = 0; k < counts[g]; k++) tasks.push({ g, sid: pool[(off + k) % pool.length].id, persona: PKEYS[(poff + k * 2) % PKEYS.length] });
+    for (let k = 0; k < counts[g]; k++) {
+      const sc = pool[k % pool.length].s;
+      let persona = PKEYS[Math.floor(r() * PKEYS.length)];
+      for (let t = 0; t < PKEYS.length && lastPair.has(sc.id + '|' + persona); t++) persona = PKEYS[(PKEYS.indexOf(persona) + 1) % PKEYS.length];
+      tasks.push({ g, sid: sc.id, persona, v: Math.floor(r() * 100000) });
+    }
   }
   for (let k = tasks.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [tasks[k], tasks[j]] = [tasks[j], tasks[k]]; }
   return tasks.map((t, n) => ({ ...t, n: n + 1 }));
@@ -46,7 +79,8 @@ async function planFor(uid, day) {
   const u = (await users()).find(x => x.id === uid);
   const quota = u?.quota ?? DEFAULT_QUOTA;
   const list = await allSc();
-  return { quota, list, tasks: makePlan(list, uid, day, quota) };
+  const history = await atts(uid);
+  return { quota, list, history, tasks: makePlan(list, uid, day, quota, history) };
 }
 
 function stats(list) {
@@ -108,13 +142,13 @@ const handlers = {
   // ===== SALE: kế hoạch 20 cuộc hôm nay
   async plan(_, me) {
     const day = todayVN();
-    const { quota, list, tasks } = await planFor(me.id, day);
-    const mine = await atts(me.id);
+    const { quota, list, tasks, history: mine } = await planFor(me.id, day);
     const today = mine.filter(a => a.date === day && a.task);
     const out = tasks.map(t => {
       const sc = list.find(s => s.id === t.sid) || {};
       const done = today.filter(a => a.task === t.n).pop();
-      return { ...t, title: sc.title, stage: sc.stage, ctx: sc.ctx, done: done ? { id: done.id, total: finalTotal(done) } : null };
+      const vv = variant(t.v);
+      return { ...t, who: vv.name, area: vv.area, title: sc.title, stage: sc.stage, ctx: sc.ctx, done: done ? { id: done.id, total: finalTotal(done) } : null };
     });
     return { day, quota, tasks: out, doneCount: out.filter(t => t.done).length, todayAvg: avg(today.map(finalTotal)), stats: stats(mine) };
   },
@@ -125,7 +159,7 @@ const handlers = {
       const { list, tasks } = await planFor(me.id, todayVN());
       const t = tasks.find(x => x.n === n); if (!t) throw new Error('Không có cuộc này');
       const sc = list.find(s => s.id === t.sid);
-      return { g: t.g, persona: t.persona, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips };
+      return { g: t.g, persona: t.persona, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips, ...variant(t.v) };
     }
     // luyện thêm: theo tình huống chọn sẵn, hoặc ngẫu nhiên trong nhóm
     const all = await allSc();
@@ -133,20 +167,20 @@ const handlers = {
     if (sc) g = sc.g;
     if (!GROUPS[g]) throw new Error('Chọn nhóm sản phẩm');
     if (!sc) { const pool = all.filter(s => s.g === g); sc = pool[Math.floor(Math.random() * pool.length)]; }
-    return { g, persona: PERSONAS[persona] ? persona : PKEYS[Math.floor(Math.random() * PKEYS.length)], sid: sc.id, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips };
+    return { g, persona: PERSONAS[persona] ? persona : PKEYS[Math.floor(Math.random() * PKEYS.length)], sid: sc.id, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips, ...variant(Math.floor(Math.random() * 100000)) };
   },
 
-  async chat({ n, sid, g, persona, messages }, me) {
+  async chat({ n, sid, g, persona, messages, v }, me) {
     if (!hasAI()) throw new Error('AI chưa được bật – báo quản lý.');
-    const sc = await findSc(me, n, sid);
+    const sc = await findSc(me, n, sid, v);
     const reply = await aiCustomer(sc?.g || g, persona, clean(messages).slice(-30), sc);
     const end = /\[HẾT\]/i.test(reply);
     return { reply: reply.replace(/\[HẾT\]/gi, '').trim(), end };
   },
 
-  async finishChat({ n, sid, g, persona, messages }, me) {
+  async finishChat({ n, sid, g, persona, messages, v }, me) {
     if (!messages || messages.filter(m => m.role === 'user').length < 2) throw new Error('Cần tư vấn ít nhất 2 tin trước khi chấm');
-    const sc = await findSc(me, n, sid);
+    const sc = await findSc(me, n, sid, v);
     g = sc?.g || g;
     const ai = await scoreChat(g, persona, clean(messages), sc);
     const a = { id: newId(), type: 'chat', task: n || null, scenarioId: sc?.id || null, g, persona, title: sc?.title || ('Luyện thêm – ' + GROUPS[g]), stage: sc?.stage || '', date: todayVN(), at: Date.now(), messages, ai, status: 'ai' };
@@ -295,10 +329,10 @@ function clean(messages) {
     .reduce((a, m) => { const l = a[a.length - 1]; if (l && l.role === m.role) l.content += '\n' + m.content; else a.push({ ...m }); return a; }, []);
 }
 
-async function findSc(me, n, sid) {
-  const list = await allSc();
-  if (n) { const { tasks } = await planFor(me.id, todayVN()); const t = tasks.find(x => x.n === n); return t ? list.find(s => s.id === t.sid) : null; }
-  return sid ? list.find(s => s.id === sid) : null;
+async function findSc(me, n, sid, v) {
+  if (n) { const { tasks, list } = await planFor(me.id, todayVN()); const t = tasks.find(x => x.n === n); const sc = t && list.find(s => s.id === t.sid); return sc ? { ...sc, variant: variant(t.v) } : null; }
+  const sc = sid && (await allSc()).find(s => s.id === sid);
+  return sc ? { ...sc, variant: variant(v) } : null;
 }
 
 export default async function handler(req, res) {
