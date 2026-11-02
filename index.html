@@ -46,27 +46,30 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 <main id="app"></main>
 <script>
 const $=s=>document.querySelector(s), app=$('#app');
-let TOKEN=localStorage.getItem('gct')||'', META=null, CUR='';
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let TOKEN=LS.get('gct')||'', META=null, CUR='';
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const color=t=>t>=80?'#15803D':t>=60?'#B8860B':'#C0392B';
 function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 async function api(action,data={}){
   const r=await fetch('/api/app',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+TOKEN},body:JSON.stringify({action,...data})});
-  const j=await r.json().catch(()=>({error:'Lỗi máy chủ'}));
+  const j=await r.json().catch(()=>({error:'Lỗi máy chủ ('+r.status+')'}));
   if(r.status===401){logout();throw new Error(j.error)}
   if(j.error)throw new Error(j.error);return j;
 }
-function logout(){TOKEN='';localStorage.removeItem('gct');META=null;renderLogin()}
+function logout(){TOKEN='';LS.del('gct');META=null;renderLogin()}
 $('#out').onclick=logout;
 
 function renderLogin(){
   $('#nav').classList.add('hide');$('#out').classList.add('hide');$('#who').textContent='';
   app.innerHTML=`<div class="card login"><h2>Đăng nhập</h2><p class="mute">Mỗi Sale đăng nhập bằng tên và mã PIN quản lý cấp.</p>
   <label class="mute">Tên</label><input id="ln" autocomplete="username"><br><br>
-  <label class="mute">Mã PIN</label><input id="lp" type="password" inputmode="numeric" autocomplete="current-password"><br><br>
+  <label class="mute">Mã PIN</label><div class="row" style="flex-wrap:nowrap"><input id="lp" type="tel" inputmode="numeric" autocomplete="off" placeholder="Nhập mã PIN" style="flex:1;-webkit-text-security:disc"><button class="btn sec" id="ls" type="button" style="white-space:nowrap">Hiện</button></div>
+  <p id="le" style="color:#C0392B;min-height:20px;margin:8px 0"></p>
   <button class="btn" id="lb" style="width:100%">Vào luyện tập</button></div>`;
-  const go=async()=>{try{const r=await api('login',{name:$('#ln').value,pin:$('#lp').value});TOKEN=r.token;localStorage.setItem('gct',TOKEN);boot()}catch(e){toast(e.message)}};
-  $('#lb').onclick=go;$('#lp').onkeydown=e=>e.key==='Enter'&&go();
+  $('#ls').onclick=()=>{const i=$('#lp');const h=i.style.webkitTextSecurity==='none';i.style.webkitTextSecurity=h?'disc':'none';$('#ls').textContent=h?'Hiện':'Ẩn'};
+  const go=async()=>{$('#le').textContent='';const b=$('#lb');b.disabled=true;b.textContent='Đang đăng nhập…';try{const r=await api('login',{name:$('#ln').value.trim(),pin:$('#lp').value.replace(/\s/g,'')});TOKEN=r.token;LS.set('gct',TOKEN);boot()}catch(e){$('#le').textContent=e.message||'Không đăng nhập được';b.disabled=false;b.textContent='Vào luyện tập'}};
+  $('#lb').onclick=go;$('#lp').onkeydown=e=>{if(e.key==='Enter')go()};
 }
 
 async function boot(){

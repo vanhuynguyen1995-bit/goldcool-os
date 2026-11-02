@@ -65,12 +65,12 @@ const handlers = {
   async login({ name, pin }) {
     name = String(name || '').trim();
     if (name.toLowerCase() === 'admin') {
-      if (String(pin) !== ADMIN_PIN) throw new Error('Sai mã PIN');
+      if (String(pin ?? '').trim() !== String(ADMIN_PIN).trim()) throw new Error('Sai mã PIN');
       const u = { id: 'admin', name: 'Quản lý', role: 'admin' };
       return { token: sign(u), user: u };
     }
     const u = (await users()).find(x => x.name.toLowerCase() === name.toLowerCase() && x.active !== false);
-    if (!u || hashPin(pin, u.salt) !== u.pinHash) throw new Error('Sai tên hoặc mã PIN');
+    if (!u || hashPin(String(pin ?? '').trim(), u.salt) !== u.pinHash) throw new Error('Sai tên hoặc mã PIN');
     const me = { id: u.id, name: u.name, role: u.role };
     return { token: sign(me), user: me };
   },
@@ -179,7 +179,7 @@ const handlers = {
       u = { id: newId(), createdAt: Date.now() }; list.push(u);
     }
     u.name = name; u.role = role === 'admin' ? 'admin' : 'sale'; u.active = active !== false;
-    if (pin) { u.salt = newSalt(); u.pinHash = hashPin(pin, u.salt); }
+    if (pin) { pin = String(pin).trim(); u.salt = newSalt(); u.pinHash = hashPin(pin, u.salt); }
     await writeDoc('users', list);
     return { ok: true };
   },
