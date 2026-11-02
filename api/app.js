@@ -5,7 +5,6 @@ import { CRITERIA, GROUPS, PERSONAS, docs } from '../lib/kb.js';
 import { hasAI, setOidc, aiScoreChat, aiCustomer, aiPing } from '../lib/ai.js';
 import { fallbackScore, total } from '../lib/score.js';
 import { SEED_MEDIA } from '../lib/media.js';
-import { QUIZZES, quizForClient, gradeQuiz, pathStatus } from '../lib/path3.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
 const DEFAULT_QUOTA = 10;
@@ -286,59 +285,6 @@ const handlers = {
   async adminDelScenario({ id }, me) {
     admin(me);
     await writeDoc('scenarios', (await customSc()).filter(x => x.id !== id));
-    return { ok: true };
-  },
-
-  // ===== LỘ TRÌNH 3 NGÀY (bài kiểm tra + đóng vai → Đạt/Chưa đạt)
-  async path3(_, me) {
-    const [qa, ca, so] = await Promise.all([readDoc('quiz-' + me.id, []), atts(me.id), readDoc('path3-signoff', {})]);
-    return { status: pathStatus(qa, ca, so[me.id]), recent: qa.slice(-12).reverse().map(({ detail, ...r }) => r) };
-  },
-
-  async quizGet({ id }, me) {
-    const z = QUIZZES[id]; if (!z) throw new Error('Không có bài kiểm tra này');
-    if (z.day === 2 && me.role !== 'admin') {
-      const st = pathStatus(await readDoc('quiz-' + me.id, []), [], null);
-      if (!st.days.d1) throw new Error('Cần đạt bài Ngày 1 trước khi làm bài Ngày 2');
-    }
-    return quizForClient(id);
-  },
-
-  async quizSubmit({ id, answers }, me) {
-    const r = gradeQuiz(id, answers);
-    if (Object.keys(answers || {}).length < r.total) throw new Error('Còn câu chưa trả lời');
-    const a = { id: newId(), ...r, date: todayVN(), at: Date.now() };
-    const list = await readDoc('quiz-' + me.id, []); list.push(a); await writeDoc('quiz-' + me.id, list);
-    return { result: a };
-  },
-
-  async adminPath3(_, me) {
-    admin(me);
-    const us = (await users()).filter(u => u.active !== false && u.role !== 'admin');
-    const so = await readDoc('path3-signoff', {});
-    const rows = await Promise.all(us.map(async u => {
-      const [qa, ca] = await Promise.all([readDoc('quiz-' + u.id, []), atts(u.id)]);
-      const firstAt = Math.min(...qa.map(x => x.at), ...ca.map(x => x.at), Infinity);
-      return { id: u.id, name: u.name, status: pathStatus(qa, ca, so[u.id]), started: isFinite(firstAt) ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(firstAt)) : null };
-    }));
-    return { rows, groups: GROUPS };
-  },
-
-  async adminQuizAttempts({ userId }, me) {
-    admin(me);
-    return { list: (await readDoc('quiz-' + userId, [])).slice().reverse() };
-  },
-
-  async adminSignoff3({ userId, undo }, me) {
-    admin(me);
-    const so = await readDoc('path3-signoff', {});
-    if (undo) delete so[userId];
-    else {
-      const st = pathStatus(await readDoc('quiz-' + userId, []), await atts(userId), null);
-      if (!st.passed) throw new Error('Sale chưa đạt đủ điều kiện');
-      so[userId] = { by: me.name, at: Date.now(), date: todayVN() };
-    }
-    await writeDoc('path3-signoff', so);
     return { ok: true };
   },
 };
