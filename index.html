@@ -191,7 +191,7 @@ async function vHome(){
 function screen(html,cls=''){const s=document.createElement('div');s.className='screen';s.innerHTML=html;document.body.appendChild(s);document.body.style.overflow='hidden';
   s.close=()=>{s.remove();if(!document.querySelector('.screen'))document.body.style.overflow=''};return s}
 async function openChat(opt){
-  let info;try{info=await api('startTask',opt.n?{n:opt.n}:{g:opt.g,persona:opt.persona})}catch(e){return toast(e.message)}
+  let info;try{info=await api('startTask',opt.n?{n:opt.n}:{g:opt.g,persona:opt.persona,sid:opt.sid})}catch(e){return toast(e.message)}
   const ctx={n:opt.n||null,sid:info.sid||null,g:info.g,persona:info.persona};
   const msgs=[{role:'assistant',content:info.first}];let busy=false,ended=false,scored=false;
   const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="av">${esc(PN(info.persona)[0]||'K')}</div>
@@ -341,8 +341,8 @@ function review(a,reload){
 // ===== NHÂN VIÊN
 async function vStaff(){
   const d=await api('adminUsers');
-  app.innerHTML=`<div class="card"><h2>Thêm Sale</h2><div class="row"><input id="un" placeholder="Tên đăng nhập (VD: Ánh)" style="flex:2;min-width:150px"><input id="up" placeholder="Mã PIN (≥4 số)" inputmode="numeric" style="flex:1;min-width:110px"><input id="uq" type="number" value="20" min="1" max="40" title="Số cuộc/ngày" style="width:90px"><button class="btn" id="ua">Thêm</button></div>
-   <p class="mute">Ô số là chỉ tiêu cuộc tư vấn mỗi ngày (Sale mới: 20).</p></div>
+  app.innerHTML=`<div class="card"><h2>Thêm Sale</h2><div class="row"><input id="un" placeholder="Tên đăng nhập (VD: Ánh)" style="flex:2;min-width:150px"><input id="up" placeholder="Mã PIN (≥4 số)" inputmode="numeric" style="flex:1;min-width:110px"><input id="uq" type="number" value="10" min="1" max="40" title="Số cuộc/ngày" style="width:90px"><button class="btn" id="ua">Thêm</button></div>
+   <p class="mute">Ô số là chỉ tiêu cuộc tư vấn mỗi ngày (mặc định 10).</p></div>
   <div class="card"><h2>Danh sách</h2><div class="tw"><table><tr><th>Tên</th><th>Vai trò</th><th>Cuộc/ngày</th><th>Trạng thái</th><th></th></tr>
   ${d.list.map(u=>`<tr><td><b>${esc(u.name)}</b></td><td>${u.role==='admin'?'Quản lý':'Sale'}</td><td><input type="number" min="1" max="40" value="${u.quota}" data-q="${u.id}" style="width:76px;padding:6px 8px"></td><td>${u.active===false?'Đã khóa':'Hoạt động'}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn ghost sm" data-pin="${u.id}">Đổi PIN</button><button class="btn ghost sm" data-tg="${u.id}">${u.active===false?'Mở':'Khóa'}</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="mute">Chưa có ai.</td></tr>'}</table></div></div>`;
   $('#ua').onclick=async()=>{try{await api('adminSaveUser',{name:$('#un').value,pin:$('#up').value,quota:$('#uq').value});toast('Đã thêm');vStaff()}catch(e){toast(e.message)}};
@@ -363,9 +363,10 @@ async function vSc(){
   <label class="f">Tin nhắn mẫu đúng quy trình</label><textarea id="ssam" rows="4"></textarea>
   <label class="f">Từ khóa nên có (cách nhau dấu phẩy – dùng khi AI bận)</label><input id="skw">
   <button class="btn" id="sa" style="margin-top:12px">Lưu tình huống</button></div>
-  <div class="card"><h2>Kho tình huống (${d.list.length})</h2><div class="list">${d.list.map(s=>`<div class="it"><span class="dot" style="background:${GC[s.g]}"></span><div class="t"><b style="font-size:14px">${esc(s.title)}</b><div class="mute">${SHORT[s.g]} · ${esc(s.stage)}${s.custom?' · Tự thêm':''}</div></div>${s.custom?`<button class="btn ghost sm" data-del="${s.id}">Xóa</button>`:''}</div>`).join('')}</div></div>`;
+  <div class="card"><h2>Kho tình huống (${d.list.length})</h2><div class="list">${d.list.map(s=>`<div class="it"><span class="dot" style="background:${GC[s.g]}"></span><div class="t"><b style="font-size:14px">${esc(s.title)}</b><div class="mute">${SHORT[s.g]} · ${esc(s.stage)}${s.custom?' · Tự thêm':''}</div></div><button class="btn sm" data-try="${s.id}">Luyện thử</button>${s.custom?`<button class="btn ghost sm" data-del="${s.id}">Xóa</button>`:''}</div>`).join('')}</div></div>`;
   $('#sa').onclick=async()=>{try{await api('adminSaveScenario',{g:$('#sg').value,stage:$('#sst').value,title:$('#stt').value,ctx:$('#sctx').value,msg:$('#smsg').value,tips:$('#stips').value,sample:$('#ssam').value,kw:$('#skw').value});toast('Đã lưu');DOCS=null;vSc()}catch(e){toast(e.message)}};
   app.querySelectorAll('[data-del]').forEach(b=>b.onclick=async e=>{e.stopPropagation();if(!confirm('Xóa tình huống này?'))return;await api('adminDelScenario',{id:b.dataset.del});vSc()});
+  app.querySelectorAll('[data-try]').forEach(b=>{const sc=d.list.find(x=>x.id===b.dataset.try);const go=()=>openChat({sid:sc.id,g:sc.g});b.onclick=e=>{e.stopPropagation();go()};b.closest('.it').onclick=go;b.closest('.it').style.cursor='pointer'});
 }
 
 TOKEN?boot():renderLogin();

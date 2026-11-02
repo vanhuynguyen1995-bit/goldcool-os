@@ -6,7 +6,7 @@ import { hasAI, setOidc, aiScoreChat, aiCustomer, aiPing } from '../lib/ai.js';
 import { fallbackScore, total } from '../lib/score.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
-const DEFAULT_QUOTA = 20;
+const DEFAULT_QUOTA = 10;
 // Chia 20 cuộc/ngày cho 6 nhóm
 const SPLIT = { td: 4, tm: 4, bc: 3, sl: 3, tb: 3, gw: 3 };
 const GKEYS = Object.keys(GROUPS);
@@ -118,17 +118,19 @@ const handlers = {
   },
 
   // mở cuộc: trả về tin nhắn đầu của khách (không tốn lượt AI)
-  async startTask({ n, g, persona }, me) {
+  async startTask({ n, g, persona, sid }, me) {
     if (n) {
       const { list, tasks } = await planFor(me.id, todayVN());
       const t = tasks.find(x => x.n === n); if (!t) throw new Error('Không có cuộc này');
       const sc = list.find(s => s.id === t.sid);
       return { g: t.g, persona: t.persona, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips };
     }
-    // luyện thêm tự chọn
+    // luyện thêm: theo tình huống chọn sẵn, hoặc ngẫu nhiên trong nhóm
+    const all = await allSc();
+    let sc = sid && all.find(s => s.id === sid);
+    if (sc) g = sc.g;
     if (!GROUPS[g]) throw new Error('Chọn nhóm sản phẩm');
-    const pool = (await allSc()).filter(s => s.g === g);
-    const sc = pool[Math.floor(Math.random() * pool.length)];
+    if (!sc) { const pool = all.filter(s => s.g === g); sc = pool[Math.floor(Math.random() * pool.length)]; }
     return { g, persona: PERSONAS[persona] ? persona : PKEYS[Math.floor(Math.random() * PKEYS.length)], sid: sc.id, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips };
   },
 
