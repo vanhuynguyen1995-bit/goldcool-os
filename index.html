@@ -233,13 +233,17 @@ async function openPicker(g0,onPick){
   sh.innerHTML=`<div><div class="row"><h2 style="margin:0">Gửi ảnh / video</h2><span class="sp"></span><button class="btn ghost sm" id="pc">Đóng</button></div>
    <div class="chips" id="pg" style="margin:10px 0 6px">${Object.keys(SHORT).map(g=>`<button class="chip ${g===g0?'on':''}" data-g="${g}">${SHORT[g]}</button>`).join('')}</div>
    <div class="chips" id="pk" style="margin-bottom:10px"><button class="chip on" data-k="">Tất cả</button>${Object.entries(KIND).map(([k,v])=>`<button class="chip" data-k="${k}">${v}</button>`).join('')}</div>
-   <div id="pl" class="mgrid"><p class="mute">Đang tải…</p></div>
-   <details style="margin-top:12px"><summary>Gửi từ máy hoặc link video</summary>
-    <label class="f">Mô tả ngắn (khách sẽ thấy) – VD: Tủ 4 cánh quạt gió GC4C-1088L thực tế</label><input id="pcap">
-    <div class="row" style="margin-top:8px"><select id="pkind" style="flex:1">${Object.entries(KIND).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
-     <label class="btn navy sm" style="cursor:pointer">📷 Chọn ảnh/video<input type="file" id="pf" accept="image/*,video/*" hidden></label></div>
-    <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="plink" placeholder="Hoặc dán link YouTube / TikTok / Facebook"><button class="btn sm" id="plb">Gửi link</button></div>
-    <p class="mute" id="pst"></p></details></div>`;
+   <div class="card" style="background:#F7F9FC;margin-bottom:12px;padding:12px">
+    <b style="font-size:14px">Gửi ảnh / video / feedback của bạn</b>
+    <div class="mute" style="margin-bottom:6px">Ảnh tự chụp, video tủ đang chạy, ảnh chụp tin nhắn feedback khách…</div>
+    <input id="pcap" placeholder="Mô tả ngắn (khách sẽ thấy) – VD: Video tủ 4 cánh quạt gió GC4C-1088L đang chạy">
+    <div class="row" style="margin-top:8px"><select id="pkind" style="flex:1;min-width:130px">${Object.entries(KIND).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+     <label class="btn navy sm" style="cursor:pointer">📷 Chọn từ máy<input type="file" id="pf" accept="image/*,video/*" hidden></label></div>
+    <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="plink" placeholder="Hoặc dán link video YouTube / TikTok / Facebook"><button class="btn sm" id="plb" style="white-space:nowrap">Gửi link</button></div>
+    <label class="row" style="margin-top:8px;font-size:13px;gap:6px"><input type="checkbox" id="psave" style="width:auto"> Lưu vào thư viện chung để cả team dùng</label>
+    <p class="mute" id="pst" style="margin:4px 0 0"></p></div>
+   <b style="font-size:14px">Thư viện có sẵn</b>
+   <div id="pl" class="mgrid" style="margin-top:8px"><p class="mute">Đang tải…</p></div></div>`;
   document.body.appendChild(sh);
   const close=()=>sh.remove();sh.onclick=e=>{if(e.target===sh)close()};sh.querySelector('#pc').onclick=close;
   let g=g0,k='';const lib=await getMedia().catch(()=>[]);
@@ -250,9 +254,10 @@ async function openPicker(g0,onPick){
   sh.querySelector('#pk').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;k=b.dataset.k;sh.querySelectorAll('#pk .chip').forEach(c=>c.classList.toggle('on',c===b));draw()};
   draw();
   const cap=()=>sh.querySelector('#pcap').value.trim(),st=sh.querySelector('#pst');
+  const keep=async md=>{if(sh.querySelector('#psave').checked){try{await api('saveMedia',{g,kind:md.kind,label:md.label,url:md.url,type:md.type});MEDIA=null}catch(e){toast(e.message)}}};
   sh.querySelector('#pf').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!cap()){st.textContent='Nhập mô tả ngắn trước để khách biết đây là ảnh gì.';e.target.value='';return}
-    try{st.textContent='Đang tải lên…';const r=await uploadFile(f,p=>st.textContent='Đang tải lên… '+p+'%');close();onPick({...r,label:cap(),kind:sh.querySelector('#pkind').value})}catch(err){st.textContent='Lỗi tải lên: '+err.message}};
-  sh.querySelector('#plb').onclick=()=>{const u=sh.querySelector('#plink').value.trim();if(!/^https?:\/\//.test(u)){st.textContent='Link không hợp lệ';return}close();onPick({url:u,type:'link',label:cap()||'Video',kind:'video'})};
+    try{st.textContent='Đang tải lên…';const r=await uploadFile(f,p=>st.textContent='Đang tải lên… '+p+'%');const md={...r,label:cap(),kind:sh.querySelector('#pkind').value};await keep(md);close();onPick(md)}catch(err){st.textContent='Lỗi tải lên: '+err.message}};
+  sh.querySelector('#plb').onclick=()=>{const u=sh.querySelector('#plink').value.trim();if(!/^https?:\/\//.test(u)){st.textContent='Link không hợp lệ';return}const md={url:u,type:'link',label:cap()||'Video',kind:sh.querySelector('#pkind').value==='anh'?'video':sh.querySelector('#pkind').value};keep(md);close();onPick(md)};
 }
 
 // ===== MÀN HÌNH CHAT
@@ -454,7 +459,7 @@ async function vMedia(){
    <label class="f">Hoặc dán link video YouTube / TikTok / Facebook</label><input id="mu" placeholder="https://…">
    <button class="btn" id="ms" style="margin-top:12px">Tải lên</button> <span class="mute" id="mst"></span></div>
   ${Object.entries(META.groups).map(([g,name])=>{const l=list.filter(m=>m.g===g);return `<div class="card"><h2><span class="dot" style="background:${GC[g]}"></span> ${esc(name)} <span class="mute">(${l.length})</span></h2>
-    ${l.length?`<div class="mgrid">${l.map(m=>`<div class="mitem">${mediaThumb(m)}<div class="row" style="padding:0 7px 7px;gap:6px"><a class="copy" href="${esc(m.url)}" target="_blank" rel="noopener">Xem</a><button class="copy" data-del="${m.id}">Xóa</button></div></div>`).join('')}</div>`:'<p class="mute">Chưa có ảnh/video.</p>'}</div>`}).join('')}`;
+    ${l.length?`<div class="mgrid">${l.map(m=>`<div class="mitem">${mediaThumb(m)}${m.by?`<span class="mute" style="padding-top:0">Do ${esc(m.by)} thêm</span>`:m.seed?'<span class="mute" style="padding-top:0">Ảnh có sẵn</span>':''}<div class="row" style="padding:0 7px 7px;gap:6px"><a class="copy" href="${esc(m.url)}" target="_blank" rel="noopener">Xem</a><button class="copy" data-del="${m.id}">Xóa</button></div></div>`).join('')}</div>`:'<p class="mute">Chưa có ảnh/video.</p>'}</div>`}).join('')}`;
   $('#ms').onclick=async()=>{const g=$('#mg').value,kind=$('#mk').value,label=$('#ml').value.trim(),files=[...$('#mf').files],url=$('#mu').value.trim(),st=$('#mst');
     if(!label)return toast('Nhập tên / mô tả');if(!files.length&&!url)return toast('Chọn tệp hoặc dán link');
     const b=$('#ms');b.disabled=true;

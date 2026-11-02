@@ -4,6 +4,7 @@ import { SCENARIOS } from '../lib/scenarios.js';
 import { CRITERIA, GROUPS, PERSONAS, docs } from '../lib/kb.js';
 import { hasAI, setOidc, aiScoreChat, aiCustomer, aiPing } from '../lib/ai.js';
 import { fallbackScore, total } from '../lib/score.js';
+import { SEED_MEDIA } from '../lib/media.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
 const DEFAULT_QUOTA = 10;
@@ -11,6 +12,7 @@ const DEFAULT_QUOTA = 10;
 const SPLIT = { td: 4, tm: 4, bc: 3, sl: 3, tb: 3, gw: 3 };
 const GKEYS = Object.keys(GROUPS);
 const PKEYS = Object.keys(PERSONAS);
+const KINDS = ['anh', 'video', 'feedback', 'maure'];
 
 const users = () => readDoc('users', []);
 const customSc = () => readDoc('scenarios', []);
@@ -163,7 +165,19 @@ const handlers = {
   },
 
   // ===== THƯ VIỆN ẢNH / VIDEO
-  async media() { return { list: await readDoc('media', []) }; },
+  async media() {
+    const hidden = new Set(await readDoc('mediaHidden', []));
+    return { list: SEED_MEDIA.filter(m => !hidden.has(m.id)).concat(await readDoc('media', [])) };
+  },
+
+  // Sale tự lưu ảnh/video/feedback mới vào thư viện chung
+  async saveMedia({ g, kind, label, url, type }, me) {
+    if (!GROUPS[g] || !label || !url) throw new Error('Thiếu nhóm, mô tả hoặc tệp');
+    const list = await readDoc('media', []);
+    const item = { id: newId(), g, kind: KINDS.includes(kind) ? kind : 'anh', label: String(label).trim().slice(0, 160), url, type: type || 'image/jpeg', by: me.name, at: Date.now() };
+    list.push(item); await writeDoc('media', list);
+    return { ok: true, item };
+  },
 
   async adminSaveMedia({ id, g, kind, label, url, type }, me) {
     admin(me);
@@ -178,6 +192,7 @@ const handlers = {
 
   async adminDelMedia({ id }, me) {
     admin(me);
+    if (String(id).startsWith('seed-')) { const h = await readDoc('mediaHidden', []); if (!h.includes(id)) h.push(id); await writeDoc('mediaHidden', h); return { ok: true }; }
     const list = await readDoc('media', []);
     const it = list.find(x => x.id === id);
     if (it && /blob\.vercel-storage\.com/.test(it.url)) { try { const { del } = await import('@vercel/blob'); await del(it.url); } catch {} }
