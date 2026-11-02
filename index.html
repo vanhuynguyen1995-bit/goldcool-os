@@ -86,6 +86,18 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pcard{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;text-align:left}.pcard.on{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy) inset}.pcard b{display:block;font-size:14px}.pcard span{font-size:12px;color:var(--mute)}
 .login{max-width:380px;margin:8vh auto 0}
 @media(min-width:900px){.gp{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.attach{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:20px;flex:none;display:grid;place-items:center;color:var(--navy)}
+.bub.md{padding:4px;max-width:260px}.bub.md img,.bub.md video{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:12px;background:#0b1220}
+.bub.md .cap{font-size:12px;color:var(--mute);padding:4px 6px 2px}.msg.me .bub.md .cap{color:#3B5B7E}
+.lnk{display:flex;gap:8px;align-items:center;padding:8px 10px;color:var(--navy);text-decoration:none;font-weight:600}.lnk i{font-style:normal;width:34px;height:34px;border-radius:8px;background:#C2410C;color:#fff;display:grid;place-items:center;flex:none}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.mitem{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;text-align:left;padding:0;position:relative;text-decoration:none;color:var(--text)}
+.mitem img,.mitem video,.mitem .vl{width:100%;height:92px;object-fit:cover;display:block;background:#0b1220}
+.mitem .vl{display:grid;place-items:center;color:#fff;font-size:26px}
+.mitem span{display:block;font-size:12px;padding:6px 7px;line-height:1.3}.mitem em{position:absolute;top:6px;left:6px;font-style:normal;font-size:10px;font-weight:700;background:#000a;color:#fff;border-radius:6px;padding:1px 6px}
+.sheet{position:fixed;inset:0;z-index:55;background:#0007;display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:#fff;width:100%;max-width:720px;border-radius:18px 18px 0 0;max-height:82vh;overflow:auto;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+.viewer{position:fixed;inset:0;z-index:70;background:#000e;display:grid;place-items:center}.viewer img,.viewer video{max-width:96vw;max-height:90vh}
 </style>
 </head>
 <body>
@@ -117,6 +129,7 @@ const I={
  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a6 6 0 0 0-4-5.6"/></svg>',
  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+ img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>',
 };
 
@@ -140,7 +153,7 @@ async function boot(){
   try{META=await api('meta')}catch(e){return renderLogin()}
   const ad=META.user.role==='admin';document.body.classList.toggle('admin',ad);
   $('#who').innerHTML=`${esc(META.user.name)} · <a href="#" id="out" style="color:#F3C34E">Thoát</a>`;$('#out').onclick=e=>{e.preventDefault();logout()};
-  const tabs=ad?[['report','Báo cáo',I.chart],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['docs','Tài liệu',I.book]]
+  const tabs=ad?[['report','Báo cáo',I.chart],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['media','Ảnh & Video',I.img],['docs','Tài liệu',I.book]]
                :[['home','Hôm nay',I.home],['docs','Tài liệu',I.book],['me','Kết quả',I.chart]];
   const t=$('#tabs');t.classList.remove('hide');
   t.innerHTML=tabs.map(([k,v,ic])=>`<button data-k="${k}">${ic}<span>${v}</span></button>`).join('');
@@ -149,7 +162,7 @@ async function boot(){
 }
 function go(k){CUR=k;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   app.innerHTML='<p class="mute" style="text-align:center;margin-top:40px">Đang tải…</p>';window.scrollTo(0,0);
-  ({home:vHome,docs:vDocs,me:vMe,report:vReport,review:vReview,staff:vStaff,sc:vSc})[k]().catch(e=>{app.innerHTML=`<div class="flag">${esc(e.message)}</div>`})}
+  ({home:vHome,docs:vDocs,me:vMe,report:vReport,review:vReview,staff:vStaff,sc:vSc,media:vMedia})[k]().catch(e=>{app.innerHTML=`<div class="flag">${esc(e.message)}</div>`})}
 function refresh(){if(CUR)go(CUR)}
 
 // ===== HÔM NAY (SALE)
@@ -187,6 +200,61 @@ async function vHome(){
   $('#xgo').onclick=()=>openChat({g:xg,persona:xp});
 }
 
+// ===== ẢNH / VIDEO
+const KIND={anh:'Ảnh sản phẩm',video:'Video',feedback:'Feedback khách',maure:'Ảnh mẫu rẻ'};
+let MEDIA=null;
+async function getMedia(force){if(!MEDIA||force)MEDIA=(await api('media')).list;return MEDIA}
+const isVid=t=>String(t||'').startsWith('video');
+function mediaThumb(m){return `${isVid(m.type)?`<video src="${esc(m.url)}#t=0.5" preload="metadata" muted playsinline></video>`:m.type==='link'?'<div class="vl">▶</div>':`<img src="${esc(m.url)}" loading="lazy" alt="">`}<em>${esc(KIND[m.kind]||'')}</em><span>${esc(m.label)}</span>`}
+function bubble(m){
+  const md=m.media;
+  if(!md)return `<div class="msg ${m.role==='user'?'me':'kh'}"><div class="bub">${esc(m.content)}</div></div>`;
+  const inner=isVid(md.type)?`<video src="${esc(md.url)}" controls playsinline preload="metadata"></video>`:md.type==='link'?`<a class="lnk" href="${esc(md.url)}" target="_blank" rel="noopener"><i>▶</i>${esc(md.label)}</a>`:`<img src="${esc(md.url)}" loading="lazy" alt="" data-view="${esc(md.url)}">`;
+  return `<div class="msg ${m.role==='user'?'me':'kh'}"><div class="bub md">${inner}${md.type!=='link'?`<div class="cap">${esc(KIND[md.kind]||'Ảnh')}: ${esc(md.label)}</div>`:''}</div></div>`;
+}
+function bindView(root){root.querySelectorAll('[data-view]').forEach(i=>i.onclick=()=>{const v=document.createElement('div');v.className='viewer';v.innerHTML=`<img src="${esc(i.dataset.view)}">`;v.onclick=()=>v.remove();document.body.appendChild(v)})}
+async function shrink(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size<900000)return file;
+  const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(file)});
+  const k=Math.min(1,1600/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',.85));return new File([b],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'});
+}
+async function uploadFile(file,onProg){
+  file=await shrink(file);
+  const {upload}=await import('https://esm.sh/@vercel/blob@1.0.0/client');
+  const name='media/'+Date.now()+'-'+file.name.normalize('NFD').replace(/[^\w.]+/g,'-').slice(-60);
+  const b=await upload(name,file,{access:'public',handleUploadUrl:'/api/upload',clientPayload:JSON.stringify({token:TOKEN}),onUploadProgress:p=>onProg&&onProg(Math.round(p.percentage))});
+  return {url:b.url,type:file.type||(/\.(mp4|mov|webm)$/i.test(file.name)?'video/mp4':'image/jpeg')};
+}
+// bảng chọn ảnh/video để gửi khách
+async function openPicker(g0,onPick){
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div><div class="row"><h2 style="margin:0">Gửi ảnh / video</h2><span class="sp"></span><button class="btn ghost sm" id="pc">Đóng</button></div>
+   <div class="chips" id="pg" style="margin:10px 0 6px">${Object.keys(SHORT).map(g=>`<button class="chip ${g===g0?'on':''}" data-g="${g}">${SHORT[g]}</button>`).join('')}</div>
+   <div class="chips" id="pk" style="margin-bottom:10px"><button class="chip on" data-k="">Tất cả</button>${Object.entries(KIND).map(([k,v])=>`<button class="chip" data-k="${k}">${v}</button>`).join('')}</div>
+   <div id="pl" class="mgrid"><p class="mute">Đang tải…</p></div>
+   <details style="margin-top:12px"><summary>Gửi từ máy hoặc link video</summary>
+    <label class="f">Mô tả ngắn (khách sẽ thấy) – VD: Tủ 4 cánh quạt gió GC4C-1088L thực tế</label><input id="pcap">
+    <div class="row" style="margin-top:8px"><select id="pkind" style="flex:1">${Object.entries(KIND).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+     <label class="btn navy sm" style="cursor:pointer">📷 Chọn ảnh/video<input type="file" id="pf" accept="image/*,video/*" hidden></label></div>
+    <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="plink" placeholder="Hoặc dán link YouTube / TikTok / Facebook"><button class="btn sm" id="plb">Gửi link</button></div>
+    <p class="mute" id="pst"></p></details></div>`;
+  document.body.appendChild(sh);
+  const close=()=>sh.remove();sh.onclick=e=>{if(e.target===sh)close()};sh.querySelector('#pc').onclick=close;
+  let g=g0,k='';const lib=await getMedia().catch(()=>[]);
+  const draw=()=>{const l=lib.filter(m=>m.g===g&&(!k||m.kind===k));
+    sh.querySelector('#pl').innerHTML=l.map(m=>`<button class="mitem" data-id="${m.id}">${mediaThumb(m)}</button>`).join('')||`<p class="mute" style="grid-column:1/-1">Chưa có ảnh/video cho nhóm này trong thư viện. Quản lý tải lên ở tab "Ảnh & Video", hoặc gửi từ máy bên dưới.</p>`;
+    sh.querySelectorAll('.mitem').forEach(b=>b.onclick=()=>{const m=lib.find(x=>x.id===b.dataset.id);close();onPick({url:m.url,type:m.type,label:m.label,kind:m.kind})})};
+  sh.querySelector('#pg').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;g=b.dataset.g;sh.querySelectorAll('#pg .chip').forEach(c=>c.classList.toggle('on',c===b));draw()};
+  sh.querySelector('#pk').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;k=b.dataset.k;sh.querySelectorAll('#pk .chip').forEach(c=>c.classList.toggle('on',c===b));draw()};
+  draw();
+  const cap=()=>sh.querySelector('#pcap').value.trim(),st=sh.querySelector('#pst');
+  sh.querySelector('#pf').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!cap()){st.textContent='Nhập mô tả ngắn trước để khách biết đây là ảnh gì.';e.target.value='';return}
+    try{st.textContent='Đang tải lên…';const r=await uploadFile(f,p=>st.textContent='Đang tải lên… '+p+'%');close();onPick({...r,label:cap(),kind:sh.querySelector('#pkind').value})}catch(err){st.textContent='Lỗi tải lên: '+err.message}};
+  sh.querySelector('#plb').onclick=()=>{const u=sh.querySelector('#plink').value.trim();if(!/^https?:\/\//.test(u)){st.textContent='Link không hợp lệ';return}close();onPick({url:u,type:'link',label:cap()||'Video',kind:'video'})};
+}
+
 // ===== MÀN HÌNH CHAT
 function screen(html,cls=''){const s=document.createElement('div');s.className='screen';s.innerHTML=html;document.body.appendChild(s);document.body.style.overflow='hidden';
   s.close=()=>{s.remove();if(!document.querySelector('.screen'))document.body.style.overflow=''};return s}
@@ -202,21 +270,25 @@ async function openChat(opt){
      <div style="margin-top:6px"><a href="#" id="tg" style="color:var(--gold);font-weight:700">💡 Gợi ý quy trình</a></div>
      <ul class="c hide" id="tips">${(info.tips||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
     <div id="log"></div></div></div>
-   <div class="composer" id="cp"><div class="inner"><textarea id="tx" rows="1" placeholder="Nhắn cho khách như trên Zalo…"></textarea><button class="send" id="sd">${I.send}</button></div></div>`);
+   <div class="composer" id="cp"><div class="inner"><button class="attach" id="at" title="Gửi ảnh / video">📎</button><textarea id="tx" rows="1" placeholder="Nhắn cho khách như trên Zalo…"></textarea><button class="send" id="sd">${I.send}</button></div></div>`);
   const log=s.querySelector('#log'),bd=s.querySelector('#bd'),tx=s.querySelector('#tx');
   s.querySelector('#tg').onclick=e=>{e.preventDefault();s.querySelector('#tips').classList.toggle('hide')};
-  const draw=()=>{log.innerHTML=msgs.map(m=>`<div class="msg ${m.role==='user'?'me':'kh'}"><div class="bub">${esc(m.content)}</div></div>`).join('')+(busy==='typing'?'<div class="msg kh typing"><div class="bub">Khách đang nhắn…</div></div>':'')+(ended&&!scored?'<div class="sys">Khách đã kết thúc cuộc chat · bấm “Chấm điểm”</div>':'');bd.scrollTop=bd.scrollHeight};
+  const draw=()=>{log.innerHTML=msgs.map(bubble).join('')+(busy==='typing'?'<div class="msg kh typing"><div class="bub">Khách đang nhắn…</div></div>':'')+(ended&&!scored?'<div class="sys">Khách đã kết thúc cuộc chat · bấm “Chấm điểm”</div>':'');bindView(log);bd.scrollTop=bd.scrollHeight;log.querySelectorAll('img,video').forEach(x=>x.addEventListener('load',()=>bd.scrollTop=bd.scrollHeight,{once:true}))};
   draw();
   tx.oninput=()=>{tx.style.height='auto';tx.style.height=Math.min(tx.scrollHeight,180)+'px'};
   tx.onkeydown=e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send()}};
-  const send=async()=>{const v=tx.value.trim();if(!v||busy||scored)return;msgs.push({role:'user',content:v});tx.value='';tx.oninput();
-    if(ended){draw();return}
-    busy='typing';draw();
-    try{const r=await api('chat',{...ctx,messages:msgs});msgs.push({role:'assistant',content:r.reply});if(r.end)ended=true}
-    catch(e){toast(e.message)}busy=false;draw();if(ended)s.querySelector('#fin').classList.add('pulse')};
+  // Sale có thể gửi liền nhiều tin (chữ + ảnh + video), khách trả lời sau khi Sale ngừng gửi ~2 giây
+  let timer=null,pending=false;
+  const plain=()=>msgs.map(({role,content})=>({role,content}));
+  const reply=async()=>{if(ended||scored)return;if(busy){pending=true;return}busy='typing';draw();
+    try{const r=await api('chat',{...ctx,messages:plain()});msgs.push({role:'assistant',content:r.reply});if(r.end)ended=true}
+    catch(e){toast(e.message)}busy=false;draw();if(pending){pending=false;schedule()}};
+  const schedule=()=>{clearTimeout(timer);timer=setTimeout(reply,2000)};
+  const send=()=>{const v=tx.value.trim();if(!v||scored)return;msgs.push({role:'user',content:v});tx.value='';tx.oninput();draw();schedule()};
   s.querySelector('#sd').onclick=send;
+  s.querySelector('#at').onclick=()=>{if(scored)return;openPicker(info.g,md=>{msgs.push({role:'user',content:`[${KIND[md.kind]||'Ảnh'}: ${md.label}]`,media:md});draw();schedule()})};
   s.querySelector('#bk').onclick=()=>{if(!scored&&msgs.length>2&&!confirm('Thoát sẽ bỏ cuộc chat này (chưa chấm). Thoát?'))return;s.close();if(scored)refresh()};
-  s.querySelector('#fin').onclick=async e=>{if(scored)return;const b=e.target;b.disabled=true;b.textContent='Đang chấm…';
+  s.querySelector('#fin').onclick=async e=>{if(scored)return;clearTimeout(timer);const b=e.target;b.disabled=true;b.textContent='Đang chấm…';
     log.insertAdjacentHTML('beforeend','<div class="sys" id="wait">AI đang chấm điểm cuộc tư vấn…</div>');bd.scrollTop=bd.scrollHeight;
     try{const r=await api('finishChat',{...ctx,messages:msgs});scored=true;b.remove();
       s.querySelector('#wait')?.remove();log.insertAdjacentHTML('beforeend',resultHTML(r.attempt,r.sample));bindCopy(log);
@@ -248,10 +320,10 @@ function bindCopy(root){root.querySelectorAll('[data-copy]').forEach(b=>b.onclic
 
 function attemptScreen(a,extra=''){
   const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(a.title)}</b><span>${a.userName?esc(a.userName)+' · ':''}${a.date} · ${esc(SHORT[a.g]||'')}${a.persona?' · '+esc(PN(a.persona)):''}</span></div></div>
-   <div class="body chatbody"><div class="inner">${(a.messages||[]).map(m=>`<div class="msg ${m.role==='user'?'me':'kh'}"><div class="bub">${esc(m.content)}</div></div>`).join('')}
+   <div class="body chatbody"><div class="inner">${(a.messages||[]).map(bubble).join('')}
    ${a.answer?`<div class="msg me"><div class="bub">${esc(a.answer)}</div></div>`:''}
    ${resultHTML(a)}${extra}</div></div>`);
-  s.querySelector('#bk').onclick=()=>s.close();bindCopy(s);return s;
+  s.querySelector('#bk').onclick=()=>s.close();bindCopy(s);bindView(s);return s;
 }
 async function openAttemptById(id){const d=await api('history');const a=d.list.find(x=>x.id===id);if(a)attemptScreen(a)}
 
@@ -266,11 +338,13 @@ async function vDocs(){
   app.querySelectorAll('.it').forEach(el=>el.onclick=()=>docScreen(secs.find(x=>x.g===el.dataset.g)));
 }
 function fmtLine(l){return esc(l).replace(/(\d{1,3}(?:\.\d{3})+đ|\d+[,.]?\d*\s?triệu|\d+%)/g,'<b>$1</b>')}
-function docScreen(x){
+async function docScreen(x){
   const samples=DOCS.samples.filter(s=>s.g===x.g);
+  const med=SHORT[x.g]?(await getMedia().catch(()=>[])).filter(m=>m.g===x.g):[];
   const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(x.name)}</b><span>Tài liệu GoldCool</span></div></div>
    <div class="body"><div class="inner">${x.note?`<div class="pre" style="margin-bottom:12px">${esc(x.note)}</div>`:''}
     <div class="card"><h2>Nội dung chính</h2><ul class="c">${x.lines.map(l=>`<li>${fmtLine(l)}</li>`).join('')}</ul></div>
+    ${SHORT[x.g]?`<div class="card"><h2>Ảnh & video (${med.length})</h2>${med.length?`<div class="mgrid">${med.map(m=>`<a class="mitem" href="${esc(m.url)}" target="_blank" rel="noopener">${mediaThumb(m)}</a>`).join('')}</div>`:'<p class="mute">Chưa có – quản lý sẽ tải lên.</p>'}</div>`:''}
     ${samples.length?`<div class="card"><h2>Tin nhắn mẫu (${samples.length})</h2>${samples.map(m=>`<details><summary>${esc(m.title)} <span class="pill">${esc(m.stage)}</span></summary>
       <div class="msg kh" style="margin-top:8px"><div class="bub" style="background:#EEF2F6">${esc(m.msg)}</div></div>
       <div class="row" style="justify-content:flex-end;margin:6px 0"><button class="copy" data-copy="${esc(m.sample)}">Sao chép tin mẫu</button></div><div class="pre">${esc(m.sample)}</div></details>`).join('')}</div>`:''}
@@ -367,6 +441,31 @@ async function vSc(){
   $('#sa').onclick=async()=>{try{await api('adminSaveScenario',{g:$('#sg').value,stage:$('#sst').value,title:$('#stt').value,ctx:$('#sctx').value,msg:$('#smsg').value,tips:$('#stips').value,sample:$('#ssam').value,kw:$('#skw').value});toast('Đã lưu');DOCS=null;vSc()}catch(e){toast(e.message)}};
   app.querySelectorAll('[data-del]').forEach(b=>b.onclick=async e=>{e.stopPropagation();if(!confirm('Xóa tình huống này?'))return;await api('adminDelScenario',{id:b.dataset.del});vSc()});
   app.querySelectorAll('[data-try]').forEach(b=>{const sc=d.list.find(x=>x.id===b.dataset.try);const go=()=>openChat({sid:sc.id,g:sc.g});b.onclick=e=>{e.stopPropagation();go()};b.closest('.it').onclick=go;b.closest('.it').style.cursor='pointer'});
+}
+
+// ===== QUẢN LÝ: THƯ VIỆN ẢNH & VIDEO
+async function vMedia(){
+  const list=await getMedia(true);
+  app.innerHTML=`<div class="card"><h2>Tải ảnh / video lên thư viện</h2><p class="mute" style="margin-top:-6px">Sale bấm 📎 trong khung chat để gửi khách. Đặt tên rõ model để AI biết Sale gửi đúng mẫu hay không.</p>
+   <div class="row"><select id="mg" style="flex:1;min-width:140px">${Object.entries(META.groups).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+    <select id="mk" style="flex:1;min-width:140px">${Object.entries(KIND).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
+   <label class="f">Tên / mô tả (VD: Tủ đông 4 cánh quạt gió GC4C-1088L – ảnh thực tế quán lẩu)</label><input id="ml">
+   <label class="f">Chọn ảnh hoặc video từ máy (chọn được nhiều tệp, mỗi tệp dùng chung tên trên kèm số thứ tự)</label><input type="file" id="mf" accept="image/*,video/*" multiple>
+   <label class="f">Hoặc dán link video YouTube / TikTok / Facebook</label><input id="mu" placeholder="https://…">
+   <button class="btn" id="ms" style="margin-top:12px">Tải lên</button> <span class="mute" id="mst"></span></div>
+  ${Object.entries(META.groups).map(([g,name])=>{const l=list.filter(m=>m.g===g);return `<div class="card"><h2><span class="dot" style="background:${GC[g]}"></span> ${esc(name)} <span class="mute">(${l.length})</span></h2>
+    ${l.length?`<div class="mgrid">${l.map(m=>`<div class="mitem">${mediaThumb(m)}<div class="row" style="padding:0 7px 7px;gap:6px"><a class="copy" href="${esc(m.url)}" target="_blank" rel="noopener">Xem</a><button class="copy" data-del="${m.id}">Xóa</button></div></div>`).join('')}</div>`:'<p class="mute">Chưa có ảnh/video.</p>'}</div>`}).join('')}`;
+  $('#ms').onclick=async()=>{const g=$('#mg').value,kind=$('#mk').value,label=$('#ml').value.trim(),files=[...$('#mf').files],url=$('#mu').value.trim(),st=$('#mst');
+    if(!label)return toast('Nhập tên / mô tả');if(!files.length&&!url)return toast('Chọn tệp hoặc dán link');
+    const b=$('#ms');b.disabled=true;
+    try{
+      if(url)await api('adminSaveMedia',{g,kind,label,url,type:'link'});
+      for(let i=0;i<files.length;i++){st.textContent=`Đang tải ${i+1}/${files.length}…`;
+        const r=await uploadFile(files[i],p=>st.textContent=`Đang tải ${i+1}/${files.length}… ${p}%`);
+        await api('adminSaveMedia',{g,kind,label:files.length>1?`${label} (${i+1})`:label,url:r.url,type:r.type});}
+      toast('Đã tải lên');vMedia();
+    }catch(e){st.textContent='Lỗi: '+e.message;b.disabled=false}};
+  app.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('Xóa ảnh/video này?'))return;await api('adminDelMedia',{id:b.dataset.del});vMedia()});
 }
 
 TOKEN?boot():renderLogin();

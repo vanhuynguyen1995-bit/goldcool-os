@@ -137,7 +137,7 @@ const handlers = {
   async chat({ n, sid, g, persona, messages }, me) {
     if (!hasAI()) throw new Error('AI chưa được bật – báo quản lý.');
     const sc = await findSc(me, n, sid);
-    const reply = await aiCustomer(sc?.g || g, persona, (messages || []).slice(-30), sc);
+    const reply = await aiCustomer(sc?.g || g, persona, clean(messages).slice(-30), sc);
     const end = /\[HẾT\]/i.test(reply);
     return { reply: reply.replace(/\[HẾT\]/gi, '').trim(), end };
   },
@@ -146,7 +146,7 @@ const handlers = {
     if (!messages || messages.filter(m => m.role === 'user').length < 2) throw new Error('Cần tư vấn ít nhất 2 tin trước khi chấm');
     const sc = await findSc(me, n, sid);
     g = sc?.g || g;
-    const ai = await scoreChat(g, persona, messages, sc);
+    const ai = await scoreChat(g, persona, clean(messages), sc);
     const a = { id: newId(), type: 'chat', task: n || null, scenarioId: sc?.id || null, g, persona, title: sc?.title || ('Luyện thêm – ' + GROUPS[g]), stage: sc?.stage || '', date: todayVN(), at: Date.now(), messages, ai, status: 'ai' };
     const list = await atts(me.id); list.push(a); await saveAtts(me.id, list);
     return { attempt: a, sample: sc?.sample || '' };
@@ -160,6 +160,29 @@ const handlers = {
   async docs() {
     const list = await allSc();
     return { sections: docs(), samples: list.filter(s => s.sample).map(s => ({ g: s.g, title: s.title, stage: s.stage, msg: s.msg, sample: s.sample })) };
+  },
+
+  // ===== THƯ VIỆN ẢNH / VIDEO
+  async media() { return { list: await readDoc('media', []) }; },
+
+  async adminSaveMedia({ id, g, kind, label, url, type }, me) {
+    admin(me);
+    if (!GROUPS[g] || !label || !url) throw new Error('Thiếu nhóm, tên hoặc tệp');
+    const list = await readDoc('media', []);
+    const item = { id: id || newId(), g, kind: kind || 'anh', label: String(label).trim(), url, type: type || (/\.(mp4|mov|webm)(\?|$)/i.test(url) ? 'video/mp4' : /^https?:\/\/[^/]*(youtu|tiktok|facebook|fb\.watch|drive\.google)/i.test(url) ? 'link' : 'image/jpeg'), at: Date.now() };
+    const i = list.findIndex(x => x.id === item.id);
+    if (i >= 0) list[i] = item; else list.push(item);
+    await writeDoc('media', list);
+    return { ok: true, item };
+  },
+
+  async adminDelMedia({ id }, me) {
+    admin(me);
+    const list = await readDoc('media', []);
+    const it = list.find(x => x.id === id);
+    if (it && /blob\.vercel-storage\.com/.test(it.url)) { try { const { del } = await import('@vercel/blob'); await del(it.url); } catch {} }
+    await writeDoc('media', list.filter(x => x.id !== id));
+    return { ok: true };
   },
 
   // ===== QUẢN LÝ
@@ -250,6 +273,12 @@ const handlers = {
     return { ok: true };
   },
 };
+
+function clean(messages) {
+  return (messages || []).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content || '').slice(0, 4000) }))
+    // gộp các tin liên tiếp cùng người gửi (Sale gửi chữ + ảnh + video liền nhau)
+    .reduce((a, m) => { const l = a[a.length - 1]; if (l && l.role === m.role) l.content += '\n' + m.content; else a.push({ ...m }); return a; }, []);
+}
 
 async function findSc(me, n, sid) {
   const list = await allSc();
