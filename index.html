@@ -131,6 +131,7 @@ const I={
  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
  img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>',
+ flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></svg>',
 };
 
 // ===== ĐĂNG NHẬP
@@ -153,8 +154,8 @@ async function boot(){
   try{META=await api('meta')}catch(e){return renderLogin()}
   const ad=META.user.role==='admin';document.body.classList.toggle('admin',ad);
   $('#who').innerHTML=`${esc(META.user.name)} · <a href="#" id="out" style="color:#F3C34E">Thoát</a>`;$('#out').onclick=e=>{e.preventDefault();logout()};
-  const tabs=ad?[['report','Báo cáo',I.chart],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['media','Ảnh & Video',I.img],['docs','Tài liệu',I.book]]
-               :[['home','Hôm nay',I.home],['docs','Tài liệu',I.book],['me','Kết quả',I.chart]];
+  const tabs=ad?[['report','Báo cáo',I.chart],['path3','Lộ trình 3 ngày',I.flag],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['media','Ảnh & Video',I.img],['docs','Tài liệu',I.book]]
+               :[['path','Lộ trình',I.flag],['home','Hôm nay',I.home],['docs','Tài liệu',I.book],['me','Kết quả',I.chart]];
   const t=$('#tabs');t.classList.remove('hide');
   t.innerHTML=tabs.map(([k,v,ic])=>`<button data-k="${k}">${ic}<span>${v}</span></button>`).join('');
   t.querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.k));
@@ -162,7 +163,7 @@ async function boot(){
 }
 function go(k){CUR=k;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   app.innerHTML='<p class="mute" style="text-align:center;margin-top:40px">Đang tải…</p>';window.scrollTo(0,0);
-  ({home:vHome,docs:vDocs,me:vMe,report:vReport,review:vReview,staff:vStaff,sc:vSc,media:vMedia})[k]().catch(e=>{app.innerHTML=`<div class="flag">${esc(e.message)}</div>`})}
+  ({path:vPath,path3:vPath3,home:vHome,docs:vDocs,me:vMe,report:vReport,review:vReview,staff:vStaff,sc:vSc,media:vMedia})[k]().catch(e=>{app.innerHTML=`<div class="flag">${esc(e.message)}</div>`})}
 function refresh(){if(CUR)go(CUR)}
 
 // ===== HÔM NAY (SALE)
@@ -471,6 +472,103 @@ async function vMedia(){
       toast('Đã tải lên');vMedia();
     }catch(e){st.textContent='Lỗi: '+e.message;b.disabled=false}};
   app.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('Xóa ảnh/video này?'))return;await api('adminDelMedia',{id:b.dataset.del});vMedia()});
+}
+
+// ===== LỘ TRÌNH 3 NGÀY (SALE)
+const pctColor=(p,pass)=>p==null?'#98A2B3':p>=pass?'var(--ok)':p>=pass-15?'var(--mid)':'var(--bad)';
+async function docSecs(){DOCS=DOCS||await api('docs');return ['dna','chung','td','tm','bc','sl','tb','gw'].map(k=>DOCS.sections.find(x=>x.g===k)).filter(Boolean).map(x=>{const m=x.title.match(/^(.*?)\s*\((.*)\)\s*$/);return {...x,name:META.groups[x.g]||x.title,note:m?m[2].charAt(0).toUpperCase()+m[2].slice(1):''}})}
+async function openDoc(g){const secs=await docSecs();const x=secs.find(s=>s.g===g);if(x)docScreen(x)}
+function stepDot(ok,cur,n){return `<div style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;${ok?'background:#12805C;color:#fff':cur?'background:#F3C34E;color:var(--navy)':'background:#ffffff26;color:#fff'}">${ok?'✓':n}</div>`}
+function quizRow(x,locked){
+  return `<div class="it" data-quiz="${x.id}" ${locked?'data-locked="1"':''}><div class="t"><b style="font-size:14px">${esc(x.title)}</b><div class="mute">${x.n} câu · cần ≥ ${x.pass}% · ${x.tries?`đã làm ${x.tries} lần`:'chưa làm'}</div></div>
+   ${x.passed?`<span class="sc" style="background:var(--ok)">${x.best}%</span>`:x.best!=null?`<span class="sc" style="background:${pctColor(x.best,x.pass)}">${x.best}%</span>`:''}
+   <span class="go" style="color:var(--gold)">${locked?'🔒':x.passed?'Làm lại ›':'Làm bài ›'}</span></div>`;
+}
+async function vPath(){
+  const {status:s}=await api('path3');const d=s.days;
+  const cur=!d.d1?1:!d.d2?2:!d.d3?3:4;
+  const q=id=>s.quizzes.find(x=>x.id===id);
+  app.innerHTML=`
+  <div class="card hero">
+   <h1>Lộ trình 3 ngày</h1><div class="mute">Học – kiểm tra – đóng vai đủ 6 nhóm sản phẩm. Đạt cả 3 ngày và được Giám đốc xác nhận thì mới nhận khách thật.</div>
+   <div class="row" style="margin-top:14px;flex-wrap:nowrap;gap:6px">${[['Ngày 1','Nền tảng',d.d1],['Ngày 2','6 nhóm & giá',d.d2],['Ngày 3','Đóng vai AI',d.d3]].map(([a,b,ok],i)=>`<div style="flex:1;display:flex;gap:8px;align-items:center;min-width:0">${stepDot(ok,cur===i+1,i+1)}<div style="min-width:0;line-height:1.2"><b style="font-size:13px">${a}</b><div class="mute" style="font-size:11px">${b}</div></div></div>`).join('')}</div>
+   <div style="margin-top:14px;background:#ffffff14;border-radius:12px;padding:10px 12px"><span class="mute">Kết luận: </span><b style="color:${s.signoff?'#7CE3B5':s.passed?'#F3C34E':'#fff'}">${s.signoff?'✓ ĐẠT – Đủ điều kiện nhận khách thật':s.passed?'ĐẠT – chờ Giám đốc xác nhận':'CHƯA ĐẠT'}</b>${s.signoff?`<div class="mute" style="font-size:12px">Xác nhận bởi ${esc(s.signoff.by)} ngày ${s.signoff.date.split('-').reverse().join('/')}</div>`:''}</div>
+  </div>
+
+  <div class="card"><div class="row"><h2 style="margin:0">Ngày 1 · Nền tảng</h2><span class="sp"></span>${d.d1?'<span class="pill" style="background:#E3F4EC;color:var(--ok)">Đạt</span>':''}</div>
+   <p class="mute">Đọc DNA và quy tắc tư vấn chung, rồi làm bài kiểm tra.</p>
+   <div class="row" style="margin-bottom:6px"><button class="btn ghost sm" data-doc="dna">📖 DNA GoldCool</button><button class="btn ghost sm" data-doc="chung">📖 Quy tắc tư vấn chung</button></div>
+   <div class="list">${quizRow(q('nen'))}</div></div>
+
+  <div class="card"><div class="row"><h2 style="margin:0">Ngày 2 · 6 nhóm sản phẩm & bảng giá</h2><span class="sp"></span>${d.d2?'<span class="pill" style="background:#E3F4EC;color:var(--ok)">Đạt</span>':''}</div>
+   <p class="mute">${d.d1?'Mỗi nhóm: đọc tài liệu rồi làm 5 câu (cần ≥ 80%). Bài bảng giá phải đúng 100%.':'🔒 Mở khi đạt bài Ngày 1.'}</p>
+   <div class="list">${['td','tm','bc','sl','tb','gw'].map(g=>{const x=q(g);return `<div style="display:flex;gap:8px;align-items:center"><span class="dot" style="width:10px;height:10px;background:${GC[g]}"></span><div style="flex:1;min-width:0">${quizRow(x,!d.d1)}</div><button class="copy" data-doc="${g}" title="Đọc tài liệu">📖</button></div>`}).join('')}
+    ${quizRow(q('gia'),!d.d1)}</div></div>
+
+  <div class="card"><div class="row"><h2 style="margin:0">Ngày 3 · Đóng vai với khách AI</h2><span class="sp"></span>${d.d3?'<span class="pill" style="background:#E3F4EC;color:var(--ok)">Đạt</span>':''}</div>
+   <p class="mute">Mỗi nhóm cần ≥ ${s.rule.minCalls} cuộc và điểm TB ≥ ${s.rule.minAvg}. Các cuộc ở tab "Hôm nay" cũng được tính. Bấm nhóm để luyện thêm.</p>
+   <div class="list">${s.rp.map(x=>`<div class="it" data-rp="${x.g}"><span class="dot" style="width:10px;height:10px;background:${GC[x.g]}"></span><div class="t"><b style="font-size:14px">${esc(x.name)}</b><div class="mute">${x.n}/${s.rule.minCalls} cuộc${x.avg!=null?` · TB ${x.avg}`:''}</div><div class="prog"><i style="width:${Math.min(100,(x.avg||0))}%;background:${x.passed?'var(--ok)':color(x.avg)}"></i></div></div>${x.passed?'<span class="sc" style="background:var(--ok)">✓</span>':''}<span class="go" style="color:var(--gold)">Luyện ›</span></div>`).join('')}</div></div>
+
+  ${s.missing.length&&!s.signoff?`<div class="card"><h2>Còn thiếu để Đạt</h2><ul class="c">${s.missing.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`:''}`;
+  app.querySelectorAll('[data-doc]').forEach(b=>b.onclick=e=>{e.stopPropagation();openDoc(b.dataset.doc)});
+  app.querySelectorAll('[data-quiz]').forEach(el=>el.onclick=()=>{if(el.dataset.locked)return toast('Cần đạt bài Ngày 1 trước');quizScreen(el.dataset.quiz)});
+  app.querySelectorAll('[data-rp]').forEach(el=>el.onclick=()=>{const ks=Object.keys(META.personas);openChat({g:el.dataset.rp,persona:ks[Math.floor(Math.random()*ks.length)]})});
+}
+
+async function quizScreen(id){
+  let z;try{z=await api('quizGet',{id})}catch(e){return toast(e.message)}
+  const ans={};
+  const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(z.title)}</b><span>Ngày ${z.day} · ${z.qs.length} câu · cần ≥ ${z.pass}%</span></div><span id="cnt" style="font-weight:700">0/${z.qs.length}</span></div>
+   <div class="body"><div class="inner" id="qb">
+    ${z.qs.map((x,i)=>`<div class="card" data-q="${x.id}"><b>Câu ${i+1}. ${esc(x.text)}</b><div style="margin-top:8px">${x.opts.map(o=>`<button class="pcard" data-k="${o.k}" style="width:100%;margin:5px 0;display:block"><span style="font-size:14px;color:var(--text)">${esc(o.t)}</span></button>`).join('')}</div></div>`).join('')}
+    <button class="btn block" id="sub" style="padding:14px;margin-bottom:20px">Nộp bài</button></div></div>`);
+  const close=()=>{s.close();if(CUR==='path')vPath()};
+  s.querySelector('#bk').onclick=()=>{if(Object.keys(ans).length&&!s.dataset.done&&!confirm('Thoát sẽ bỏ bài đang làm. Thoát?'))return;close()};
+  s.querySelectorAll('[data-q]').forEach(c=>c.onclick=e=>{const b=e.target.closest('.pcard');if(!b||s.dataset.done)return;ans[c.dataset.q]=b.dataset.k;c.querySelectorAll('.pcard').forEach(x=>x.classList.toggle('on',x===b));s.querySelector('#cnt').textContent=Object.keys(ans).length+'/'+z.qs.length});
+  s.querySelector('#sub').onclick=async e=>{
+    if(Object.keys(ans).length<z.qs.length){const i=z.qs.findIndex(x=>!ans[x.id]);toast('Còn câu chưa trả lời');s.querySelector(`[data-q="${z.qs[i].id}"]`).scrollIntoView({behavior:'smooth',block:'center'});return}
+    const b=e.target;b.disabled=true;b.textContent='Đang chấm…';
+    try{const {result:r}=await api('quizSubmit',{id,answers:ans});s.dataset.done='1';
+      const det=Object.fromEntries(r.detail.map(d=>[d.id,d]));
+      s.querySelectorAll('[data-q]').forEach(c=>{const d=det[c.dataset.q];c.querySelectorAll('.pcard').forEach(x=>{if(x.dataset.k===d.right)x.style.cssText+=';border-color:var(--ok);box-shadow:0 0 0 2px var(--ok) inset;background:#EEF9F3';else if(x.dataset.k===d.pick)x.style.cssText+=';border-color:var(--bad);box-shadow:0 0 0 2px var(--bad) inset;background:#FFF1EA'});
+        c.insertAdjacentHTML('beforeend',`<div class="${d.ok?'pre':'flag'}" style="margin-top:8px;font-weight:400">${d.ok?'✓ Đúng. ':'✗ Sai. '}${esc(d.why)}</div>`)});
+      b.remove();
+      s.querySelector('#qb').insertAdjacentHTML('afterbegin',`<div class="res"><div class="row" style="flex-wrap:nowrap;gap:14px"><div class="big" style="background:${r.passed?'var(--ok)':'var(--bad)'}">${r.pct}%</div><div><b style="font-size:17px">${r.passed?'ĐẠT':'CHƯA ĐẠT'}</b><div class="mute">Đúng ${r.correct}/${r.total} câu · cần ≥ ${z.pass}%</div></div></div>
+        <div class="row" style="margin-top:12px"><button class="btn" id="again" style="flex:1">Làm lại</button><button class="btn ghost" id="back2" style="flex:1">Về lộ trình</button></div>
+        ${r.passed?'':'<p class="mute" style="margin-bottom:0">Xem giải thích từng câu bên dưới, đọc lại tài liệu rồi làm lại.</p>'}</div>`);
+      s.querySelector('.body').scrollTop=0;
+      s.querySelector('#again').onclick=()=>{s.close();quizScreen(id)};s.querySelector('#back2').onclick=close;
+    }catch(err){toast(err.message);b.disabled=false;b.textContent='Nộp bài'}};
+}
+
+// ===== QUẢN LÝ: LỘ TRÌNH 3 NGÀY
+async function vPath3(){
+  const d=await api('adminPath3');
+  const QS=['nen','td','tm','bc','sl','tb','gw','gia'];const QN={nen:'Nền tảng',gia:'Bảng giá',...SHORT};
+  const verdictOf=s=>s.signoff?['Đủ ĐK nhận khách','var(--ok)']:s.passed?['Đạt – chờ xác nhận','var(--mid)']:['Chưa đạt · '+s.stage,'var(--bad)'];
+  const n=d.rows.length,pass=d.rows.filter(r=>r.status.passed).length,ok=d.rows.filter(r=>r.status.signoff).length;
+  app.innerHTML=`<div class="card"><div class="row"><h2 style="margin:0">Lộ trình 3 ngày – kết quả đầu ra</h2><span class="sp"></span><button class="btn sm" id="cpz">Sao chép gửi Zalo</button></div>
+   <div class="kp" style="grid-template-columns:repeat(3,1fr)">${[['Sale đang học',n],['Đã Đạt',pass],['Đã xác nhận nhận khách',ok]].map(([a,b])=>`<div style="background:#F5F7FA"><b style="color:var(--navy)">${b}</b><span class="mute">${a}</span></div>`).join('')}</div>
+   <p class="mute" style="margin-bottom:0">Đạt khi: bài Nền tảng ≥ 90% · 6 bài nhóm ≥ 80% · bài Bảng giá 100% · đóng vai mỗi nhóm ≥ ${d.rows[0]?.status.rule.minCalls??2} cuộc, TB ≥ ${d.rows[0]?.status.rule.minAvg??75}.</p></div>
+  <div class="card"><div class="tw"><table><tr><th>Sale</th><th>Kết luận</th>${QS.map(k=>`<th>KT ${QN[k]}</th>`).join('')}${Object.keys(SHORT).map(g=>`<th><span class="dot" style="background:${GC[g]}"></span> Đóng vai ${SHORT[g]}</th>`).join('')}<th></th></tr>
+   ${d.rows.map(r=>{const s=r.status;const [vt,vc]=verdictOf(s);return `<tr><td><a href="#" data-u="${r.id}" style="color:var(--navy);font-weight:700">${esc(r.name)}</a><div class="mute">${r.started?'Bắt đầu '+r.started.split('-').reverse().join('/'):'Chưa bắt đầu'}</div></td>
+    <td><b style="color:${vc}">${vt}</b>${s.weak?`<div class="mute">Yếu: ${SHORT[s.weak.g]} (${s.weak.avg})</div>`:''}</td>
+    ${QS.map(k=>{const x=s.quizzes.find(q=>q.id===k);return `<td><span class="cell" style="background:${x.best==null?'#F2F4F7':pctColor(x.best,x.pass)};color:${x.best==null?'#98A2B3':'#fff'}">${x.best==null?'–':x.best+'%'}</span>${x.tries>1?`<div class="mute" style="font-size:11px">${x.tries} lần</div>`:''}</td>`}).join('')}
+    ${s.rp.map(x=>`<td><span class="cell" style="background:${x.avg==null?'#F2F4F7':x.passed?'var(--ok)':color(x.avg)};color:${x.avg==null?'#98A2B3':'#fff'}">${x.avg??'–'}</span><div class="mute" style="font-size:11px">${x.n} cuộc</div></td>`).join('')}
+    <td>${s.signoff?`<button class="btn ghost sm" data-undo="${r.id}">Hủy xác nhận</button>`:s.passed?`<button class="btn sm" data-ok="${r.id}">Xác nhận nhận khách</button>`:''}</td></tr>`}).join('')||`<tr><td colspan="17" class="mute">Chưa có Sale – vào tab Nhân viên để tạo tài khoản.</td></tr>`}
+  </table></div><p class="mute">Bấm tên Sale để xem điều còn thiếu và lịch sử bài kiểm tra.</p></div>`;
+  $('#cpz').onclick=()=>copyText(`KẾT QUẢ LỘ TRÌNH 3 NGÀY – ${META.today.split('-').reverse().join('/')}\n`+d.rows.map((r,i)=>{const s=r.status;return `${i+1}. ${r.name}: ${verdictOf(s)[0]}${s.weak?` · yếu nhất ${SHORT[s.weak.g]} (${s.weak.avg})`:''}${!s.passed&&s.missing.length?` · còn thiếu ${s.missing.length} mục`:''}`}).join('\n'));
+  app.querySelectorAll('[data-ok]').forEach(b=>b.onclick=async()=>{const r=d.rows.find(x=>x.id===b.dataset.ok);if(!confirm(`Xác nhận ${r.name} đủ điều kiện nhận khách thật?`))return;try{await api('adminSignoff3',{userId:r.id});toast('Đã xác nhận');vPath3()}catch(e){toast(e.message)}});
+  app.querySelectorAll('[data-undo]').forEach(b=>b.onclick=async()=>{if(!confirm('Hủy xác nhận?'))return;try{await api('adminSignoff3',{userId:b.dataset.undo,undo:true});vPath3()}catch(e){toast(e.message)}});
+  app.querySelectorAll('[data-u]').forEach(a=>a.onclick=async e=>{e.preventDefault();const r=d.rows.find(x=>x.id===a.dataset.u);const s=r.status;const l=(await api('adminQuizAttempts',{userId:r.id})).list;
+    const sc=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(r.name)}</b><span>${verdictOf(s)[0]}</span></div></div>
+     <div class="body"><div class="inner">
+      ${s.missing.length?`<div class="card"><h2>Còn thiếu để Đạt</h2><ul class="c">${s.missing.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`:'<div class="card"><b style="color:var(--ok)">Đã đủ điều kiện Đạt.</b></div>'}
+      <div class="card"><h2>Bài kiểm tra đã làm (${l.length})</h2><div class="list">${l.map((x,i)=>`<div class="it" data-i="${i}"><div class="t"><b style="font-size:14px">${esc(QN[x.quiz]||x.quiz)}</b><div class="mute">${x.date.split('-').reverse().join('/')} · đúng ${x.correct}/${x.total}</div></div><span class="sc" style="background:${x.passed?'var(--ok)':'var(--bad)'}">${x.pct}%</span></div>`).join('')||'<p class="mute">Chưa làm bài nào.</p>'}</div></div>
+      <div id="qd"></div></div></div>`);
+    sc.querySelector('#bk').onclick=()=>sc.close();
+    sc.querySelectorAll('[data-i]').forEach(el=>el.onclick=()=>{const x=l[el.dataset.i];sc.querySelector('#qd').innerHTML=`<div class="card"><h2>Câu sai – ${esc(QN[x.quiz]||x.quiz)} ${x.date.split('-').reverse().join('/')}</h2>${x.detail.filter(q=>!q.ok).map(q=>`<div style="margin:10px 0"><b style="font-size:14px">${esc(q.text)}</b><div class="flag" style="font-weight:400">Chọn: ${esc(q.pickText||'–')}</div><div class="pre">Đúng: ${esc(q.rightText)}</div></div>`).join('')||'<p class="mute">Không sai câu nào.</p>'}</div>`;sc.querySelector('#qd').scrollIntoView({behavior:'smooth'})});
+  });
 }
 
 TOKEN?boot():renderLogin();
