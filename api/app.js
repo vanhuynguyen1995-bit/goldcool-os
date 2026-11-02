@@ -80,8 +80,8 @@ let HEALTH = null;
 const handlers = {
   async health() {
     if (HEALTH && HEALTH.ai.ok && HEALTH.chat.ok && Date.now() - HEALTH.at < 600000) return HEALTH;
-    let ai, chat; try { ai = { ok: true, reply: await aiPing('score') }; } catch (e) { ai = { ok: false, error: String(e.message || e).slice(0, 300) }; }
-    try { chat = { ok: true, reply: await aiPing('chat') }; } catch (e) { chat = { ok: false, error: String(e.message || e).slice(0, 300) }; }
+    const t = async (k) => { const t0 = Date.now(); try { return { ok: true, reply: await aiPing(k), ms: Date.now() - t0 }; } catch (e) { return { ok: false, error: String(e.message || e).slice(0, 500), ms: Date.now() - t0 }; } };
+    const [ai, chat] = await Promise.all([t('score'), t('chat')]);
     HEALTH = { at: Date.now(), ai, chat };
     return HEALTH;
   },
