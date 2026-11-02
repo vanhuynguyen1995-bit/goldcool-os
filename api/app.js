@@ -79,9 +79,10 @@ async function scoreChat(g, persona, messages, sc) {
 let HEALTH = null;
 const handlers = {
   async health() {
-    if (HEALTH && HEALTH.ai.ok && Date.now() - HEALTH.at < 600000) return HEALTH;
-    let ai; try { ai = { ok: true, reply: await aiPing() }; } catch (e) { ai = { ok: false, error: String(e.message || e).slice(0, 300) }; }
-    HEALTH = { at: Date.now(), ai };
+    if (HEALTH && HEALTH.ai.ok && HEALTH.chat.ok && Date.now() - HEALTH.at < 600000) return HEALTH;
+    let ai, chat; try { ai = { ok: true, reply: await aiPing('score') }; } catch (e) { ai = { ok: false, error: String(e.message || e).slice(0, 300) }; }
+    try { chat = { ok: true, reply: await aiPing('chat') }; } catch (e) { chat = { ok: false, error: String(e.message || e).slice(0, 300) }; }
+    HEALTH = { at: Date.now(), ai, chat };
     return HEALTH;
   },
 
