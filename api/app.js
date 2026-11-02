@@ -64,10 +64,10 @@ async function score(kind, payload) {
 let HEALTH = null;
 const handlers = {
   async health() {
-    if (HEALTH && Date.now() - HEALTH.at < 600000) return HEALTH;
+    if (HEALTH && HEALTH.ai.ok && Date.now() - HEALTH.at < 600000) return HEALTH;
     const { aiPing } = await import('../lib/ai.js');
     let ai; try { ai = { ok: true, reply: await aiPing() }; } catch (e) { ai = { ok: false, error: String(e.message || e).slice(0, 300) }; }
-    HEALTH = { at: Date.now(), ai, oidc: !!process.env.VERCEL_OIDC_TOKEN };
+    HEALTH = { at: Date.now(), ai, gemini: !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) };
     return HEALTH;
   },
 
@@ -112,7 +112,7 @@ const handlers = {
   },
 
   async chat({ g, persona, messages }, me) {
-    if (!hasAI()) throw new Error('Phòng luyện AI cần cài ANTHROPIC_API_KEY trên Vercel. Tạm thời hãy làm bài tình huống.');
+    if (!hasAI()) throw new Error('Phòng luyện AI chưa được bật (cần GEMINI_API_KEY trên Vercel). Tạm thời hãy làm bài tình huống.');
     const reply = await aiCustomer(g, persona, (messages || []).slice(-30));
     return { reply };
   },
