@@ -1,12 +1,16 @@
 import { readDoc, writeDoc } from '../lib/store.js';
 import { sign, verify, hashPin, newSalt, newId, todayVN } from '../lib/auth.js';
 import { SCENARIOS } from '../lib/scenarios.js';
-import { CRITERIA, GROUPS, PERSONAS } from '../lib/kb.js';
-import { hasAI, setOidc, aiScoreDrill, aiScoreChat, aiCustomer } from '../lib/ai.js';
+import { CRITERIA, GROUPS, PERSONAS, docs } from '../lib/kb.js';
+import { hasAI, setOidc, aiScoreChat, aiCustomer, aiPing } from '../lib/ai.js';
 import { fallbackScore, total } from '../lib/score.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
-const DAILY = 3;
+const DEFAULT_QUOTA = 20;
+// Chia 20 cuộc/ngày cho 6 nhóm
+const SPLIT = { td: 4, tm: 4, bc: 3, sl: 3, tb: 3, gw: 3 };
+const GKEYS = Object.keys(GROUPS);
+const PKEYS = Object.keys(PERSONAS);
 
 const users = () => readDoc('users', []);
 const customSc = () => readDoc('scenarios', []);
@@ -14,49 +18,60 @@ const allSc = async () => SCENARIOS.concat(await customSc());
 const atts = (uid) => readDoc('att-' + uid, []);
 const saveAtts = (uid, a) => writeDoc('att-' + uid, a);
 const finalTotal = (a) => (a.final ? a.final.total : a.ai ? a.ai.total : 0);
+const admin = (me) => { if (me.role !== 'admin') throw new Error('Chỉ quản lý được dùng chức năng này'); };
+const strip = ({ kw, ...rest }) => rest;
 
-function pickDaily(list, uid, day) {
-  let h = 0; for (const ch of uid + day) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const out = []; const used = new Set();
-  for (let i = 0; out.length < Math.min(DAILY, list.length) && i < 50; i++) {
-    h = (h * 1103515245 + 12345) >>> 0;
-    const idx = h % list.length;
-    if (!used.has(idx)) { used.add(idx); out.push(list[idx]); }
+function rng(seed) { let h = 2166136261; for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0; return () => (h = (Math.imul(h, 1103515245) + 12345) >>> 0) / 4294967296; }
+
+// Kế hoạch trong ngày: mỗi cuộc = 1 nhóm + 1 tình huống + 1 kiểu khách, không trùng tổ hợp, xáo trộn thứ tự
+function makePlan(list, uid, day, quota) {
+  const r = rng(uid + '|' + day);
+  const counts = {}; let sum = 0;
+  for (const g of GKEYS) { counts[g] = Math.round(SPLIT[g] * quota / 20); sum += counts[g]; }
+  let i = 0; while (sum < quota) { counts[GKEYS[i++ % 6]]++; sum++; } i = 0; while (sum > quota) { const g = GKEYS[5 - (i++ % 6)]; if (counts[g] > 0) { counts[g]--; sum--; } }
+  const tasks = [];
+  for (const g of GKEYS) {
+    const pool = list.filter(s => s.g === g);
+    if (!pool.length) continue;
+    const off = Math.floor(r() * pool.length), poff = Math.floor(r() * PKEYS.length);
+    for (let k = 0; k < counts[g]; k++) tasks.push({ g, sid: pool[(off + k) % pool.length].id, persona: PKEYS[(poff + k * 2) % PKEYS.length] });
   }
-  return out;
+  for (let k = tasks.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [tasks[k], tasks[j]] = [tasks[j], tasks[k]]; }
+  return tasks.map((t, n) => ({ ...t, n: n + 1 }));
+}
+
+async function planFor(uid, day) {
+  const u = (await users()).find(x => x.id === uid);
+  const quota = u?.quota ?? DEFAULT_QUOTA;
+  const list = await allSc();
+  return { quota, list, tasks: makePlan(list, uid, day, quota) };
 }
 
 function stats(list) {
-  const by = {}; CRITERIA.forEach(c => (by[c.k] = { sum: 0, n: 0, max: c.max, name: c.name }));
-  const days = {};
+  const by = {}; CRITERIA.forEach(c => (by[c.k] = { sum: 0, n: 0 }));
+  const days = {}; const grp = {};
   for (const a of list) {
     const sc = a.final?.scores || a.ai?.scores;
     if (sc) CRITERIA.forEach(c => { by[c.k].sum += Number(sc[c.k]) || 0; by[c.k].n++; });
     (days[a.date] ||= []).push(finalTotal(a));
+    (grp[a.g] ||= []).push(finalTotal(a));
   }
-  const crit = CRITERIA.map(c => ({ k: c.k, name: c.name, max: c.max, avg: by[c.k].n ? +(by[c.k].sum / by[c.k].n).toFixed(1) : null, pct: by[c.k].n ? Math.round((by[c.k].sum / by[c.k].n) / c.max * 100) : null }));
+  const crit = CRITERIA.map(c => ({ k: c.k, name: c.name, max: c.max, pct: by[c.k].n ? Math.round(by[c.k].sum / by[c.k].n / c.max * 100) : null }));
   const weakest = crit.filter(c => c.pct !== null).sort((a, b) => a.pct - b.pct)[0] || null;
-  const daily = Object.keys(days).sort().slice(-14).map(d => ({ date: d, avg: Math.round(days[d].reduce((x, y) => x + y, 0) / days[d].length), n: days[d].length }));
-  // chuỗi ngày luyện liên tục
+  const daily = Object.keys(days).sort().slice(-14).map(d => ({ date: d, avg: avg(days[d]), n: days[d].length }));
+  const groups = GKEYS.map(g => ({ g, name: GROUPS[g], avg: grp[g] ? avg(grp[g].slice(-10)) : null, n: grp[g]?.length || 0 }));
   let streak = 0; const set = new Set(Object.keys(days));
   const d = new Date(todayVN() + 'T00:00:00Z');
   if (!set.has(todayVN())) d.setUTCDate(d.getUTCDate() - 1);
   while (set.has(d.toISOString().slice(0, 10))) { streak++; d.setUTCDate(d.getUTCDate() - 1); }
-  const recent = list.slice(-20);
-  return { count: list.length, avg: recent.length ? Math.round(recent.reduce((x, a) => x + finalTotal(a), 0) / recent.length) : null, crit, weakest, daily, streak };
+  return { count: list.length, avg: avg(list.slice(-20).map(finalTotal)), crit, weakest, daily, groups, streak };
 }
+const avg = (arr) => (arr.length ? Math.round(arr.reduce((x, y) => x + y, 0) / arr.length) : null);
 
-async function score(kind, payload) {
-  let r;
-  if (hasAI()) {
-    try { r = kind === 'drill' ? await aiScoreDrill(payload.sc, payload.answer) : await aiScoreChat(payload.g, payload.persona, payload.messages); }
-    catch (e) { r = null; payload.err = String(e.message || e); }
-  }
-  if (!r) {
-    const text = kind === 'drill' ? payload.answer : payload.messages.filter(m => m.role === 'user').map(m => m.content).join('\n\n');
-    r = fallbackScore(payload.sc, text);
-    if (payload.err) r.aiError = payload.err;
-  }
+async function scoreChat(g, persona, messages, sc) {
+  let r, err;
+  if (hasAI()) { try { r = await aiScoreChat(g, persona, messages, sc); } catch (e) { err = String(e.message || e); } }
+  if (!r) { r = fallbackScore(sc, messages.filter(m => m.role === 'user').map(m => m.content).join('\n\n')); if (err) r.aiError = err; }
   r.total = total(r.scores);
   return r;
 }
@@ -65,21 +80,20 @@ let HEALTH = null;
 const handlers = {
   async health() {
     if (HEALTH && HEALTH.ai.ok && Date.now() - HEALTH.at < 600000) return HEALTH;
-    const { aiPing } = await import('../lib/ai.js');
     let ai; try { ai = { ok: true, reply: await aiPing() }; } catch (e) { ai = { ok: false, error: String(e.message || e).slice(0, 300) }; }
-    HEALTH = { at: Date.now(), ai, gemini: !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) };
+    HEALTH = { at: Date.now(), ai };
     return HEALTH;
   },
 
   async login({ name, pin }) {
-    name = String(name || '').trim();
+    name = String(name || '').trim(); pin = String(pin ?? '').trim();
     if (name.toLowerCase() === 'admin') {
-      if (String(pin ?? '').trim() !== String(ADMIN_PIN).trim()) throw new Error('Sai mã PIN');
+      if (pin !== String(ADMIN_PIN).trim()) throw new Error('Sai mã PIN');
       const u = { id: 'admin', name: 'Quản lý', role: 'admin' };
       return { token: sign(u), user: u };
     }
     const u = (await users()).find(x => x.name.toLowerCase() === name.toLowerCase() && x.active !== false);
-    if (!u || hashPin(String(pin ?? '').trim(), u.salt) !== u.pinHash) throw new Error('Sai tên hoặc mã PIN');
+    if (!u || hashPin(pin, u.salt) !== u.pinHash) throw new Error('Sai tên hoặc mã PIN');
     const me = { id: u.id, name: u.name, role: u.role };
     return { token: sign(me), user: me };
   },
@@ -88,80 +102,93 @@ const handlers = {
     return { user: me, ai: hasAI(), criteria: CRITERIA, groups: GROUPS, personas: PERSONAS, today: todayVN() };
   },
 
-  async daily(_, me) {
+  // ===== SALE: kế hoạch 20 cuộc hôm nay
+  async plan(_, me) {
     const day = todayVN();
-    const list = await allSc();
+    const { quota, list, tasks } = await planFor(me.id, day);
     const mine = await atts(me.id);
-    const picks = pickDaily(list, me.id, day).map(s => {
-      const done = mine.find(a => a.type === 'drill' && a.scenarioId === s.id && a.date === day);
-      return { ...strip(s), done: done ? { total: finalTotal(done), id: done.id } : null };
+    const today = mine.filter(a => a.date === day && a.task);
+    const out = tasks.map(t => {
+      const sc = list.find(s => s.id === t.sid) || {};
+      const done = today.filter(a => a.task === t.n).pop();
+      return { ...t, title: sc.title, stage: sc.stage, ctx: sc.ctx, done: done ? { id: done.id, total: finalTotal(done) } : null };
     });
-    return { day, picks, stats: stats(mine) };
+    return { day, quota, tasks: out, doneCount: out.filter(t => t.done).length, todayAvg: avg(today.map(finalTotal)), stats: stats(mine) };
   },
 
-  async scenarios() { return { list: (await allSc()).map(strip) }; },
+  // mở cuộc: trả về tin nhắn đầu của khách (không tốn lượt AI)
+  async startTask({ n, g, persona }, me) {
+    if (n) {
+      const { list, tasks } = await planFor(me.id, todayVN());
+      const t = tasks.find(x => x.n === n); if (!t) throw new Error('Không có cuộc này');
+      const sc = list.find(s => s.id === t.sid);
+      return { g: t.g, persona: t.persona, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips };
+    }
+    // luyện thêm tự chọn
+    if (!GROUPS[g]) throw new Error('Chọn nhóm sản phẩm');
+    const pool = (await allSc()).filter(s => s.g === g);
+    const sc = pool[Math.floor(Math.random() * pool.length)];
+    return { g, persona: PERSONAS[persona] ? persona : PKEYS[Math.floor(Math.random() * PKEYS.length)], sid: sc.id, title: sc.title, stage: sc.stage, ctx: sc.ctx, first: sc.msg, tips: sc.tips };
+  },
 
-  async submitDrill({ scenarioId, answer }, me) {
-    if (!answer || String(answer).trim().length < 10) throw new Error('Câu trả lời quá ngắn');
-    const sc = (await allSc()).find(s => s.id === scenarioId);
-    if (!sc) throw new Error('Không tìm thấy tình huống');
-    const ai = await score('drill', { sc, answer });
-    const a = { id: newId(), type: 'drill', scenarioId, g: sc.g, title: sc.title, date: todayVN(), at: Date.now(), answer, ai, status: 'ai' };
+  async chat({ n, sid, g, persona, messages }, me) {
+    if (!hasAI()) throw new Error('AI chưa được bật – báo quản lý.');
+    const sc = await findSc(me, n, sid);
+    const reply = await aiCustomer(sc?.g || g, persona, (messages || []).slice(-30), sc);
+    const end = /\[HẾT\]/i.test(reply);
+    return { reply: reply.replace(/\[HẾT\]/gi, '').trim(), end };
+  },
+
+  async finishChat({ n, sid, g, persona, messages }, me) {
+    if (!messages || messages.filter(m => m.role === 'user').length < 2) throw new Error('Cần tư vấn ít nhất 2 tin trước khi chấm');
+    const sc = await findSc(me, n, sid);
+    g = sc?.g || g;
+    const ai = await scoreChat(g, persona, messages, sc);
+    const a = { id: newId(), type: 'chat', task: n || null, scenarioId: sc?.id || null, g, persona, title: sc?.title || ('Luyện thêm – ' + GROUPS[g]), stage: sc?.stage || '', date: todayVN(), at: Date.now(), messages, ai, status: 'ai' };
     const list = await atts(me.id); list.push(a); await saveAtts(me.id, list);
-    return { attempt: a, sample: sc.sample };
-  },
-
-  async chat({ g, persona, messages }, me) {
-    if (!hasAI()) throw new Error('Phòng luyện AI chưa được bật (cần GEMINI_API_KEY trên Vercel). Tạm thời hãy làm bài tình huống.');
-    const reply = await aiCustomer(g, persona, (messages || []).slice(-30));
-    return { reply };
-  },
-
-  async finishChat({ g, persona, messages }, me) {
-    if (!messages || messages.filter(m => m.role === 'user').length < 2) throw new Error('Cần nhắn ít nhất 2 tin trước khi chấm');
-    const ai = await score('chat', { g, persona, messages, sc: null });
-    const a = { id: newId(), type: 'chat', g, persona, title: 'Luyện AI – ' + GROUPS[g], date: todayVN(), at: Date.now(), messages, ai, status: 'ai' };
-    const list = await atts(me.id); list.push(a); await saveAtts(me.id, list);
-    return { attempt: a };
+    return { attempt: a, sample: sc?.sample || '' };
   },
 
   async history(_, me) {
     const list = await atts(me.id);
-    return { list: list.slice().reverse().slice(0, 60), stats: stats(list) };
+    return { list: list.slice().reverse().slice(0, 80), stats: stats(list) };
   },
 
-  async aiTest(_, me) {
-    admin(me);
-    const { aiCustomer } = await import('../lib/ai.js');
-    try { return { ok: true, reply: await aiCustomer('td', 'de', []) }; } catch (e) { return { ok: false, error: String(e.message || e) }; }
+  async docs() {
+    const list = await allSc();
+    return { sections: docs(), samples: list.filter(s => s.sample).map(s => ({ g: s.g, title: s.title, stage: s.stage, msg: s.msg, sample: s.sample })) };
   },
 
   // ===== QUẢN LÝ
-  async adminOverview(_, me) {
+  async adminReport({ day }, me) {
     admin(me);
-    const us = (await users()).filter(u => u.active !== false);
-    const day = todayVN();
+    day = day || todayVN();
+    const us = (await users()).filter(u => u.active !== false && u.role !== 'admin');
     const rows = [];
     for (const u of us) {
       const list = await atts(u.id);
-      const st = stats(list);
-      rows.push({ id: u.id, name: u.name, role: u.role, today: list.filter(a => a.date === day).length, avg: st.avg, streak: st.streak, weakest: st.weakest, count: st.count, pending: list.filter(a => a.status === 'ai').length, last: list.length ? list[list.length - 1].date : null, daily: st.daily });
+      const dl = list.filter(a => a.date === day);
+      const g = {}; for (const a of dl) (g[a.g] ||= []).push(finalTotal(a));
+      const flags = dl.reduce((x, a) => x + ((a.ai?.flags || []).filter(Boolean).length ? 1 : 0), 0);
+      const st = stats(dl);
+      rows.push({ id: u.id, name: u.name, quota: u.quota ?? DEFAULT_QUOTA, done: dl.filter(a => a.task).length, extra: dl.filter(a => !a.task).length, avg: avg(dl.map(finalTotal)),
+        groups: Object.fromEntries(GKEYS.map(k => [k, g[k] ? avg(g[k]) : null])), flags, weakest: st.weakest, pending: dl.filter(a => a.status === 'ai').length, streak: stats(list).streak });
     }
-    rows.sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1));
-    return { rows, day, ai: hasAI() };
+    rows.sort((a, b) => (b.done - a.done) || ((b.avg ?? -1) - (a.avg ?? -1)));
+    return { day, rows, ai: hasAI(), groups: GROUPS };
   },
 
-  async adminAttempts({ userId, onlyPending }, me) {
+  async adminAttempts({ userId, onlyPending, day }, me) {
     admin(me);
     const us = await users();
     const ids = userId ? [userId] : us.map(u => u.id);
     const out = [];
     for (const id of ids) {
       const u = us.find(x => x.id === id);
-      for (const a of await atts(id)) if (!onlyPending || a.status === 'ai') out.push({ ...a, userId: id, userName: u?.name || id });
+      for (const a of await atts(id)) if ((!onlyPending || a.status === 'ai') && (!day || a.date === day)) out.push({ ...a, userId: id, userName: u?.name || id });
     }
     out.sort((a, b) => b.at - a.at);
-    return { list: out.slice(0, 80) };
+    return { list: out.slice(0, 100) };
   },
 
   async adminReview({ userId, attemptId, scores, comment }, me) {
@@ -178,10 +205,10 @@ const handlers = {
 
   async adminUsers(_, me) {
     admin(me);
-    return { list: (await users()).map(({ pinHash, salt, ...u }) => u) };
+    return { list: (await users()).map(({ pinHash, salt, ...u }) => ({ quota: DEFAULT_QUOTA, ...u })) };
   },
 
-  async adminSaveUser({ id, name, pin, role, active }, me) {
+  async adminSaveUser({ id, name, pin, role, active, quota }, me) {
     admin(me);
     const list = await users();
     name = String(name || '').trim();
@@ -190,14 +217,17 @@ const handlers = {
     let u = id && list.find(x => x.id === id);
     if (!u) {
       if (list.some(x => x.name.toLowerCase() === name.toLowerCase())) throw new Error('Tên đã tồn tại');
-      if (!pin || String(pin).length < 4) throw new Error('Mã PIN tối thiểu 4 số');
+      if (!pin || String(pin).trim().length < 4) throw new Error('Mã PIN tối thiểu 4 số');
       u = { id: newId(), createdAt: Date.now() }; list.push(u);
     }
     u.name = name; u.role = role === 'admin' ? 'admin' : 'sale'; u.active = active !== false;
+    if (quota !== undefined) u.quota = Math.max(1, Math.min(40, Number(quota) || DEFAULT_QUOTA));
     if (pin) { pin = String(pin).trim(); u.salt = newSalt(); u.pinHash = hashPin(pin, u.salt); }
     await writeDoc('users', list);
     return { ok: true };
   },
+
+  async scenarios() { return { list: (await allSc()).map(strip) }; },
 
   async adminSaveScenario(s, me) {
     admin(me);
@@ -218,8 +248,11 @@ const handlers = {
   },
 };
 
-function strip(s) { const { kw, ...rest } = s; return rest; }
-function admin(me) { if (me.role !== 'admin') throw new Error('Chỉ quản lý được dùng chức năng này'); }
+async function findSc(me, n, sid) {
+  const list = await allSc();
+  if (n) { const { tasks } = await planFor(me.id, todayVN()); const t = tasks.find(x => x.n === n); return t ? list.find(s => s.id === t.sid) : null; }
+  return sid ? list.find(s => s.id === sid) : null;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');

@@ -2,261 +2,369 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17324F">
 <title>GoldCool Sale Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--gold:#B8860B;--gold2:#F5E6C4;--navy:#1F3A5F;--bg:#F6F7F9;--card:#fff;--line:#E3E6EB;--text:#1D2433;--mute:#6B7280;--ok:#15803D;--bad:#C0392B;--warn:#B45309}
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
-header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
-header b{color:#F2C14E;letter-spacing:.5px}header .sp{flex:1}header button{background:transparent;border:1px solid #ffffff55;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer}
-nav{display:flex;gap:4px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:52px;z-index:4}
-nav button{border:0;background:transparent;padding:8px 12px;border-radius:999px;color:var(--mute);font-weight:600;white-space:nowrap;cursor:pointer}
-nav button.on{background:var(--gold2);color:var(--navy)}
-main{max-width:920px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
-h2{font-size:18px;margin:0 0 10px;color:var(--navy)}h3{font-size:15px;margin:14px 0 6px;color:var(--navy)}
-.mute{color:var(--mute);font-size:13px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{background:var(--gold);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:15px}
-.btn.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}.btn:disabled{opacity:.5;cursor:wait}
-input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
-textarea{min-height:170px;resize:vertical;line-height:1.5}
-.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:#EEF3F8;color:var(--navy);margin-right:6px}
-.tag.g{background:var(--gold2);color:#7A5A06}
-.bubble{background:#EEF3F8;border-radius:14px 14px 14px 4px;padding:10px 12px;white-space:pre-wrap;max-width:85%;margin:6px 0}
-.bubble.me{background:var(--gold2);margin-left:auto;border-radius:14px 14px 4px 14px}
-.pre{white-space:pre-wrap;background:#FFF9EC;border-left:4px solid var(--gold);padding:10px 12px;border-radius:8px;line-height:1.5}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.kpi b{display:block;font-size:24px;color:var(--navy)}
-.bar{height:8px;background:#EDF0F4;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gold)}
-.score{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;flex:none}
-.list .it{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}.list .it:last-child{border:0}
-ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
-.flag{background:#FDECEA;color:var(--bad);border-radius:8px;padding:8px 10px;margin:4px 0;font-weight:600}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}th{color:var(--mute);font-weight:600}
-.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto;z-index:20}
-.modal>.card{max-width:760px;width:100%}
-.login{max-width:380px;margin:60px auto}
-.hide{display:none}.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;z-index:30}
-@media(max-width:560px){main{padding:12px}.bubble{max-width:92%}}
+:root{--navy:#17324F;--navy2:#22476E;--gold:#C08A12;--gold2:#FBF1DA;--bg:#F2F4F7;--card:#fff;--line:#E4E7EC;--text:#18212F;--mute:#667085;--ok:#12805C;--mid:#B7791F;--bad:#C2410C;--me:#D9ECFF;--chatbg:#E6ECF2}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 'Be Vietnam Pro',-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
+.top .logo{font-weight:800;letter-spacing:.6px;color:#F3C34E}.top .sub{opacity:.75;font-size:13px}.top .sp{flex:1}.top .who{font-size:13px;opacity:.9}
+main{max-width:600px;margin:0 auto;padding:14px 14px 96px}
+body.admin main{max-width:1080px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;max-width:160px;border:0;background:none;padding:8px 4px 9px;color:var(--mute);font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs button svg{width:22px;height:22px}.tabs button.on{color:var(--navy)}.tabs button.on svg{stroke:var(--gold)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:0 0 10px;color:var(--navy)}h3{font-size:14px;margin:14px 0 6px;color:var(--navy)}
+.mute{color:var(--mute);font-size:13px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:var(--gold);color:#fff}
+.btn.navy{background:var(--navy)}.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}.btn.block{width:100%}.btn:disabled{opacity:.55}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+textarea{resize:vertical;line-height:1.5}
+label.f{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;color:var(--navy)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:#EEF2F6;color:var(--navy2)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.sc{min-width:44px;height:30px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px}
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border:0}
+.hero .mute{color:#C9D5E3}
+.ring{--p:0;width:92px;height:92px;border-radius:50%;background:conic-gradient(#F3C34E calc(var(--p)*1%),#ffffff26 0);display:grid;place-items:center;flex:none}
+.ring>div{width:74px;height:74px;border-radius:50%;background:var(--navy);display:grid;place-items:center;text-align:center;line-height:1.1}
+.ring b{font-size:22px}.ring span{font-size:11px;color:#C9D5E3}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.kp div{background:#ffffff14;border-radius:12px;padding:8px 10px}.kp b{display:block;font-size:18px}.kp span{font-size:11px;color:var(--mute)}.hero .kp span{color:#C9D5E3}
+.gp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gp .g{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}.gp .g b{font-size:13px;display:block;line-height:1.3}
+.prog{height:6px;background:#EDF0F4;border-radius:99px;overflow:hidden;margin-top:6px}.prog i{display:block;height:100%;background:var(--gold);border-radius:99px}
+.task{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line)}.task:last-child{border:0}
+.task .n{width:30px;height:30px;border-radius:50%;background:#EEF2F6;display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--navy);flex:none}
+.task.next{background:var(--gold2);border-radius:12px;padding:12px 10px;border:0;margin:4px 0}.task.next .n{background:var(--gold);color:#fff}
+.task .t{flex:1;min-width:0}.task .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task .go{color:var(--gold);font-weight:700;font-size:13px;white-space:nowrap}
+.list .it{display:flex;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}.list .it:last-child{border:0}.list .it .t{flex:1;min-width:0}
+.bar{height:8px;background:#EDF0F4;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px}
+.flag{background:#FFF1EA;color:var(--bad);border-radius:10px;padding:8px 10px;margin:6px 0;font-weight:600;font-size:14px}
+.pre{white-space:pre-wrap;background:#FFFBF0;border:1px solid #F1E3BF;padding:10px 12px;border-radius:12px;line-height:1.55;font-size:14px}
+ul.c{margin:4px 0;padding-left:18px}ul.c li{margin:3px 0}
+details{border-top:1px solid var(--line);padding-top:8px;margin-top:10px}summary{cursor:pointer;font-weight:600;color:var(--navy);font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--mute);font-weight:600;font-size:12px}
+.tw{overflow-x:auto}.cell{display:inline-block;min-width:34px;text-align:center;border-radius:8px;padding:2px 6px;font-weight:700;font-size:13px}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:10px 16px;border-radius:12px;z-index:60;font-size:14px;max-width:90vw}
+.hide{display:none!important}
+/* màn hình phủ (chat, chi tiết) */
+.screen{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+.screen .bar2{background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top))}
+.screen .bar2 .back{border:0;background:none;color:#fff;font-size:22px;padding:2px 8px}
+.screen .bar2 .ttl{flex:1;min-width:0;line-height:1.25}.screen .bar2 .ttl b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.screen .bar2 .ttl span{font-size:12px;opacity:.8}
+.av{width:38px;height:38px;border-radius:50%;background:#F3C34E;color:var(--navy);display:grid;place-items:center;font-weight:800;flex:none}
+.screen .body{flex:1;overflow-y:auto;padding:12px}
+.screen .inner{max-width:720px;margin:0 auto}
+.chatbody{background:var(--chatbg)}
+.ctx{background:#fff;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:10px;border:1px solid var(--line)}
+.ctx b{color:var(--navy)}
+.msg{display:flex;margin:6px 0}.msg.me{justify-content:flex-end}
+.bub{max-width:82%;padding:9px 12px;border-radius:16px;background:#fff;white-space:pre-wrap;word-wrap:break-word;font-size:15px;box-shadow:0 1px 1px #0000000d}
+.msg.kh .bub{border-top-left-radius:4px}.msg.me .bub{background:var(--me);border-top-right-radius:4px}
+.sys{text-align:center;font-size:12px;color:var(--mute);margin:10px 0}
+.typing .bub{color:var(--mute);font-style:italic}
+.composer{background:#fff;border-top:1px solid var(--line);padding:8px 10px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+.composer .inner{display:flex;gap:8px;align-items:flex-end}
+.composer textarea{min-height:44px;max-height:180px;border-radius:22px;padding:11px 14px;resize:none}
+.send{width:44px;height:44px;border-radius:50%;border:0;background:var(--navy);color:#fff;flex:none;display:grid;place-items:center}
+.send svg{width:20px;height:20px}
+.res{background:#fff;border-radius:16px;padding:16px;margin:12px 0;border:1px solid var(--line)}
+.big{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:26px;font-weight:800;flex:none}
+.copy{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--navy)}
+.seg{display:flex;background:#E9EDF2;border-radius:12px;padding:3px;gap:3px}.seg button{flex:1;border:0;background:none;border-radius:10px;padding:8px;font-weight:700;color:var(--mute);font-size:14px}.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 2px #0001}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pcard{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;text-align:left}.pcard.on{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy) inset}.pcard b{display:block;font-size:14px}.pcard span{font-size:12px;color:var(--mute)}
+.login{max-width:380px;margin:8vh auto 0}
+@media(min-width:900px){.gp{grid-template-columns:repeat(6,minmax(0,1fr))}}
 </style>
 </head>
 <body>
-<header><b>GOLDCOOL</b><span>Sale Academy</span><span class="sp"></span><span id="who" class="mute" style="color:#cfd8e3"></span><button id="out" class="hide">Đăng xuất</button></header>
-<nav id="nav" class="hide"></nav>
+<div class="top"><span class="logo">GOLDCOOL</span><span class="sub">Sale Academy</span><span class="sp"></span><span class="who" id="who"></span></div>
 <main id="app"></main>
+<nav class="tabs hide" id="tabs"></nav>
 <script>
 const $=s=>document.querySelector(s), app=$('#app');
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 let TOKEN=LS.get('gct')||'', META=null, CUR='';
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const color=t=>t>=80?'#15803D':t>=60?'#B8860B':'#C0392B';
-function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+const color=t=>t==null?'#98A2B3':t>=80?'#12805C':t>=65?'#B7791F':'#C2410C';
+const verdict=t=>t>=85?'Xuất sắc':t>=75?'Đạt tốt':t>=65?'Đạt':t>=50?'Cần cố gắng':'Chưa đạt';
+const SHORT={td:'Tủ đông 4-6C',tm:'Tủ mát 2-3C',bc:'Bàn chặt',sl:'Tủ salad',tb:'Trưng bày',gw:'GoldWash'};
+const GC={td:'#2563EB',tm:'#0891B2',bc:'#7C3AED',sl:'#16A34A',tb:'#DB2777',gw:'#EA580C'};
+const PN=p=>(META.personas[p]||'').split(':')[0];
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2800)}
 async function api(action,data={}){
   const r=await fetch('/api/app',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+TOKEN},body:JSON.stringify({action,...data})});
   const j=await r.json().catch(()=>({error:'Lỗi máy chủ ('+r.status+')'}));
   if(r.status===401){logout();throw new Error(j.error)}
   if(j.error)throw new Error(j.error);return j;
 }
-function logout(){TOKEN='';LS.del('gct');META=null;renderLogin()}
-$('#out').onclick=logout;
+function copyText(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Đã sao chép')).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('Đã sao chép')}catch(e){}a.remove()})}
+const I={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+ book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a6 6 0 0 0-4-5.6"/></svg>',
+ list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+ send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>',
+};
 
+// ===== ĐĂNG NHẬP
+function logout(){TOKEN='';LS.del('gct');META=null;document.querySelectorAll('.screen').forEach(s=>s.remove());renderLogin()}
 function renderLogin(){
-  $('#nav').classList.add('hide');$('#out').classList.add('hide');$('#who').textContent='';
-  app.innerHTML=`<div class="card login"><h2>Đăng nhập</h2><p class="mute">Mỗi Sale đăng nhập bằng tên và mã PIN quản lý cấp.</p>
-  <label class="mute">Tên</label><input id="ln" autocomplete="username"><br><br>
-  <label class="mute">Mã PIN</label><div class="row" style="flex-wrap:nowrap"><input id="lp" type="tel" inputmode="numeric" autocomplete="off" placeholder="Nhập mã PIN" style="flex:1;-webkit-text-security:disc"><button class="btn sec" id="ls" type="button" style="white-space:nowrap">Hiện</button></div>
-  <p id="le" style="color:#C0392B;min-height:20px;margin:8px 0"></p>
-  <button class="btn" id="lb" style="width:100%">Vào luyện tập</button></div>`;
+  $('#tabs').classList.add('hide');$('#who').textContent='';document.body.classList.remove('admin');
+  app.innerHTML=`<div class="card login"><h1>Đăng nhập</h1><p class="mute">Mỗi Sale đăng nhập bằng tên và mã PIN quản lý cấp.</p>
+  <label class="f">Tên</label><input id="ln" autocomplete="username">
+  <label class="f">Mã PIN</label><div class="row" style="flex-wrap:nowrap"><input id="lp" type="tel" inputmode="numeric" autocomplete="off" placeholder="Nhập mã PIN" style="-webkit-text-security:disc"><button class="btn ghost" id="ls" type="button">Hiện</button></div>
+  <p id="le" style="color:var(--bad);min-height:20px;margin:8px 0"></p>
+  <button class="btn block" id="lb">Vào luyện tập</button></div>`;
   $('#ls').onclick=()=>{const i=$('#lp');const h=i.style.webkitTextSecurity==='none';i.style.webkitTextSecurity=h?'disc':'none';$('#ls').textContent=h?'Hiện':'Ẩn'};
-  const go=async()=>{$('#le').textContent='';const b=$('#lb');b.disabled=true;b.textContent='Đang đăng nhập…';try{const r=await api('login',{name:$('#ln').value.trim(),pin:$('#lp').value.replace(/\s/g,'')});TOKEN=r.token;LS.set('gct',TOKEN);boot()}catch(e){$('#le').textContent=e.message||'Không đăng nhập được';b.disabled=false;b.textContent='Vào luyện tập'}};
+  const go=async()=>{$('#le').textContent='';const b=$('#lb');b.disabled=true;b.textContent='Đang đăng nhập…';
+    try{const r=await api('login',{name:$('#ln').value.trim(),pin:$('#lp').value.replace(/\s/g,'')});TOKEN=r.token;LS.set('gct',TOKEN);boot()}
+    catch(e){$('#le').textContent=e.message||'Không đăng nhập được';b.disabled=false;b.textContent='Vào luyện tập'}};
   $('#lb').onclick=go;$('#lp').onkeydown=e=>{if(e.key==='Enter')go()};
 }
 
 async function boot(){
   try{META=await api('meta')}catch(e){return renderLogin()}
-  $('#who').textContent=META.user.name;$('#out').classList.remove('hide');
-  const tabs=META.user.role==='admin'
-    ?[['ov','Tổng quan'],['rv','Duyệt bài'],['us','Nhân viên'],['sc','Tình huống'],['today','Tự luyện']]
-    :[['today','Hôm nay'],['ai','Luyện với AI'],['prog','Tiến bộ'],['all','Kho tình huống']];
-  const nav=$('#nav');nav.classList.remove('hide');
-  nav.innerHTML=tabs.map(([k,v])=>`<button data-k="${k}">${v}</button>`).join('');
-  nav.onclick=e=>{const k=e.target.dataset.k;if(k)go(k)};
+  const ad=META.user.role==='admin';document.body.classList.toggle('admin',ad);
+  $('#who').innerHTML=`${esc(META.user.name)} · <a href="#" id="out" style="color:#F3C34E">Thoát</a>`;$('#out').onclick=e=>{e.preventDefault();logout()};
+  const tabs=ad?[['report','Báo cáo',I.chart],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['docs','Tài liệu',I.book]]
+               :[['home','Hôm nay',I.home],['docs','Tài liệu',I.book],['me','Kết quả',I.chart]];
+  const t=$('#tabs');t.classList.remove('hide');
+  t.innerHTML=tabs.map(([k,v,ic])=>`<button data-k="${k}">${ic}<span>${v}</span></button>`).join('');
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.k));
   go(tabs[0][0]);
 }
-function go(k){CUR=k;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
-  ({today:vToday,ai:vAI,prog:vProg,all:vAll,ov:vOv,rv:vRv,us:vUs,sc:vSc})[k]();window.scrollTo(0,0)}
-const G=g=>META.groups[g]||g;
+function go(k){CUR=k;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  app.innerHTML='<p class="mute" style="text-align:center;margin-top:40px">Đang tải…</p>';window.scrollTo(0,0);
+  ({home:vHome,docs:vDocs,me:vMe,report:vReport,review:vReview,staff:vStaff,sc:vSc})[k]().catch(e=>{app.innerHTML=`<div class="flag">${esc(e.message)}</div>`})}
+function refresh(){if(CUR)go(CUR)}
 
-// ===== HÔM NAY
-async function vToday(){
-  app.innerHTML='<p class="mute">Đang tải…</p>';
-  const d=await api('daily');const s=d.stats;
+// ===== HÔM NAY (SALE)
+async function vHome(){
+  const d=await api('plan');const s=d.stats;
+  const next=d.tasks.find(t=>!t.done);const pct=Math.round(d.doneCount/d.quota*100);
+  const byG={};d.tasks.forEach(t=>{(byG[t.g]||={n:0,d:0,sum:0});byG[t.g].n++;if(t.done){byG[t.g].d++;byG[t.g].sum+=t.done.total}});
   app.innerHTML=`
-  <div class="grid">
-    <div class="kpi"><span class="mute">Điểm TB (20 bài gần nhất)</span><b>${s.avg??'–'}</b></div>
-    <div class="kpi"><span class="mute">Chuỗi ngày luyện</span><b>${s.streak} 🔥</b></div>
-    <div class="kpi"><span class="mute">Tổng bài đã làm</span><b>${s.count}</b></div>
-    <div class="kpi"><span class="mute">Cần cải thiện nhất</span><b style="font-size:15px">${s.weakest?esc(s.weakest.name)+' ('+s.weakest.pct+'%)':'–'}</b></div>
-  </div><br>
-  <div class="card"><h2>3 bài tình huống hôm nay · ${d.day}</h2>
-  ${!META.ai?'<p class="mute">⚠ Chưa bật AI – điểm đang chấm tạm theo từ khóa, quản lý sẽ duyệt lại.</p>':''}
-  <div class="list">${d.picks.map(p=>`<div class="it" data-id="${p.id}"><div><span class="tag g">${esc(G(p.g))}</span><span class="tag">${esc(p.stage)}</span><br><b>${esc(p.title)}</b></div>
-   <div>${p.done?`<span class="score" style="width:46px;height:46px;font-size:16px;background:${color(p.done.total)}">${p.done.total}</span>`:'<button class="btn">Làm bài</button>'}</div></div>`).join('')}</div></div>
-  <p class="mute">Mẹo: làm xong 3 bài thì vào "Luyện với AI" chat thử 1 khách – hoặc vào "Kho tình huống" luyện thêm phần còn yếu.</p>`;
-  app.querySelectorAll('.it').forEach(el=>el.onclick=()=>openDrill(d.picks.find(p=>p.id===el.dataset.id)));
+  <div class="card hero">
+    <div class="row" style="flex-wrap:nowrap;gap:16px">
+      <div class="ring" style="--p:${pct}"><div><b>${d.doneCount}/${d.quota}</b><span>cuộc</span></div></div>
+      <div><h1>Chào ${esc(META.user.name)}</h1><div class="mute">${d.doneCount>=d.quota?'Đã hoàn thành chỉ tiêu hôm nay. Rất tốt!':`Hôm nay cần tư vấn ${d.quota} khách – còn ${d.quota-d.doneCount} cuộc.`}</div></div>
+    </div>
+    <div class="kp"><div><b>${d.todayAvg??'–'}</b><span>Điểm TB hôm nay</span></div><div><b>${s.streak}</b><span>Ngày liên tiếp</span></div><div><b>${s.avg??'–'}</b><span>TB 20 cuộc gần nhất</span></div></div>
+  </div>
+  ${!META.ai?'<div class="flag">AI chưa được bật – báo quản lý.</div>':''}
+  ${next?`<button class="btn block" id="gonext" style="margin-bottom:12px;padding:14px">Bắt đầu cuộc ${next.n}: ${esc(SHORT[next.g])} →</button>`:''}
+  <div class="card"><h2>Tiến độ theo nhóm</h2><div class="gp">${Object.keys(SHORT).map(g=>{const x=byG[g]||{n:0,d:0};return `<div class="g"><b><span class="dot" style="background:${GC[g]}"></span> ${SHORT[g]}</b><span class="mute">${x.d}/${x.n} cuộc${x.d?` · TB ${Math.round(x.sum/x.d)}`:''}</span><div class="prog"><i style="width:${x.n?x.d/x.n*100:0}%;background:${GC[g]}"></i></div></div>`}).join('')}</div></div>
+  <div class="card"><h2>${d.quota} cuộc tư vấn hôm nay</h2>
+   ${d.tasks.map(t=>`<div class="task ${next&&t.n===next.n?'next':''}" data-n="${t.n}" style="cursor:pointer">
+     <div class="n">${t.n}</div>
+     <div class="t"><b>${esc(t.title)}</b><span class="mute"><span class="dot" style="background:${GC[t.g]}"></span> ${SHORT[t.g]} · ${esc(PN(t.persona))}</span></div>
+     ${t.done?`<span class="sc" style="background:${color(t.done.total)}">${t.done.total}</span>`:`<span class="go">${next&&t.n===next.n?'Bắt đầu':'Làm'} ›</span>`}
+   </div>`).join('')}
+  </div>
+  <div class="card"><h2>Luyện thêm</h2><p class="mute" style="margin-top:-6px">Tự chọn nhóm và kiểu khách để luyện phần còn yếu (không tính vào chỉ tiêu).</p>
+   <div class="chips" id="xg">${Object.keys(SHORT).map((g,i)=>`<button class="chip ${i?'':'on'}" data-g="${g}">${SHORT[g]}</button>`).join('')}</div>
+   <div class="pgrid" style="margin-top:10px" id="xp">${Object.entries(META.personas).map(([k,v],i)=>`<button class="pcard ${i?'':'on'}" data-p="${k}"><b>${esc(v.split(':')[0])}</b><span>${esc((v.split(':')[1]||'').trim())}</span></button>`).join('')}</div>
+   <button class="btn navy block" id="xgo" style="margin-top:12px">Bắt đầu luyện thêm</button></div>`;
+  app.querySelectorAll('.task').forEach(el=>el.onclick=()=>{const t=d.tasks.find(x=>x.n==el.dataset.n);if(t.done)return openAttemptById(t.done.id);openChat({n:t.n,total:d.quota})});
+  if(next)$('#gonext').onclick=()=>openChat({n:next.n,total:d.quota});
+  let xg='td',xp=Object.keys(META.personas)[0];
+  $('#xg').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;xg=b.dataset.g;$('#xg').querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b))};
+  $('#xp').onclick=e=>{const b=e.target.closest('.pcard');if(!b)return;xp=b.dataset.p;$('#xp').querySelectorAll('.pcard').forEach(c=>c.classList.toggle('on',c===b))};
+  $('#xgo').onclick=()=>openChat({g:xg,persona:xp});
 }
 
-function openDrill(sc){
-  const m=document.createElement('div');m.className='modal';
-  m.innerHTML=`<div class="card"><div class="row"><span class="tag g">${esc(G(sc.g))}</span><span class="tag">${esc(sc.stage)}</span><span class="sp" style="flex:1"></span><button class="btn sec" id="x">Đóng</button></div>
-  <h2 style="margin-top:10px">${esc(sc.title)}</h2><p class="mute">${esc(sc.ctx)}</p>
-  <div class="bubble">${esc(sc.msg)}</div>
-  <h3>Tin nhắn bạn sẽ gửi khách</h3><textarea id="ans" placeholder="Gõ đúng như nhắn Zalo cho khách: trình bày thoáng, mỗi phương án một khối, kết thúc bằng 1 câu hỏi…"></textarea>
-  <div class="row" style="margin-top:10px"><button class="btn" id="sub">Nộp bài & chấm điểm</button><span class="mute">Bài nộp xong không sửa được.</span></div>
-  <div id="res"></div></div>`;
-  document.body.appendChild(m);m.querySelector('#x').onclick=()=>{m.remove();CUR==='today'&&vToday()};
-  m.querySelector('#sub').onclick=async e=>{
-    e.target.disabled=true;e.target.textContent='AI đang chấm…';
-    try{const r=await api('submitDrill',{scenarioId:sc.id,answer:m.querySelector('#ans').value});
-      m.querySelector('#ans').disabled=true;e.target.remove();
-      m.querySelector('#res').innerHTML=resultHTML(r.attempt,{sample:r.sample,tips:sc.tips});
-    }catch(err){toast(err.message);e.target.disabled=false;e.target.textContent='Nộp bài & chấm điểm'}
-  };
+// ===== MÀN HÌNH CHAT
+function screen(html,cls=''){const s=document.createElement('div');s.className='screen';s.innerHTML=html;document.body.appendChild(s);document.body.style.overflow='hidden';
+  s.close=()=>{s.remove();if(!document.querySelector('.screen'))document.body.style.overflow=''};return s}
+async function openChat(opt){
+  let info;try{info=await api('startTask',opt.n?{n:opt.n}:{g:opt.g,persona:opt.persona})}catch(e){return toast(e.message)}
+  const ctx={n:opt.n||null,sid:info.sid||null,g:info.g,persona:info.persona};
+  const msgs=[{role:'assistant',content:info.first}];let busy=false,ended=false,scored=false;
+  const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="av">${esc(PN(info.persona)[0]||'K')}</div>
+    <div class="ttl"><b>Khách · ${esc(SHORT[info.g])}</b><span>${opt.n?`Cuộc ${opt.n}/${opt.total} · `:'Luyện thêm · '}${esc(PN(info.persona))}</span></div>
+    <button class="btn sm" id="fin">Chấm điểm</button></div>
+   <div class="body chatbody" id="bd"><div class="inner">
+    <div class="ctx"><b>${esc(info.title)}</b> <span class="pill">${esc(info.stage)}</span><div style="margin-top:4px">${esc(info.ctx)}</div>
+     <div style="margin-top:6px"><a href="#" id="tg" style="color:var(--gold);font-weight:700">💡 Gợi ý quy trình</a></div>
+     <ul class="c hide" id="tips">${(info.tips||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+    <div id="log"></div></div></div>
+   <div class="composer" id="cp"><div class="inner"><textarea id="tx" rows="1" placeholder="Nhắn cho khách như trên Zalo…"></textarea><button class="send" id="sd">${I.send}</button></div></div>`);
+  const log=s.querySelector('#log'),bd=s.querySelector('#bd'),tx=s.querySelector('#tx');
+  s.querySelector('#tg').onclick=e=>{e.preventDefault();s.querySelector('#tips').classList.toggle('hide')};
+  const draw=()=>{log.innerHTML=msgs.map(m=>`<div class="msg ${m.role==='user'?'me':'kh'}"><div class="bub">${esc(m.content)}</div></div>`).join('')+(busy==='typing'?'<div class="msg kh typing"><div class="bub">Khách đang nhắn…</div></div>':'')+(ended&&!scored?'<div class="sys">Khách đã kết thúc cuộc chat · bấm “Chấm điểm”</div>':'');bd.scrollTop=bd.scrollHeight};
+  draw();
+  tx.oninput=()=>{tx.style.height='auto';tx.style.height=Math.min(tx.scrollHeight,180)+'px'};
+  tx.onkeydown=e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send()}};
+  const send=async()=>{const v=tx.value.trim();if(!v||busy||scored)return;msgs.push({role:'user',content:v});tx.value='';tx.oninput();
+    if(ended){draw();return}
+    busy='typing';draw();
+    try{const r=await api('chat',{...ctx,messages:msgs});msgs.push({role:'assistant',content:r.reply});if(r.end)ended=true}
+    catch(e){toast(e.message)}busy=false;draw();if(ended)s.querySelector('#fin').classList.add('pulse')};
+  s.querySelector('#sd').onclick=send;
+  s.querySelector('#bk').onclick=()=>{if(!scored&&msgs.length>2&&!confirm('Thoát sẽ bỏ cuộc chat này (chưa chấm). Thoát?'))return;s.close();if(scored)refresh()};
+  s.querySelector('#fin').onclick=async e=>{if(scored)return;const b=e.target;b.disabled=true;b.textContent='Đang chấm…';
+    log.insertAdjacentHTML('beforeend','<div class="sys" id="wait">AI đang chấm điểm cuộc tư vấn…</div>');bd.scrollTop=bd.scrollHeight;
+    try{const r=await api('finishChat',{...ctx,messages:msgs});scored=true;b.remove();
+      s.querySelector('#wait')?.remove();log.insertAdjacentHTML('beforeend',resultHTML(r.attempt,r.sample));bindCopy(log);
+      s.querySelector('#cp').innerHTML=`<div class="inner" style="gap:8px">${opt.n?'<button class="btn" id="nx" style="flex:2">Cuộc tiếp theo →</button>':''}<button class="btn ghost" id="hm" style="flex:1;white-space:nowrap">Về trang chính</button></div>`;
+      s.querySelector('#hm').onclick=()=>{s.close();refresh()};
+      if(opt.n)s.querySelector('#nx').onclick=async()=>{s.close();const p=await api('plan');const nx=p.tasks.find(t=>!t.done);if(CUR==='home')vHome();if(nx)openChat({n:nx.n,total:p.quota});else toast('Đã xong chỉ tiêu hôm nay!')};
+      setTimeout(()=>s.querySelector('.res')?.scrollIntoView({behavior:'smooth'}),50);
+    }catch(err){s.querySelector('#wait')?.remove();toast(err.message);b.disabled=false;b.textContent='Chấm điểm'}};
+  setTimeout(()=>tx.focus(),100);
 }
 
-function resultHTML(a,{sample,tips}={}){
+function resultHTML(a,sample){
   const ai=a.ai||{},fin=a.final;const sc=fin?.scores||ai.scores||{};const t=fin?fin.total:ai.total;
-  return `<hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
-  <div class="row"><div class="score" style="background:${color(t)}">${t}</div><div><b>${fin?'Điểm quản lý đã duyệt':'Điểm AI chấm'}</b><br><span class="mute">${fin?'Bởi '+esc(fin.by):ai.fallback?'Chấm tạm theo từ khóa – chờ quản lý duyệt':'Quản lý có thể điều chỉnh khi duyệt'}</span></div></div>
-  ${fin?.comment?`<div class="pre" style="margin-top:10px"><b>Nhận xét của quản lý:</b>\n${esc(fin.comment)}</div>`:''}
-  <h3>Điểm từng tiêu chí</h3>${META.criteria.map(c=>`<div style="margin:6px 0"><div class="row" style="justify-content:space-between"><span>${esc(c.name)}</span><b>${sc[c.k]??0}/${c.max}</b></div><div class="bar"><i style="width:${(sc[c.k]||0)/c.max*100}%"></i></div></div>`).join('')}
-  ${(ai.flags||[]).filter(Boolean).map(f=>`<div class="flag">⚠ ${esc(f)}</div>`).join('')}
-  ${ai.good?.length?`<h3>✅ Làm tốt</h3><ul>${ai.good.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
-  ${ai.fix?.length?`<h3>🛠 Cần sửa</h3><ul>${ai.fix.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
-  ${ai.better?`<h3>💡 Gợi ý tin nhắn tốt hơn</h3><div class="pre">${esc(ai.better)}</div>`:''}
-  ${tips?.length?`<h3>Yêu cầu của bước này</h3><ul>${tips.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
-  ${sample&&sample!==ai.better?`<h3>Tin mẫu theo quy trình</h3><div class="pre">${esc(sample)}</div>`:''}
-  ${ai.aiError?`<p class="mute">AI tạm lỗi, đã chấm dự phòng: ${esc(ai.aiError)}</p>`:''}`;
+  const better=ai.better||'';
+  return `<div class="res">
+   <div class="row" style="flex-wrap:nowrap;gap:14px"><div class="big" style="background:${color(t)}">${t}</div>
+    <div><b style="font-size:17px">${verdict(t)}</b><div class="mute">${fin?'Quản lý đã duyệt · '+esc(fin.by):ai.fallback?'Chấm tạm (AI bận) – quản lý sẽ duyệt lại':'AI chấm · quản lý có thể điều chỉnh'}</div></div></div>
+   ${fin?.comment?`<h3>Nhận xét của quản lý</h3><div class="pre">${esc(fin.comment)}</div>`:''}
+   ${(ai.flags||[]).filter(Boolean).map(f=>`<div class="flag">⚠ ${esc(f)}</div>`).join('')}
+   ${ai.good?.length?`<h3>✅ Làm tốt</h3><ul class="c">${ai.good.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+   ${ai.fix?.length?`<h3>🛠 Cần sửa</h3><ul class="c">${ai.fix.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+   ${better?`<h3 class="row">💡 Nên nhắn thế này <span class="sp"></span><button class="copy" data-copy="${esc(better)}">Sao chép</button></h3><div class="pre">${esc(better)}</div>`:''}
+   ${sample&&sample!==better?`<details><summary>Tin nhắn mẫu theo quy trình</summary><div class="row" style="justify-content:flex-end;margin:6px 0"><button class="copy" data-copy="${esc(sample)}">Sao chép</button></div><div class="pre">${esc(sample)}</div></details>`:''}
+   <details><summary>Chi tiết điểm 5 tiêu chí</summary>${META.criteria.map(c=>`<div style="margin:8px 0"><div class="row" style="justify-content:space-between;font-size:14px"><span>${esc(c.name)}</span><b>${sc[c.k]??0}/${c.max}</b></div><div class="bar"><i style="width:${(sc[c.k]||0)/c.max*100}%;background:${color((sc[c.k]||0)/c.max*100)}"></i></div></div>`).join('')}</details>
+   ${ai.aiError?`<p class="mute">AI tạm lỗi nên đã chấm dự phòng.</p>`:''}
+  </div>`;
+}
+function bindCopy(root){root.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy))}
+
+function attemptScreen(a,extra=''){
+  const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(a.title)}</b><span>${a.userName?esc(a.userName)+' · ':''}${a.date} · ${esc(SHORT[a.g]||'')}${a.persona?' · '+esc(PN(a.persona)):''}</span></div></div>
+   <div class="body chatbody"><div class="inner">${(a.messages||[]).map(m=>`<div class="msg ${m.role==='user'?'me':'kh'}"><div class="bub">${esc(m.content)}</div></div>`).join('')}
+   ${a.answer?`<div class="msg me"><div class="bub">${esc(a.answer)}</div></div>`:''}
+   ${resultHTML(a)}${extra}</div></div>`);
+  s.querySelector('#bk').onclick=()=>s.close();bindCopy(s);return s;
+}
+async function openAttemptById(id){const d=await api('history');const a=d.list.find(x=>x.id===id);if(a)attemptScreen(a)}
+
+// ===== TÀI LIỆU
+let DOCS=null;
+async function vDocs(){
+  DOCS=DOCS||await api('docs');
+  const order=['dna','chung','td','tm','bc','sl','tb','gw'];
+  const secs=order.map(k=>DOCS.sections.find(x=>x.g===k)).filter(Boolean).map(x=>{const m=x.title.match(/^(.*?)\s*\((.*)\)\s*$/);return {...x,name:META.groups[x.g]||x.title,note:m?m[2].charAt(0).toUpperCase()+m[2].slice(1):''}});
+  app.innerHTML=`<div class="card"><h2>Tài liệu quy trình</h2><p class="mute" style="margin-top:-6px">Đọc trước khi tư vấn. Mỗi nhóm có giá, thông số, luồng tư vấn và tin nhắn mẫu để sao chép.</p>
+   <div class="list">${secs.map(x=>`<div class="it" data-g="${x.g}"><span class="dot" style="width:12px;height:12px;background:${GC[x.g]||'var(--gold)'}"></span><div class="t"><b>${esc(x.name)}</b><div class="mute">${SHORT[x.g]?`${DOCS.samples.filter(s=>s.g===x.g).length} tin nhắn mẫu${x.note?' · '+esc(x.note):''}`:'Đọc kỹ trước khi bắt đầu'}</div></div><span class="go" style="color:var(--gold)">›</span></div>`).join('')}</div></div>`;
+  app.querySelectorAll('.it').forEach(el=>el.onclick=()=>docScreen(secs.find(x=>x.g===el.dataset.g)));
+}
+function fmtLine(l){return esc(l).replace(/(\d{1,3}(?:\.\d{3})+đ|\d+[,.]?\d*\s?triệu|\d+%)/g,'<b>$1</b>')}
+function docScreen(x){
+  const samples=DOCS.samples.filter(s=>s.g===x.g);
+  const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(x.name)}</b><span>Tài liệu GoldCool</span></div></div>
+   <div class="body"><div class="inner">${x.note?`<div class="pre" style="margin-bottom:12px">${esc(x.note)}</div>`:''}
+    <div class="card"><h2>Nội dung chính</h2><ul class="c">${x.lines.map(l=>`<li>${fmtLine(l)}</li>`).join('')}</ul></div>
+    ${samples.length?`<div class="card"><h2>Tin nhắn mẫu (${samples.length})</h2>${samples.map(m=>`<details><summary>${esc(m.title)} <span class="pill">${esc(m.stage)}</span></summary>
+      <div class="msg kh" style="margin-top:8px"><div class="bub" style="background:#EEF2F6">${esc(m.msg)}</div></div>
+      <div class="row" style="justify-content:flex-end;margin:6px 0"><button class="copy" data-copy="${esc(m.sample)}">Sao chép tin mẫu</button></div><div class="pre">${esc(m.sample)}</div></details>`).join('')}</div>`:''}
+   </div></div>`);
+  s.querySelector('#bk').onclick=()=>s.close();bindCopy(s);
 }
 
-// ===== LUYỆN AI
-function vAI(){
-  app.innerHTML=`<div class="card"><h2>Luyện với khách giả lập (AI)</h2>
-  <p class="mute">AI đóng vai khách thật theo tính cách bạn chọn. Tư vấn như trên Zalo, khi xong bấm "Kết thúc & chấm điểm".</p>
-  ${!META.ai?'<div class="flag">Chưa bật AI. Quản lý cần thêm ANTHROPIC_API_KEY trên Vercel để dùng phòng luyện này.</div>':''}
-  <div class="row"><div style="flex:1;min-width:200px"><label class="mute">Nhóm sản phẩm</label><select id="g">${Object.entries(META.groups).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
-  <div style="flex:1;min-width:200px"><label class="mute">Kiểu khách</label><select id="p">${Object.entries(META.personas).map(([k,v])=>`<option value="${k}">${v.split(':')[0]}</option>`).join('')}</select></div></div>
-  <br><button class="btn" id="st">Bắt đầu – khách nhắn trước</button></div><div id="chat"></div>`;
-  $('#st').onclick=startChat;
-}
-async function startChat(){
-  const g=$('#g').value,p=$('#p').value;let msgs=[];
-  const box=$('#chat');
-  box.innerHTML=`<div class="card"><div class="row"><span class="tag g">${esc(G(g))}</span><span class="tag">${esc(META.personas[p].split(':')[0])}</span></div><div id="log" style="margin:10px 0"></div>
-  <textarea id="msg" style="min-height:110px" placeholder="Nhắn cho khách…"></textarea>
-  <div class="row" style="margin-top:8px"><button class="btn" id="send">Gửi</button><button class="btn sec" id="fin">Kết thúc & chấm điểm</button></div><div id="res"></div></div>`;
-  const log=$('#log');
-  const draw=()=>{log.innerHTML=msgs.map(m=>`<div class="bubble ${m.role==='user'?'me':''}">${esc(m.content)}</div>`).join('')};
-  const ask=async()=>{log.insertAdjacentHTML('beforeend','<p class="mute" id="typing">Khách đang nhắn…</p>');
-    try{const r=await api('chat',{g,persona:p,messages:msgs});msgs.push({role:'assistant',content:r.reply});}catch(e){toast(e.message)}
-    draw();};
-  await ask();
-  $('#send').onclick=async()=>{const v=$('#msg').value.trim();if(!v)return;msgs.push({role:'user',content:v});$('#msg').value='';draw();await ask()};
-  $('#fin').onclick=async e=>{e.target.disabled=true;e.target.textContent='AI đang chấm…';
-    try{const r=await api('finishChat',{g,persona:p,messages:msgs});$('#send').remove();e.target.remove();$('#msg').remove();$('#res').innerHTML=resultHTML(r.attempt)}
-    catch(err){toast(err.message);e.target.disabled=false;e.target.textContent='Kết thúc & chấm điểm'}};
-}
-
-// ===== TIẾN BỘ
+// ===== KẾT QUẢ (SALE)
 function chartHTML(daily){
   if(!daily?.length)return '<p class="mute">Chưa có dữ liệu.</p>';
-  return `<div style="display:flex;align-items:flex-end;gap:6px;height:140px;padding-top:10px">${daily.map(d=>`<div style="flex:1;text-align:center"><div style="font-size:11px;font-weight:700">${d.avg}</div><div style="height:${d.avg}px;background:${color(d.avg)};border-radius:6px 6px 0 0"></div><div class="mute" style="font-size:10px">${d.date.slice(5)}</div></div>`).join('')}</div>`;
+  return `<div style="display:flex;align-items:flex-end;gap:6px;height:130px;padding-top:12px">${daily.map(d=>`<div style="flex:1;text-align:center;min-width:0"><div style="font-size:11px;font-weight:700">${d.avg}</div><div style="height:${Math.max(4,d.avg)}px;background:${color(d.avg)};border-radius:6px 6px 0 0"></div><div class="mute" style="font-size:10px">${d.date.slice(8)}/${d.date.slice(5,7)}</div></div>`).join('')}</div>`;
 }
-async function vProg(){
-  app.innerHTML='<p class="mute">Đang tải…</p>';
+async function vMe(){
   const d=await api('history');const s=d.stats;
   app.innerHTML=`<div class="card"><h2>Điểm trung bình theo ngày</h2>${chartHTML(s.daily)}</div>
-  <div class="card"><h2>Kỹ năng theo tiêu chí</h2>${s.crit.map(c=>`<div style="margin:8px 0"><div class="row" style="justify-content:space-between"><span>${esc(c.name)}</span><b>${c.pct??'–'}%</b></div><div class="bar"><i style="width:${c.pct||0}%"></i></div></div>`).join('')}
-  ${s.weakest?`<p>👉 Tập trung cải thiện: <b>${esc(s.weakest.name)}</b>. Vào Kho tình huống luyện thêm các bài liên quan.</p>`:''}</div>
-  <div class="card"><h2>Bài đã làm</h2><div class="list">${d.list.map(a=>`<div class="it" data-id="${a.id}"><div><b>${esc(a.title)}</b><br><span class="mute">${a.date} · ${a.type==='chat'?'Luyện AI':'Tình huống'} · ${a.status==='reviewed'?'Đã duyệt':'Chờ duyệt'}</span></div><span class="score" style="width:46px;height:46px;font-size:16px;background:${color(a.final?a.final.total:a.ai.total)}">${a.final?a.final.total:a.ai.total}</span></div>`).join('')||'<p class="mute">Chưa có bài.</p>'}</div></div>`;
-  app.querySelectorAll('.it').forEach(el=>el.onclick=()=>showAttempt(d.list.find(a=>a.id===el.dataset.id)));
-}
-function showAttempt(a,extra=''){
-  const m=document.createElement('div');m.className='modal';
-  m.innerHTML=`<div class="card"><div class="row"><b>${esc(a.title)}</b><span style="flex:1"></span><button class="btn sec" id="x">Đóng</button></div>
-  <p class="mute">${a.userName?esc(a.userName)+' · ':''}${a.date}</p>
-  ${a.type==='chat'?a.messages.map(x=>`<div class="bubble ${x.role==='user'?'me':''}">${esc(x.content)}</div>`).join(''):`<h3>Câu trả lời</h3><div class="pre">${esc(a.answer)}</div>`}
-  ${resultHTML(a)}${extra}</div>`;
-  document.body.appendChild(m);m.querySelector('#x').onclick=()=>m.remove();return m;
+  <div class="card"><h2>Điểm theo nhóm sản phẩm</h2>${s.groups.map(g=>`<div style="margin:9px 0"><div class="row" style="justify-content:space-between;font-size:14px"><span><span class="dot" style="background:${GC[g.g]}"></span> ${SHORT[g.g]} <span class="mute">(${g.n} cuộc)</span></span><b style="color:${color(g.avg)}">${g.avg??'–'}</b></div><div class="bar"><i style="width:${g.avg||0}%;background:${GC[g.g]}"></i></div></div>`).join('')}</div>
+  <div class="card"><h2>Kỹ năng</h2>${s.crit.map(c=>`<div style="margin:9px 0"><div class="row" style="justify-content:space-between;font-size:14px"><span>${esc(c.name)}</span><b>${c.pct??'–'}%</b></div><div class="bar"><i style="width:${c.pct||0}%;background:${color(c.pct)}"></i></div></div>`).join('')}
+   ${s.weakest?`<div class="pre" style="margin-top:10px">Cần tập trung: <b>${esc(s.weakest.name)}</b></div>`:''}</div>
+  <div class="card"><h2>Các cuộc đã làm</h2><div class="list">${d.list.map(a=>`<div class="it" data-id="${a.id}"><span class="dot" style="background:${GC[a.g]}"></span><div class="t"><b style="font-size:14px">${esc(a.title)}</b><div class="mute">${a.date} · ${SHORT[a.g]||''} · ${a.status==='reviewed'?'Quản lý đã duyệt':'AI chấm'}</div></div><span class="sc" style="background:${color(a.final?a.final.total:a.ai.total)}">${a.final?a.final.total:a.ai.total}</span></div>`).join('')||'<p class="mute">Chưa có cuộc nào.</p>'}</div></div>`;
+  app.querySelectorAll('.it').forEach(el=>el.onclick=()=>attemptScreen(d.list.find(a=>a.id===el.dataset.id)));
 }
 
-// ===== KHO TÌNH HUỐNG
-async function vAll(){
-  const d=await api('scenarios');
-  app.innerHTML=`<div class="card"><h2>Kho tình huống</h2><p class="mute">Luyện thêm bất kỳ bài nào, nhất là nhóm và bước bạn còn yếu.</p>
-  <select id="fg"><option value="">Tất cả nhóm</option>${Object.entries(META.groups).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
-  <div class="list" id="ls"></div></div>`;
-  const draw=()=>{const g=$('#fg').value;$('#ls').innerHTML=d.list.filter(s=>!g||s.g===g).map(s=>`<div class="it" data-id="${s.id}"><div><span class="tag g">${esc(G(s.g))}</span><span class="tag">${esc(s.stage)}</span><br><b>${esc(s.title)}</b></div><button class="btn sec">Luyện</button></div>`).join('');
-    $('#ls').querySelectorAll('.it').forEach(el=>el.onclick=()=>openDrill(d.list.find(s=>s.id===el.dataset.id)))};
-  $('#fg').onchange=draw;draw();
-}
-
-// ===== QUẢN LÝ: TỔNG QUAN
-async function vOv(){
-  app.innerHTML='<p class="mute">Đang tải…</p>';
-  const d=await api('adminOverview');
-  app.innerHTML=`${!d.ai?'<div class="flag">Chưa bật AI: thêm biến ANTHROPIC_API_KEY trên Vercel để AI chấm điểm và đóng vai khách. Hiện đang chấm tạm theo từ khóa.</div>':''}
-  <div class="card"><h2>Bảng xếp hạng · ${d.day}</h2>
-  <table><tr><th>Sale</th><th>Hôm nay</th><th>Điểm TB</th><th>Chuỗi</th><th>Yếu nhất</th><th>Chờ duyệt</th></tr>
-  ${d.rows.map(r=>`<tr data-id="${r.id}" style="cursor:pointer"><td><b>${esc(r.name)}</b><br><span class="mute">${r.last?'Lần cuối '+r.last:'Chưa luyện'}</span></td><td>${r.today}/3</td><td><b style="color:${color(r.avg||0)}">${r.avg??'–'}</b></td><td>${r.streak}</td><td>${r.weakest?esc(r.weakest.name)+' '+r.weakest.pct+'%':'–'}</td><td>${r.pending}</td></tr>`).join('')||'<tr><td colspan="6" class="mute">Chưa có nhân viên – vào tab Nhân viên để tạo tài khoản.</td></tr>'}</table></div>
-  <div id="det"></div>`;
-  app.querySelectorAll('tr[data-id]').forEach(el=>el.onclick=()=>{const r=d.rows.find(x=>x.id===el.dataset.id);$('#det').innerHTML=`<div class="card"><h2>${esc(r.name)} – điểm theo ngày</h2>${chartHTML(r.daily)}<button class="btn sec" id="seeb">Xem bài của ${esc(r.name)}</button></div>`;$('#seeb').onclick=()=>{go('rv');setTimeout(()=>{$('#fu').value=r.id;$('#fu').onchange()},300)}});
+// ===== QUẢN LÝ: BÁO CÁO NGÀY
+async function vReport(day){
+  day=typeof day==='string'?day:META.today;
+  const d=await api('adminReport',{day});
+  const done=d.rows.reduce((x,r)=>x+r.done,0),quota=d.rows.reduce((x,r)=>x+r.quota,0);
+  const all=d.rows.filter(r=>r.avg!=null);const tavg=all.length?Math.round(all.reduce((x,r)=>x+r.avg,0)/all.length):null;
+  app.innerHTML=`<div class="card"><div class="row"><h2 style="margin:0">Báo cáo luyện tập</h2><span class="sp"></span><input type="date" id="dd" value="${d.day}" style="width:auto"><button class="btn sm" id="cpz">Sao chép gửi Zalo</button></div>
+   <div class="kp" style="grid-template-columns:repeat(4,1fr)">${[['Sale',d.rows.length],['Cuộc đã làm',`${done}/${quota}`],['Điểm TB',tavg??'–'],['Chờ duyệt',d.rows.reduce((x,r)=>x+r.pending,0)]].map(([a,b])=>`<div style="background:#F5F7FA"><b style="color:var(--navy)">${b}</b><span class="mute">${a}</span></div>`).join('')}</div></div>
+  ${!d.ai?'<div class="flag">AI chưa bật – kiểm tra GEMINI_API_KEY trên Vercel.</div>':''}
+  <div class="card"><div class="tw"><table><tr><th>Sale</th><th>Hoàn thành</th><th>TB</th>${Object.keys(SHORT).map(g=>`<th><span class="dot" style="background:${GC[g]}"></span> ${SHORT[g]}</th>`).join('')}<th>Lỗi nặng</th><th>Yếu nhất</th></tr>
+   ${d.rows.map(r=>`<tr data-id="${r.id}" style="cursor:pointer"><td><b>${esc(r.name)}</b>${r.extra?`<div class="mute">+${r.extra} luyện thêm</div>`:''}</td>
+    <td><b style="color:${r.done>=r.quota?'var(--ok)':r.done?'var(--mid)':'var(--bad)'}">${r.done}/${r.quota}</b><div class="prog" style="width:80px"><i style="width:${Math.min(100,r.done/r.quota*100)}%"></i></div></td>
+    <td><span class="cell" style="background:${color(r.avg)};color:#fff">${r.avg??'–'}</span></td>
+    ${Object.keys(SHORT).map(g=>`<td><span class="cell" style="color:${color(r.groups[g])}">${r.groups[g]??'–'}</span></td>`).join('')}
+    <td>${r.flags?`<b style="color:var(--bad)">${r.flags}</b>`:'0'}</td><td class="mute">${r.weakest?esc(r.weakest.name.split('(')[0])+' '+r.weakest.pct+'%':'–'}</td></tr>`).join('')||`<tr><td colspan="11" class="mute">Chưa có Sale – vào tab Nhân viên để tạo tài khoản.</td></tr>`}
+  </table></div><p class="mute">Bấm vào tên Sale để xem từng cuộc tư vấn trong ngày.</p></div>`;
+  $('#dd').onchange=e=>vReport(e.target.value);
+  $('#cpz').onclick=()=>{const txt=`BÁO CÁO LUYỆN TƯ VẤN ${d.day.split('-').reverse().join('/')}\n`+d.rows.map((r,i)=>`${i+1}. ${r.name}: ${r.done}/${r.quota} cuộc · TB ${r.avg??'–'} điểm${r.flags?` · ${r.flags} cuộc có lỗi nặng`:''}${r.weakest?` · yếu: ${r.weakest.name.split('(')[0].trim()}`:''}${r.done<r.quota?' ⚠ chưa đủ chỉ tiêu':''}`).join('\n');copyText(txt)};
+  app.querySelectorAll('tr[data-id]').forEach(el=>el.onclick=async()=>{const r=d.rows.find(x=>x.id===el.dataset.id);const l=(await api('adminAttempts',{userId:r.id,day:d.day})).list;
+    const s=screen(`<div class="bar2"><button class="back" id="bk">‹</button><div class="ttl"><b>${esc(r.name)}</b><span>${d.day} · ${r.done}/${r.quota} cuộc · TB ${r.avg??'–'}</span></div></div>
+     <div class="body"><div class="inner"><div class="card"><div class="list">${l.map((a,i)=>`<div class="it" data-i="${i}"><span class="dot" style="background:${GC[a.g]}"></span><div class="t"><b style="font-size:14px">${a.task?`#${a.task} `:''}${esc(a.title)}</b><div class="mute">${SHORT[a.g]||''} · ${esc(PN(a.persona))} · ${a.status==='reviewed'?'Đã duyệt':'Chờ duyệt'}${(a.ai?.flags||[]).filter(Boolean).length?' · <b style="color:var(--bad)">có lỗi nặng</b>':''}</div></div><span class="sc" style="background:${color(a.final?a.final.total:a.ai.total)}">${a.final?a.final.total:a.ai.total}</span></div>`).join('')||'<p class="mute">Chưa có cuộc nào.</p>'}</div></div></div></div>`);
+    s.querySelector('#bk').onclick=()=>s.close();
+    s.querySelectorAll('.it').forEach(x=>x.onclick=()=>review(l[x.dataset.i],()=>{}))});
 }
 
 // ===== DUYỆT BÀI
-async function vRv(){
-  const us=(await api('adminUsers')).list;
-  app.innerHTML=`<div class="card"><h2>Duyệt bài</h2><div class="row"><select id="fu" style="flex:1"><option value="">Tất cả nhân viên</option>${us.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select>
-  <label class="row" style="width:auto"><input type="checkbox" id="fp" checked style="width:auto"> Chỉ bài chờ duyệt</label></div><div class="list" id="ls"></div></div>`;
+async function vReview(){
+  const us=(await api('adminUsers')).list.filter(u=>u.role!=='admin');
+  app.innerHTML=`<div class="card"><h2>Duyệt bài</h2><div class="row"><select id="fu" style="flex:1;min-width:160px"><option value="">Tất cả Sale</option>${us.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select>
+   <label class="row" style="width:auto;font-size:14px"><input type="checkbox" id="fp" checked style="width:auto"> Chỉ bài chờ duyệt</label></div><div class="list" id="ls" style="margin-top:8px"></div></div>`;
   const load=async()=>{$('#ls').innerHTML='<p class="mute">Đang tải…</p>';const d=await api('adminAttempts',{userId:$('#fu').value||undefined,onlyPending:$('#fp').checked});
-    $('#ls').innerHTML=d.list.map((a,i)=>`<div class="it" data-i="${i}"><div><b>${esc(a.userName)}</b> · ${esc(a.title)}<br><span class="mute">${a.date} · ${a.status==='reviewed'?'Đã duyệt':'Chờ duyệt'}</span></div><span class="score" style="width:46px;height:46px;font-size:16px;background:${color(a.final?a.final.total:a.ai.total)}">${a.final?a.final.total:a.ai.total}</span></div>`).join('')||'<p class="mute">Không có bài.</p>';
+    $('#ls').innerHTML=d.list.map((a,i)=>`<div class="it" data-i="${i}"><span class="dot" style="background:${GC[a.g]}"></span><div class="t"><b style="font-size:14px">${esc(a.userName)} · ${esc(a.title)}</b><div class="mute">${a.date} · ${SHORT[a.g]||''} · ${a.status==='reviewed'?'Đã duyệt':'Chờ duyệt'}${(a.ai?.flags||[]).filter(Boolean).length?' · <b style="color:var(--bad)">lỗi nặng</b>':''}</div></div><span class="sc" style="background:${color(a.final?a.final.total:a.ai.total)}">${a.final?a.final.total:a.ai.total}</span></div>`).join('')||'<p class="mute">Không có bài.</p>';
     $('#ls').querySelectorAll('.it').forEach(el=>el.onclick=()=>review(d.list[el.dataset.i],load));};
   $('#fu').onchange=load;$('#fp').onchange=load;load();
 }
 function review(a,reload){
   const sc=a.final?.scores||a.ai.scores;
-  const form=`<h3>Quản lý chấm lại</h3>${META.criteria.map(c=>`<div class="row" style="margin:4px 0"><span style="flex:1">${esc(c.name)} (tối đa ${c.max})</span><input type="number" min="0" max="${c.max}" value="${sc[c.k]??0}" data-k="${c.k}" style="width:80px"></div>`).join('')}
-  <textarea id="cm" style="min-height:90px" placeholder="Nhận xét cho Sale (cụ thể: sai ở đâu, sửa thế nào)">${esc(a.final?.comment||'')}</textarea>
-  <div class="row" style="margin-top:8px"><button class="btn" id="ok">Lưu & duyệt</button></div>`;
-  const m=showAttempt(a,form);
-  m.querySelector('#ok').onclick=async()=>{const s={};m.querySelectorAll('input[data-k]').forEach(i=>s[i.dataset.k]=Number(i.value));
-    try{await api('adminReview',{userId:a.userId,attemptId:a.id,scores:s,comment:m.querySelector('#cm').value});toast('Đã duyệt');m.remove();reload()}catch(e){toast(e.message)}};
+  const form=`<div class="res"><h2>Quản lý chấm lại</h2>${META.criteria.map(c=>`<div class="row" style="margin:6px 0;flex-wrap:nowrap"><span style="flex:1;font-size:14px">${esc(c.name)} <span class="mute">/${c.max}</span></span><input type="number" min="0" max="${c.max}" value="${sc[c.k]??0}" data-k="${c.k}" style="width:76px"></div>`).join('')}
+   <label class="f">Nhận xét cho Sale</label><textarea id="cm" rows="3" placeholder="Sai ở đâu, sửa thế nào…">${esc(a.final?.comment||'')}</textarea>
+   <button class="btn block" id="ok" style="margin-top:10px">Lưu & duyệt</button></div>`;
+  const s=attemptScreen(a,form);
+  s.querySelector('#ok').onclick=async()=>{const v={};s.querySelectorAll('input[data-k]').forEach(i=>v[i.dataset.k]=Number(i.value));
+    try{await api('adminReview',{userId:a.userId,attemptId:a.id,scores:v,comment:s.querySelector('#cm').value});toast('Đã duyệt');s.close();reload()}catch(e){toast(e.message)}};
 }
 
 // ===== NHÂN VIÊN
-async function vUs(){
+async function vStaff(){
   const d=await api('adminUsers');
-  app.innerHTML=`<div class="card"><h2>Thêm nhân viên</h2><div class="row"><input id="un" placeholder="Tên đăng nhập (VD: Ánh)" style="flex:2;min-width:160px"><input id="up" placeholder="Mã PIN (≥4 số)" inputmode="numeric" style="flex:1;min-width:120px"><select id="ur" style="flex:1;min-width:120px"><option value="sale">Sale</option><option value="admin">Quản lý</option></select><button class="btn" id="ua">Thêm</button></div></div>
-  <div class="card"><h2>Danh sách</h2><table><tr><th>Tên</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr>
-  ${d.list.map(u=>`<tr><td><b>${esc(u.name)}</b></td><td>${u.role==='admin'?'Quản lý':'Sale'}</td><td>${u.active===false?'Đã khóa':'Hoạt động'}</td><td class="row"><button class="btn sec" data-pin="${u.id}">Đổi PIN</button><button class="btn sec" data-tg="${u.id}">${u.active===false?'Mở':'Khóa'}</button></td></tr>`).join('')}</table></div>`;
-  $('#ua').onclick=async()=>{try{await api('adminSaveUser',{name:$('#un').value,pin:$('#up').value,role:$('#ur').value});toast('Đã thêm');vUs()}catch(e){toast(e.message)}};
+  app.innerHTML=`<div class="card"><h2>Thêm Sale</h2><div class="row"><input id="un" placeholder="Tên đăng nhập (VD: Ánh)" style="flex:2;min-width:150px"><input id="up" placeholder="Mã PIN (≥4 số)" inputmode="numeric" style="flex:1;min-width:110px"><input id="uq" type="number" value="20" min="1" max="40" title="Số cuộc/ngày" style="width:90px"><button class="btn" id="ua">Thêm</button></div>
+   <p class="mute">Ô số là chỉ tiêu cuộc tư vấn mỗi ngày (Sale mới: 20).</p></div>
+  <div class="card"><h2>Danh sách</h2><div class="tw"><table><tr><th>Tên</th><th>Vai trò</th><th>Cuộc/ngày</th><th>Trạng thái</th><th></th></tr>
+  ${d.list.map(u=>`<tr><td><b>${esc(u.name)}</b></td><td>${u.role==='admin'?'Quản lý':'Sale'}</td><td><input type="number" min="1" max="40" value="${u.quota}" data-q="${u.id}" style="width:76px;padding:6px 8px"></td><td>${u.active===false?'Đã khóa':'Hoạt động'}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn ghost sm" data-pin="${u.id}">Đổi PIN</button><button class="btn ghost sm" data-tg="${u.id}">${u.active===false?'Mở':'Khóa'}</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="mute">Chưa có ai.</td></tr>'}</table></div></div>`;
+  $('#ua').onclick=async()=>{try{await api('adminSaveUser',{name:$('#un').value,pin:$('#up').value,quota:$('#uq').value});toast('Đã thêm');vStaff()}catch(e){toast(e.message)}};
+  app.querySelectorAll('[data-q]').forEach(i=>i.onchange=async()=>{const u=d.list.find(x=>x.id===i.dataset.q);try{await api('adminSaveUser',{...u,quota:i.value});toast('Đã lưu chỉ tiêu')}catch(e){toast(e.message)}});
   app.querySelectorAll('[data-pin]').forEach(b=>b.onclick=async()=>{const u=d.list.find(x=>x.id===b.dataset.pin);const pin=prompt('Mã PIN mới cho '+u.name+' (≥4 số)');if(!pin)return;try{await api('adminSaveUser',{...u,pin});toast('Đã đổi PIN')}catch(e){toast(e.message)}});
-  app.querySelectorAll('[data-tg]').forEach(b=>b.onclick=async()=>{const u=d.list.find(x=>x.id===b.dataset.tg);try{await api('adminSaveUser',{...u,active:u.active===false});vUs()}catch(e){toast(e.message)}});
+  app.querySelectorAll('[data-tg]').forEach(b=>b.onclick=async()=>{const u=d.list.find(x=>x.id===b.dataset.tg);try{await api('adminSaveUser',{...u,active:u.active===false});vStaff()}catch(e){toast(e.message)}});
 }
 
 // ===== TÌNH HUỐNG (QUẢN LÝ)
 async function vSc(){
   const d=await api('scenarios');
-  app.innerHTML=`<div class="card"><h2>Thêm tình huống thực tế</h2><p class="mute">Gặp tình huống mới ngoài thực tế → thêm vào đây để cả team luyện.</p>
-  <div class="row"><select id="sg" style="flex:1">${Object.entries(META.groups).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><input id="sst" placeholder="Bước (VD: Xử lý phản đối)" style="flex:1"></div><br>
-  <input id="stt" placeholder="Tên tình huống"><br><br><input id="sctx" placeholder="Bối cảnh (khách là ai, đã trao đổi gì)"><br><br>
-  <textarea id="smsg" style="min-height:70px" placeholder="Khách nhắn gì"></textarea><br><br>
-  <textarea id="stips" style="min-height:90px" placeholder="Yêu cầu câu trả lời tốt – mỗi dòng một ý"></textarea><br><br>
-  <textarea id="ssam" placeholder="Tin nhắn mẫu đúng quy trình"></textarea><br><br>
-  <input id="skw" placeholder="Từ khóa nên có, cách nhau dấu phẩy (dùng khi chưa bật AI)"><br><br>
-  <button class="btn" id="sa">Lưu tình huống</button></div>
-  <div class="card"><h2>Kho hiện có (${d.list.length})</h2><div class="list">${d.list.map(s=>`<div class="it"><div><span class="tag g">${esc(G(s.g))}</span><span class="tag">${esc(s.stage)}</span>${s.custom?'<span class="tag">Tự thêm</span>':''}<br><b>${esc(s.title)}</b></div>${s.custom?`<button class="btn sec" data-del="${s.id}">Xóa</button>`:''}</div>`).join('')}</div></div>`;
-  $('#sa').onclick=async()=>{try{await api('adminSaveScenario',{g:$('#sg').value,stage:$('#sst').value,title:$('#stt').value,ctx:$('#sctx').value,msg:$('#smsg').value,tips:$('#stips').value,sample:$('#ssam').value,kw:$('#skw').value});toast('Đã lưu');vSc()}catch(e){toast(e.message)}};
+  app.innerHTML=`<div class="card"><h2>Thêm tình huống thực tế</h2><p class="mute" style="margin-top:-6px">Gặp ca mới ngoài thực tế → thêm vào đây, AI sẽ đóng vai khách theo tình huống này trong các cuộc luyện.</p>
+  <div class="row"><select id="sg" style="flex:1;min-width:150px">${Object.entries(META.groups).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><input id="sst" placeholder="Bước (VD: Xử lý phản đối)" style="flex:1;min-width:150px"></div>
+  <label class="f">Tên tình huống</label><input id="stt">
+  <label class="f">Bối cảnh (khách là ai, đã trao đổi gì trước đó)</label><input id="sctx">
+  <label class="f">Tin nhắn mở đầu của khách</label><textarea id="smsg" rows="2"></textarea>
+  <label class="f">Yêu cầu tư vấn đúng – mỗi dòng một ý</label><textarea id="stips" rows="3"></textarea>
+  <label class="f">Tin nhắn mẫu đúng quy trình</label><textarea id="ssam" rows="4"></textarea>
+  <label class="f">Từ khóa nên có (cách nhau dấu phẩy – dùng khi AI bận)</label><input id="skw">
+  <button class="btn" id="sa" style="margin-top:12px">Lưu tình huống</button></div>
+  <div class="card"><h2>Kho tình huống (${d.list.length})</h2><div class="list">${d.list.map(s=>`<div class="it"><span class="dot" style="background:${GC[s.g]}"></span><div class="t"><b style="font-size:14px">${esc(s.title)}</b><div class="mute">${SHORT[s.g]} · ${esc(s.stage)}${s.custom?' · Tự thêm':''}</div></div>${s.custom?`<button class="btn ghost sm" data-del="${s.id}">Xóa</button>`:''}</div>`).join('')}</div></div>`;
+  $('#sa').onclick=async()=>{try{await api('adminSaveScenario',{g:$('#sg').value,stage:$('#sst').value,title:$('#stt').value,ctx:$('#sctx').value,msg:$('#smsg').value,tips:$('#stips').value,sample:$('#ssam').value,kw:$('#skw').value});toast('Đã lưu');DOCS=null;vSc()}catch(e){toast(e.message)}};
   app.querySelectorAll('[data-del]').forEach(b=>b.onclick=async e=>{e.stopPropagation();if(!confirm('Xóa tình huống này?'))return;await api('adminDelScenario',{id:b.dataset.del});vSc()});
 }
 
