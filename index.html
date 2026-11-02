@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17324F">
-<title>GoldCool Sale Academy</title>
+<meta name="theme-color" content="#0B3D24">
+<title>GoldCool · Lộ trình 3 ngày</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#17324F;--navy2:#22476E;--gold:#C08A12;--gold2:#FBF1DA;--bg:#F2F4F7;--card:#fff;--line:#E4E7EC;--text:#18212F;--mute:#667085;--ok:#12805C;--mid:#B7791F;--bad:#C2410C;--me:#D9ECFF;--chatbg:#E6ECF2}
+:root{--navy:#0B3D24;--navy2:#15803D;--gold:#C08A12;--gold2:#FBF1DA;--bg:#F2F4F7;--card:#fff;--line:#E4E7EC;--text:#18212F;--mute:#667085;--ok:#12805C;--mid:#B7791F;--bad:#C2410C;--me:#D9ECFF;--chatbg:#E6ECF2}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 'Be Vietnam Pro',-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inherit}
@@ -101,7 +101,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 </style>
 </head>
 <body>
-<div class="top"><span class="logo">GOLDCOOL</span><span class="sub">Sale Academy</span><span class="sp"></span><span class="who" id="who"></span></div>
+<div class="top"><span class="logo">GOLDCOOL</span><span class="sub">Lộ trình 3 ngày</span><span class="sp"></span><span class="who" id="who"></span></div>
 <main id="app"></main>
 <nav class="tabs hide" id="tabs"></nav>
 <script>
@@ -138,15 +138,15 @@ const I={
 function logout(){TOKEN='';LS.del('gct');META=null;document.querySelectorAll('.screen').forEach(s=>s.remove());renderLogin()}
 function renderLogin(){
   $('#tabs').classList.add('hide');$('#who').textContent='';document.body.classList.remove('admin');
-  app.innerHTML=`<div class="card login"><h1>Đăng nhập</h1><p class="mute">Mỗi Sale đăng nhập bằng tên và mã PIN quản lý cấp.</p>
+  app.innerHTML=`<div class="card login"><h1>Đăng nhập</h1><p class="mute">Lộ trình 3 ngày cho Sale mới: học, kiểm tra và đóng vai đủ 6 nhóm sản phẩm. Đăng nhập bằng tên và mã PIN quản lý cấp.</p>
   <label class="f">Tên</label><input id="ln" autocomplete="username">
   <label class="f">Mã PIN</label><div class="row" style="flex-wrap:nowrap"><input id="lp" type="tel" inputmode="numeric" autocomplete="off" placeholder="Nhập mã PIN" style="-webkit-text-security:disc"><button class="btn ghost" id="ls" type="button">Hiện</button></div>
   <p id="le" style="color:var(--bad);min-height:20px;margin:8px 0"></p>
-  <button class="btn block" id="lb">Vào luyện tập</button></div>`;
+  <button class="btn block" id="lb">Vào học</button></div>`;
   $('#ls').onclick=()=>{const i=$('#lp');const h=i.style.webkitTextSecurity==='none';i.style.webkitTextSecurity=h?'disc':'none';$('#ls').textContent=h?'Hiện':'Ẩn'};
   const go=async()=>{$('#le').textContent='';const b=$('#lb');b.disabled=true;b.textContent='Đang đăng nhập…';
     try{const r=await api('login',{name:$('#ln').value.trim(),pin:$('#lp').value.replace(/\s/g,'')});TOKEN=r.token;LS.set('gct',TOKEN);boot()}
-    catch(e){$('#le').textContent=e.message||'Không đăng nhập được';b.disabled=false;b.textContent='Vào luyện tập'}};
+    catch(e){$('#le').textContent=e.message||'Không đăng nhập được';b.disabled=false;b.textContent='Vào học'}};
   $('#lb').onclick=go;$('#lp').onkeydown=e=>{if(e.key==='Enter')go()};
 }
 
@@ -154,8 +154,8 @@ async function boot(){
   try{META=await api('meta')}catch(e){return renderLogin()}
   const ad=META.user.role==='admin';document.body.classList.toggle('admin',ad);
   $('#who').innerHTML=`${esc(META.user.name)} · <a href="#" id="out" style="color:#F3C34E">Thoát</a>`;$('#out').onclick=e=>{e.preventDefault();logout()};
-  const tabs=ad?[['report','Báo cáo',I.chart],['path3','Lộ trình 3 ngày',I.flag],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['media','Ảnh & Video',I.img],['docs','Tài liệu',I.book]]
-               :[['path','Lộ trình',I.flag],['home','Hôm nay',I.home],['docs','Tài liệu',I.book],['me','Kết quả',I.chart]];
+  const tabs=ad?[['path3','Kết quả 3 ngày',I.flag],['review','Duyệt bài',I.check],['staff','Nhân viên',I.users],['sc','Tình huống',I.list],['media','Ảnh & Video',I.img],['docs','Tài liệu',I.book]]
+               :[['path','Lộ trình',I.flag],['docs','Tài liệu',I.book],['me','Kết quả',I.chart]];
   const t=$('#tabs');t.classList.remove('hide');
   t.innerHTML=tabs.map(([k,v,ic])=>`<button data-k="${k}">${ic}<span>${v}</span></button>`).join('');
   t.querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.k));
@@ -421,11 +421,11 @@ function review(a,reload){
 // ===== NHÂN VIÊN
 async function vStaff(){
   const d=await api('adminUsers');
-  app.innerHTML=`<div class="card"><h2>Thêm Sale</h2><div class="row"><input id="un" placeholder="Tên đăng nhập (VD: Ánh)" style="flex:2;min-width:150px"><input id="up" placeholder="Mã PIN (≥4 số)" inputmode="numeric" style="flex:1;min-width:110px"><input id="uq" type="number" value="10" min="1" max="40" title="Số cuộc/ngày" style="width:90px"><button class="btn" id="ua">Thêm</button></div>
-   <p class="mute">Ô số là chỉ tiêu cuộc tư vấn mỗi ngày (mặc định 10).</p></div>
-  <div class="card"><h2>Danh sách</h2><div class="tw"><table><tr><th>Tên</th><th>Vai trò</th><th>Cuộc/ngày</th><th>Trạng thái</th><th></th></tr>
-  ${d.list.map(u=>`<tr><td><b>${esc(u.name)}</b></td><td>${u.role==='admin'?'Quản lý':'Sale'}</td><td><input type="number" min="1" max="40" value="${u.quota}" data-q="${u.id}" style="width:76px;padding:6px 8px"></td><td>${u.active===false?'Đã khóa':'Hoạt động'}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn ghost sm" data-pin="${u.id}">Đổi PIN</button><button class="btn ghost sm" data-tg="${u.id}">${u.active===false?'Mở':'Khóa'}</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="mute">Chưa có ai.</td></tr>'}</table></div></div>`;
-  $('#ua').onclick=async()=>{try{await api('adminSaveUser',{name:$('#un').value,pin:$('#up').value,quota:$('#uq').value});toast('Đã thêm');vStaff()}catch(e){toast(e.message)}};
+  app.innerHTML=`<div class="card"><h2>Thêm Sale</h2><div class="row"><input id="un" placeholder="Tên đăng nhập (VD: Ánh)" style="flex:2;min-width:150px"><input id="up" placeholder="Mã PIN (≥4 số)" inputmode="numeric" style="flex:1;min-width:110px"><button class="btn" id="ua">Thêm</button></div>
+   <p class="mute">Sale đăng nhập bằng tên và mã PIN này để học Lộ trình 3 ngày.</p></div>
+  <div class="card"><h2>Danh sách</h2><div class="tw"><table><tr><th>Tên</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr>
+  ${d.list.map(u=>`<tr><td><b>${esc(u.name)}</b></td><td>${u.role==='admin'?'Quản lý':'Sale'}</td><td>${u.active===false?'Đã khóa':'Hoạt động'}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn ghost sm" data-pin="${u.id}">Đổi PIN</button><button class="btn ghost sm" data-tg="${u.id}">${u.active===false?'Mở':'Khóa'}</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="mute">Chưa có ai.</td></tr>'}</table></div></div>`;
+  $('#ua').onclick=async()=>{try{await api('adminSaveUser',{name:$('#un').value,pin:$('#up').value});toast('Đã thêm');vStaff()}catch(e){toast(e.message)}};
   app.querySelectorAll('[data-q]').forEach(i=>i.onchange=async()=>{const u=d.list.find(x=>x.id===i.dataset.q);try{await api('adminSaveUser',{...u,quota:i.value});toast('Đã lưu chỉ tiêu')}catch(e){toast(e.message)}});
   app.querySelectorAll('[data-pin]').forEach(b=>b.onclick=async()=>{const u=d.list.find(x=>x.id===b.dataset.pin);const pin=prompt('Mã PIN mới cho '+u.name+' (≥4 số)');if(!pin)return;try{await api('adminSaveUser',{...u,pin});toast('Đã đổi PIN')}catch(e){toast(e.message)}});
   app.querySelectorAll('[data-tg]').forEach(b=>b.onclick=async()=>{const u=d.list.find(x=>x.id===b.dataset.tg);try{await api('adminSaveUser',{...u,active:u.active===false});vStaff()}catch(e){toast(e.message)}});
@@ -506,7 +506,7 @@ async function vPath(){
     ${quizRow(q('gia'),!d.d1)}</div></div>
 
   <div class="card"><div class="row"><h2 style="margin:0">Ngày 3 · Đóng vai với khách AI</h2><span class="sp"></span>${d.d3?'<span class="pill" style="background:#E3F4EC;color:var(--ok)">Đạt</span>':''}</div>
-   <p class="mute">Mỗi nhóm cần ≥ ${s.rule.minCalls} cuộc và điểm TB ≥ ${s.rule.minAvg}. Các cuộc ở tab "Hôm nay" cũng được tính. Bấm nhóm để luyện thêm.</p>
+   <p class="mute">Mỗi nhóm cần ≥ ${s.rule.minCalls} cuộc và điểm TB ≥ ${s.rule.minAvg}. Bấm nhóm để vào chat với khách AI – tư vấn như trên Zalo, gửi được ảnh/video, xong bấm Chấm điểm.</p>
    <div class="list">${s.rp.map(x=>`<div class="it" data-rp="${x.g}"><span class="dot" style="width:10px;height:10px;background:${GC[x.g]}"></span><div class="t"><b style="font-size:14px">${esc(x.name)}</b><div class="mute">${x.n}/${s.rule.minCalls} cuộc${x.avg!=null?` · TB ${x.avg}`:''}</div><div class="prog"><i style="width:${Math.min(100,(x.avg||0))}%;background:${x.passed?'var(--ok)':color(x.avg)}"></i></div></div>${x.passed?'<span class="sc" style="background:var(--ok)">✓</span>':''}<span class="go" style="color:var(--gold)">Luyện ›</span></div>`).join('')}</div></div>
 
   ${s.missing.length&&!s.signoff?`<div class="card"><h2>Còn thiếu để Đạt</h2><ul class="c">${s.missing.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`:''}`;
